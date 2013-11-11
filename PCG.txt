@@ -1,0 +1,108 @@
+%----------------------------------------------------------------------------
+%Framework
+%----------------------------------------------------------------------------
+
+#const maxAreaSize=32.  %32. %maximum length of a side in number of tiles in an area 
+#const minAreaSize=8. %minimum length of a side in number of tiles in an area
+
+areaSizeRange(minAreaSize..maxAreaSize). %range of possible area length/widths
+wallSizeRange(0 .. maxAreaSize). %range of valid wall positions
+floorSizeRange(0 .. (maxAreaSize - 1)). %range of valid floor positions
+#hide areaSizeRange/1. %do not print range
+
+%----------------------------------------------------------------------------
+%Level Basics
+%----------------------------------------------------------------------------
+
+level(indoor_dungeon).
+
+%determine the size of the area
+1 { levelLengthX(X,L) : areaSizeRange(X) :level(L) } 1. 
+1 { levelLengthY(Y,L) : areaSizeRange(Y) :level(L) } 1.
+
+%determine valid tile numbers
+lengthXDim(0..(X - 1), L) :- levelLengthX(X, L).
+lengthYDim(0..(Y - 1), L) :- levelLengthY(Y, L).
+#hide lengthXDim/2.
+#hide lengthYDim/2.
+
+%define tiles
+tile(X,Y,L) :- lengthXDim(X,L), lengthYDim(Y,L), level(L).
+
+%#hide tile/3.
+
+%define walls
+
+%walls have to be able to border entire area so valid dimensions range from 0 to X/Y 
+wallXDim(0..X , L) :- levelLengthX(X, L). 
+wallYDim(0..Y , L) :- levelLengthY(Y, L).
+
+%wallX(X,Y,L) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
+{ wallX(X,Y,L) : wallSizeRange(X) : wallSizeRange(Y) : level(L) }. 
+:- wallX(X,Y,L) , not wallXDim(X,L). %all walls must have a valid x
+:- wallX(X,Y,L), levelLengthX(X,L). %check that wall does not start at rightmost x
+:- wallX(X,Y,L), not wallYDim(Y,L). %all walls must have a valid y 
+
+
+%wallY(X,Y,L) from X,Y to X,Y+1. The bottommost y is not a valid y for a wall on the y axis it can only be used for walls on the x Axis
+{ wallY(X,Y,L) : wallSizeRange(X) : wallSizeRange(Y) : level(L) }. 
+:- wallY(X,Y,L) , not wallXDim(X,L). %all walls must have a valid x
+:- wallY(X,Y,L), levelLengthY(Y,L). %check that wall does not start on bottommost y
+:- wallY(X,Y,L), not wallYDim(Y,L).  %all walls must have a valid y
+
+%Barricades are walls and anything else that occupies the same space (doors for example0
+barricadeX(X,Y,L) :- wallX(X,Y,L).
+barricadeY(X,Y,L) :- wallY(X,Y,L).
+
+%There is no barricade that is freestanding
+:- barricadeX(X,Y,L) , not barricadeX(X+1,Y,L), not barricadeX(X-1,Y,L), not barricadeY(X,Y,L), not barricadeY(X,Y-1,L).
+:- barricadeY(X,Y,L) , not barricadeX(X,Y,L), not barricadeX(X-1,Y,L), not barricadeY(X,Y+1,L), not barricadeY(X,Y-1,L).
+
+%define floors
+{ floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) : level(L) }.
+:- floor(X,Y,L) , not tile(X,Y,L). %all floors must be on valid tiles
+
+%There must be a wall between any floor and non floor tile
+:- floor(X,Y,L) , not floor((X - 1),Y,L), not wallY(X,Y,L).
+:- floor(X,Y,L) , not floor((X + 1),Y,L), not wallY((X + 1),Y,L).
+:- floor(X,Y,L) , not floor(X,(Y - 1),L), not wallX(X,Y,L).
+:- floor(X,Y,L) , not floor(X,(Y + 1),L), not wallX(X,(Y+1),L).
+
+%There must be a floor on at least one side of a wall
+:- wallX(X,Y,L), not floor(X,Y,L), not floor(X,(Y-1),L).
+:- wallY(X,Y,L), not floor(X,Y,L), not floor((X-1),Y,L).
+
+%Each level should have a starting tile along one of the edges
+1 { levelStart(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) : level(L) } 1. 
+
+:- levelStart(X,Y,L), not floor(X,Y,L). %the start must be on a floor
+
+%The starting tile must be on one of the edges
+nonEdgeXDim(1..(X - 2), L) :- levelLengthX(X, L). %Define non edge tiles
+nonEdgeYDim(1..(Y - 2), L) :- levelLengthY(Y, L). %Define non edge tiles
+:- levelStart(X,Y,L), nonEdgeXDim(X,L), nonEdgeYDim(Y,L). 
+
+{ connection(X1,Y1,X2,Y2, L) : floorSizeRange(X1) : floorSizeRange(Y1) : floorSizeRange(X2) : floorSizeRange(Y2) : level(L) }. 
+
+connectedUp(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), X1 == X2, (Y1 - 1) == Y2, not wallX(X1,Y1,L).
+connectedDown(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), X1 == X2, (Y1 + 1) == Y2, not wallX(X2,Y2,L).
+connectedLeft(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1,L).
+connectedRight(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), Y1 == Y2, (X1 + 1) == X2, not wallY(X2,Y2,L).
+
+:- connection(X1,Y1,X2,Y2,L), not connectedUp(X1,Y1,X2,Y2,L), not connectedDown(X1,Y1,X2,Y2,L), not connectedLeft(X1,Y1,X2,Y2,L), not connectedRight(X1,Y1,X2,Y2,L).
+
+
+%Every floor tile should be reachable
+step(0,-1 ;; 0,1 ;; 1,0 ;; -1,0). %Set up range of possible ways to move one tile over
+
+reachable(X,Y,L) :- levelStart(X,Y,L).
+
+reachable(NX,NY,L) :-
+  reachable(X,Y,L),
+  step(DX,DY),
+  NX = X + DX,
+  NY = Y + DY,
+  floor(NX,NY,L),
+  connection(NX,NY,X,Y,L).
+
+:- floor(X,Y,L), not reachable(X,Y,L).
