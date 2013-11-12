@@ -7,21 +7,29 @@ binary_term = re.compile("(\w+)\(([\d\w]+),([\d\w]+),([\d\w]+)\)")
 
 def display_maze(facts):
   """turn a list of ansprolog facts into a nice ascii-art maze diagram"""
-  max_x = 1
-  max_y = 1
+  max_x_i = 1
+  max_y_i = 1
+  max_x_o = 1
+  max_y_o = 1
+  
   tile = {}
   floor = {}
   startTile = {}
   wallX = {}
   wallY = {}
+  tree = {}
 
   for fact in facts:
 	m = binary_term.match(fact)
 	if m:
 	  functor, x, y, l = m.groups()
 	  x, y = int(x), int(y)
-	  pos = (x,y)
-	  max_x, max_y = max(x, max_x), max(y, max_y)
+	  pos = (x,y,l)
+	  
+	  if(l == "indoor_dungeon"):
+		max_x_i, max_y_i = max(x, max_x_i), max(y, max_y_i)
+	  if(l == "outdoors"):
+		max_x_o, max_y_o = max(x, max_x_o), max(y, max_y_o)
 	  if functor == "tile":
 		tile[pos] = True
 	  if functor == "floor":
@@ -32,22 +40,27 @@ def display_maze(facts):
 		wallY[pos] = True
 	  if functor == "levelStart":
 		startTile[pos] = True
+	  if functor == "tree":
+		tree[pos] = True
 
-  def code(x,y):
+  def code(x,y,l):
 	"""decide how a maze cell should be typeset"""
-	pos = (x,y)
+	pos = (x,y,l)
 	returnchar = " " #every tile should contain something so the default s
 	if pos in floor:
 	  returnchar = "."
+	if pos in tree:
+	  returnchar = "%"
 	if pos in startTile:
 	  returnchar = "s"
 	return returnchar
 
-  for y in range(0,max_y+1):
+  #display indoors	
+  for y in range(0,max_y_i+1):
 	#print top wall
 	line = ""
-	for x in range(0, max_x+1):
-		pos = (x,y)
+	for x in range(0, max_x_i+1):
+		pos = (x,y,"indoor_dungeon")
 		if(pos in wallX):
 			line = line + " -"
 		else:
@@ -56,15 +69,27 @@ def display_maze(facts):
 	
 	line = ""
 	
-	for x in range(0, max_x+1):		
-		pos = (x,y)
+	for x in range(0, max_x_i+1):		
+		pos = (x,y,"indoor_dungeon")
 		
 		if(pos in wallY):
 			line = line + "|"
 		else:
 			line = line + " "
 		
-		line = line + code(x,y)
+		line = line + code(x,y,"indoor_dungeon")
+	print line
+	
+  print("\n\n\n\n")
+  
+  #display outdoors	
+  for y in range(0,max_y_o+1):
+	
+	line = ""
+	
+	for x in range(0, max_x_o+1):		
+
+		line = line + code(x,y,"outdoors")
 	print line
 
 def main():

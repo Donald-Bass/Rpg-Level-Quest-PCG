@@ -3,7 +3,8 @@
 %----------------------------------------------------------------------------
 
 #const maxAreaSize=32.  %32. %maximum length of a side in number of tiles in an area 
-#const minAreaSize=8. %minimum length of a side in number of tiles in an area
+#const minAreaSize=2. %minimum length of a side in number of tiles in an area
+#const numLevels=2.
 
 areaSizeRange(minAreaSize..maxAreaSize). %range of possible area length/widths
 wallSizeRange(0 .. maxAreaSize). %range of valid wall positions
@@ -15,10 +16,21 @@ floorSizeRange(0 .. (maxAreaSize - 1)). %range of valid floor positions
 %----------------------------------------------------------------------------
 
 level(indoor_dungeon).
+interior(indoor_dungeon).
+level(outdoors).
+exterior(outdoors).
+
+%A level must be either outside or inside, but not both
+:- level(x), not interior(x), not exterior(x). 
+:- level(x), interior(x), exterior(x). 
 
 %determine the size of the area
-1 { levelLengthX(X,L) : areaSizeRange(X) :level(L) } 1. 
-1 { levelLengthY(Y,L) : areaSizeRange(Y) :level(L) } 1.
+{ levelLengthX(X,L) : areaSizeRange(X) :level(L) }. 
+{ levelLengthY(Y,L) : areaSizeRange(Y) :level(L) }. 
+
+%A level cannot have two different lengths
+:- levelLengthX(X1,L), levelLengthX(X2,L), X1 != X2.
+:- levelLengthY(Y1,L), levelLengthY(Y2,L), Y1 != Y2.
 
 %determine valid tile numbers
 lengthXDim(0..(X - 1), L) :- levelLengthX(X, L).
@@ -42,6 +54,7 @@ wallYDim(0..Y , L) :- levelLengthY(Y, L).
 :- wallX(X,Y,L) , not wallXDim(X,L). %all walls must have a valid x
 :- wallX(X,Y,L), levelLengthX(X,L). %check that wall does not start at rightmost x
 :- wallX(X,Y,L), not wallYDim(Y,L). %all walls must have a valid y 
+:- wallX(X,Y,L), not interior(L). %only interiors have walls
 
 
 %wallY(X,Y,L) from X,Y to X,Y+1. The bottommost y is not a valid y for a wall on the y axis it can only be used for walls on the x Axis
@@ -49,6 +62,7 @@ wallYDim(0..Y , L) :- levelLengthY(Y, L).
 :- wallY(X,Y,L) , not wallXDim(X,L). %all walls must have a valid x
 :- wallY(X,Y,L), levelLengthY(Y,L). %check that wall does not start on bottommost y
 :- wallY(X,Y,L), not wallYDim(Y,L).  %all walls must have a valid y
+:- wallY(X,Y,L), not interior(L). %only interiors have walls
 
 %Barricades are walls and anything else that occupies the same space (doors for example0
 barricadeX(X,Y,L) :- wallX(X,Y,L).
@@ -61,12 +75,13 @@ barricadeY(X,Y,L) :- wallY(X,Y,L).
 %define floors
 { floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) : level(L) }.
 :- floor(X,Y,L) , not tile(X,Y,L). %all floors must be on valid tiles
+:- tile(X,Y,L), not floor(X,Y,L), exterior(L). %all tiles must be floors outdoors
 
-%There must be a wall between any floor and non floor tile
-:- floor(X,Y,L) , not floor((X - 1),Y,L), not wallY(X,Y,L).
-:- floor(X,Y,L) , not floor((X + 1),Y,L), not wallY((X + 1),Y,L).
-:- floor(X,Y,L) , not floor(X,(Y - 1),L), not wallX(X,Y,L).
-:- floor(X,Y,L) , not floor(X,(Y + 1),L), not wallX(X,(Y+1),L).
+%There must be a wall between any floor and non floor tile when the level is an interior
+:- floor(X,Y,L) , not floor((X - 1),Y,L), not wallY(X,Y,L), interior(L).
+:- floor(X,Y,L) , not floor((X + 1),Y,L), not wallY((X + 1),Y,L), interior(L).
+:- floor(X,Y,L) , not floor(X,(Y - 1),L), not wallX(X,Y,L), interior(L).
+:- floor(X,Y,L) , not floor(X,(Y + 1),L), not wallX(X,(Y+1),L), interior(L).
 
 %There must be a floor on at least one side of a wall
 :- wallX(X,Y,L), not floor(X,Y,L), not floor(X,(Y-1),L).
@@ -76,12 +91,14 @@ barricadeY(X,Y,L) :- wallY(X,Y,L).
 1 { levelStart(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) : level(L) } 1. 
 
 :- levelStart(X,Y,L), not floor(X,Y,L). %the start must be on a floor
+:- levelStart(X,Y,L), exterior(L). %only interiors have a starting point for now
 
 %The starting tile must be on one of the edges
 nonEdgeXDim(1..(X - 2), L) :- levelLengthX(X, L). %Define non edge tiles
 nonEdgeYDim(1..(Y - 2), L) :- levelLengthY(Y, L). %Define non edge tiles
 :- levelStart(X,Y,L), nonEdgeXDim(X,L), nonEdgeYDim(Y,L). 
 
+%define what tiles are connected to what tiles
 { connection(X1,Y1,X2,Y2, L) : floorSizeRange(X1) : floorSizeRange(Y1) : floorSizeRange(X2) : floorSizeRange(Y2) : level(L) }. 
 
 connectedUp(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), X1 == X2, (Y1 - 1) == Y2, not wallX(X1,Y1,L).
@@ -89,12 +106,16 @@ connectedDown(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), X1 == X2, (Y1 + 
 connectedLeft(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1,L).
 connectedRight(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), Y1 == Y2, (X1 + 1) == X2, not wallY(X2,Y2,L).
 
+%two connected tiles cannot be connected in none of the 4 directions(aka two connected tiles must be connected in one of the four directions)
 :- connection(X1,Y1,X2,Y2,L), not connectedUp(X1,Y1,X2,Y2,L), not connectedDown(X1,Y1,X2,Y2,L), not connectedLeft(X1,Y1,X2,Y2,L), not connectedRight(X1,Y1,X2,Y2,L).
 
+%------------------------------------------------------------------------------------------
+%Define what tiles are reachable
+%------------------------------------------------------------------------------------------
 
-%Every floor tile should be reachable
 step(0,-1 ;; 0,1 ;; 1,0 ;; -1,0). %Set up range of possible ways to move one tile over
 
+%The start of the level is automatically reachable
 reachable(X,Y,L) :- levelStart(X,Y,L).
 
 reachable(NX,NY,L) :-
@@ -104,5 +125,29 @@ reachable(NX,NY,L) :-
   NY = Y + DY,
   floor(NX,NY,L),
   connection(NX,NY,X,Y,L).
+  
+%Every floor tile should be reachable
+:- floor(X,Y,L), not reachable(X,Y,L), interior(L).
 
-:- floor(X,Y,L), not reachable(X,Y,L).
+%-----------------------------------------------------------------------
+% Indoor level Specific Elements
+%------------------------------------------------------------------------
+
+%------------------------------------------------------------------------
+%Outdoor level specific elements
+%------------------------------------------------------------------------
+
+10 { tree(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) : level(L) } 50.
+:-  tree(X,Y,L), not tile(X,Y,L). %trees must be on valid tiles
+:-  tree(X,Y,L), not exterior(L). %trees must be outside
+
+%-----------------------------------------------
+%Planning With help from Answer set programming and plan generation
+%http://www.sciencedirect.com/science/article/pii/S0004370202001868
+%-----------------------------------------------
+
+%-----------------------------------------
+%Fixed Elements
+%------------------------------------
+levelLengthX(8,indoor_dungeon).
+levelLengthY(8,indoor_dungeon).
