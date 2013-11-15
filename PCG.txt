@@ -5,6 +5,10 @@
 #const maxAreaSize=32.  %32. %maximum length of a side in number of tiles in an area 
 #const minAreaSize=2. %minimum length of a side in number of tiles in an area
 #const numLevels=2.
+#const maxNumberOfNpcs=100. %maximum number of npcs that can be generated
+#const maxNumberOfItems=100. %maximum number of itesm that can be generated
+#const maxTargetIndex=100. %should be set to the larger of the two above values
+#const numQuests=1.
 
 areaSizeRange(minAreaSize..maxAreaSize). %range of possible area length/widths
 wallSizeRange(0 .. maxAreaSize). %range of valid wall positions
@@ -74,6 +78,9 @@ barricadeY(X,Y,L) :- wallY(X,Y,L).
 
 %define floors
 { floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) : level(L) }.
+
+%15 { floor(X,Y,indoor_dungeon) : floorSizeRange(X) : floorSizeRange(Y) : level(indoor_dungeon) } :- level(indoor_dungeon).
+
 :- floor(X,Y,L) , not tile(X,Y,L). %all floors must be on valid tiles
 :- tile(X,Y,L), not floor(X,Y,L), exterior(L). %all tiles must be floors outdoors
 
@@ -145,6 +152,54 @@ reachable(NX,NY,L) :-
 %Planning With help from Answer set programming and plan generation
 %http://www.sciencedirect.com/science/article/pii/S0004370202001868
 %-----------------------------------------------
+
+%NPC
+npcNumRange(1..maxNumberOfNpcs). %each npc will be identified with a number (they will be given names during the conversion to an actual module
+{ npc(NPCN) : npcNumRange(NPCN) }. %each npc has an identifying number
+
+{ friendly(NPCN): npcNumRange(NPCN)}. %states that npc N is friendly
+{ hostile(NPCN): npcNumRange(NPCN)}. %states that npc N is hostile
+%npc location
+
+:- friendly(NPCN) , not npc(NPCN). 
+:- hostile(NPCN) , not npc(NPCN).
+:- npc(NPCN), not friendly(NPCN), not hostile(NPCN). %all npcs are either friendly or hostile
+:- npc(NPCN), friendly(NPCN), hostile(NPCN). %no npc is both friendly and hostile
+
+1 { npcLocation(NPCN,X,Y,L) : npcNumRange(NPCN) : floorSizeRange(X) : floorSizeRange(Y) : level(L) } 1 :- npc(NPCN).%for every npc there is one location they are located
+:- npcLocation(NPCN,X,Y,L), not floor(X,Y,L). %NPCS must be located on floor tiles
+
+questNumRange(1..numQuests). %each quest will be each npc will be identified with a number (they will be given names during the conversion to an actual module)
+numQuests { quest(QN) : questNumRange(QN) } numQuests. %each npc has an identifying number
+
+numQuests { questGiver(QN, NPCN) : questNumRange(QN) : npcNumRange(NPCN)} numQuests. %each quest has an npc that gives the quest
+:- questGiver(QN, NPCN), not quest(QN).
+:- questGiver(QN, NPCN), not npc(NPCN).
+:- questGiver(QN, NPCN), hostile(NPCN). %the quest giver cannot be hostile 
+:- questGiver(QN, NPCN1), questGiver(QN, NPCN2), NPCN1 != NPCN2. %the quest giver cannot be hostile 
+
+typeOfObjective(kill).
+%typeOfObjective(fetch).
+
+1 { questObjectiveType(QN, OBJTYPE) : questNumRange(QN) : typeOfObjective(OBJTYPE) } 1 :- quest(QN).
+%:- questObjectiveType(QN, OBJTYPE1), questObjectiveType(QN, OBJTYPE2), OBJTYPE1 != OBJTYPE2.
+
+targetIndexRange(1..maxTargetIndex). %range of possible indexs for the quest target
+1 { questTarget(QN, T) : questNumRange(QN) : targetIndexRange(T) }  1 :- quest(QN). %the target of a quest (a npc/item to fetch/kill)
+:- questTarget(QN1, T), questTarget(QN2, T), questObjectiveType(QN1, TYPE), questObjectiveType(QN2, TYPE), QN1 != QN2. %Two quests cannot have the same target
+
+%Kill quest target rules
+:- questTarget(QN, T), questObjectiveType(QN, kill), not npc(T). %The target must be an actual npcs
+:- questTarget(QN, T), questObjectiveType(QN, kill), not hostile(T). %The target must be a hostile npc
+
+%fetch quest target rules
+
+%{ questType
+
+%quest(q).
+%quest(Q) :- questGiver(Q,N), npc(N).
+
+%1 { quest(Q) }
 
 %-----------------------------------------
 %Fixed Elements
