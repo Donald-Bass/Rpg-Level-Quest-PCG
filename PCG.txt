@@ -8,6 +8,7 @@
 #const maxNumberOfNpcs=100. %maximum number of npcs that can be generated
 #const maxNumberOfItems=100. %maximum number of itesm that can be generated
 #const maxTargetIndex=100. %should be set to the larger of the two above values
+#const maxQuestStages=100. %maximum number of quest stages that can be generated
 #const numQuests=1.
 
 areaSizeRange(minAreaSize..maxAreaSize). %range of possible area length/widths
@@ -77,7 +78,7 @@ barricadeY(X,Y,L) :- wallY(X,Y,L).
 :- barricadeY(X,Y,L) , not barricadeX(X,Y,L), not barricadeX(X-1,Y,L), not barricadeY(X,Y+1,L), not barricadeY(X,Y-1,L).
 
 %define floors
-{ floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) : level(L) }.
+16 { floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) : level(L) } :- level(L).
 
 %15 { floor(X,Y,indoor_dungeon) : floorSizeRange(X) : floorSizeRange(Y) : level(indoor_dungeon) } :- level(indoor_dungeon).
 
@@ -194,15 +195,43 @@ targetIndexRange(1..maxTargetIndex). %range of possible indexs for the quest tar
 
 %fetch quest target rules
 
-%{ questType
+%Quest stage rules
+stageRange(1..maxQuestStages). %range of allowable quest stages
 
-%quest(q).
-%quest(Q) :- questGiver(Q,N), npc(N).
+{ alive(NPCN,S) : npcNumRange(NPCN) : stageRange(S) }. %npc NPCN is alive during stage S
+{ dead(NPCN,S) : npcNumRange(NPCN) : stageRange(S) }. %npc NPCN is dead during stage S
 
-%1 { quest(Q) }
+:- alive(NPCN, S), dead(NPCN, S). %an npc cannot be both dead and alive at the same time
+alive(NPCN,1) :- npc(NPCN). %all npcs are alive at stage 1 FOR NOW
+
+%only bother keeping track of alive/dead status for actual npcs during actual quest stages
+:- alive(NPCN, SN), not npc(NPCN). 
+:- dead(NPCN, SN), not npc(NPCN). 
+:- alive(NPCN, SN), not stage(SN). 
+:- dead(NPCN, SN), not stage(SN). 
+
+
+{ playerAt(L,S) : level(L) : stageRange(S) }. %Level the player is in at Stage S
+
+%Possible actions
+action(getQuest).
+%action(move).
+%action(kill).
+
+1 { stageAction(SN,A) : stageRange(SN) : action(A) } 1. %Action A occurs at stage SN (Note no support yet for multiple branches)
+:- stageAction(SN,A1), stageAction(SN,A2), A1 != A2. %currently only one action can occur per stage
+stage(SN) :- stageAction(SN,A). %if an action occurs at a stage that stage exists
+:- stage(SN), not stage((SN - 1)), SN != 1. %Every stage has to have a stage before it or be the first stage
+
+%Get quest action
+1 { getQuest(NPCN, SN) : stageRange(SN) : npcNumRange(NPCN) } 1 :- stageAction(SN,getQuest). %A getQuest action requires a npc to be specified to get the quest from
+%:- getQuest(NPCN,SN), npcLocation(NPCN,X,Y,L1), playerAt(L2,SN), L1 != L2. %The player must be in the location of the quest giver to get a quest
+:- getQuest(NPCN,SN), not npc(NPCN). %the quest giver must actually exist
+%constraint to check that npc is the quest giver
 
 %-----------------------------------------
 %Fixed Elements
 %------------------------------------
 levelLengthX(8,indoor_dungeon).
 levelLengthY(8,indoor_dungeon).
+playerAt(outdoors,1). 
