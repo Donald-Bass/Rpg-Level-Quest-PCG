@@ -40,8 +40,6 @@ exterior(outdoors).
 %determine valid tile numbers
 lengthXDim(0..(X - 1), L) :- levelLengthX(X, L).
 lengthYDim(0..(Y - 1), L) :- levelLengthY(Y, L).
-#hide lengthXDim/2.
-#hide lengthYDim/2.
 
 %define tiles
 tile(X,Y,L) :- lengthXDim(X,L), lengthYDim(Y,L), level(L).
@@ -114,6 +112,12 @@ connectedDown(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), X1 == X2, (Y1 + 
 connectedLeft(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1,L).
 connectedRight(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), Y1 == Y2, (X1 + 1) == X2, not wallY(X2,Y2,L).
 
+%if a connection exists in any direction the two tiles are connected
+%connection(X1,Y1,X2,Y2,L) :- connectedUp(X1,Y1,X2,Y2,L).
+%connection(X1,Y1,X2,Y2,L) :- connectedDown(X1,Y1,X2,Y2,L).
+%connection(X1,Y1,X2,Y2,L) :- connectedLeft(X1,Y1,X2,Y2,L).
+%connection(X1,Y1,X2,Y2,L) :- connectedRight(X1,Y1,X2,Y2,L).
+
 %two connected tiles cannot be connected in none of the 4 directions(aka two connected tiles must be connected in one of the four directions)
 :- connection(X1,Y1,X2,Y2,L), not connectedUp(X1,Y1,X2,Y2,L), not connectedDown(X1,Y1,X2,Y2,L), not connectedLeft(X1,Y1,X2,Y2,L), not connectedRight(X1,Y1,X2,Y2,L).
 
@@ -169,6 +173,8 @@ npcNumRange(1..maxNumberOfNpcs). %each npc will be identified with a number (the
 
 1 { npcLocation(NPCN,X,Y,L) : npcNumRange(NPCN) : floorSizeRange(X) : floorSizeRange(Y) : level(L) } 1 :- npc(NPCN).%for every npc there is one location they are located
 :- npcLocation(NPCN,X,Y,L), not floor(X,Y,L). %NPCS must be located on floor tiles
+npcLevel(NPCN,L) :- npcLocation(NPCN,X,Y,L). %Make it for easier to check if a npc and the player or two npcs are in the same level
+
 
 questNumRange(1..numQuests). %each quest will be each npc will be identified with a number (they will be given names during the conversion to an actual module)
 numQuests { quest(QN) : questNumRange(QN) } numQuests. %each npc has an identifying number
@@ -179,7 +185,7 @@ numQuests { questGiver(QN, NPCN) : questNumRange(QN) : npcNumRange(NPCN)} numQue
 :- questGiver(QN, NPCN), hostile(NPCN). %the quest giver cannot be hostile 
 :- questGiver(QN, NPCN1), questGiver(QN, NPCN2), NPCN1 != NPCN2. %the quest giver cannot be hostile 
 
-typeOfObjective(kill).
+typeOfObjective(killObjective).
 %typeOfObjective(fetch).
 
 1 { questObjectiveType(QN, OBJTYPE) : questNumRange(QN) : typeOfObjective(OBJTYPE) } 1 :- quest(QN).
@@ -190,8 +196,10 @@ targetIndexRange(1..maxTargetIndex). %range of possible indexs for the quest tar
 :- questTarget(QN1, T), questTarget(QN2, T), questObjectiveType(QN1, TYPE), questObjectiveType(QN2, TYPE), QN1 != QN2. %Two quests cannot have the same target
 
 %Kill quest target rules
-:- questTarget(QN, T), questObjectiveType(QN, kill), not npc(T). %The target must be an actual npcs
-:- questTarget(QN, T), questObjectiveType(QN, kill), not hostile(T). %The target must be a hostile npc
+:- questTarget(QN, T), questObjectiveType(QN, killObjective), not npc(T). %The target must be an actual npcs
+:- questTarget(QN, T), questObjectiveType(QN, killObjective), not hostile(T). %The target must be a hostile npc
+
+:- questTarget(QN, T), not npcLevel(T,indoor_dungeon). %hack for now to force target to be within dungeon
 
 %fetch quest target rules
 
@@ -212,22 +220,52 @@ alive(NPCN,1) :- npc(NPCN). %all npcs are alive at stage 1 FOR NOW
 
 
 { playerAt(L,S) : level(L) : stageRange(S) }. %Level the player is in at Stage S
+playerAt(L,S+1) :- stage(S), stage(S + 1), not stageAction(S,moveAction), playerAt(L,S). %if the player doesn't move during a stage he stays at the same location
+playerAt(L,S+1) :- stage(S), stage(S + 1), stageAction(S,moveAction), move(L,S). %if the player does move he goes to the level he moved to
+
 
 %Possible actions
-action(getQuest).
-%action(move).
-%action(kill).
+action(getQuestAction).
+action(moveAction).
+action(killAction).
 
-1 { stageAction(SN,A) : stageRange(SN) : action(A) } 1. %Action A occurs at stage SN (Note no support yet for multiple branches)
+{ stageAction(SN,A) : stageRange(SN) : action(A) } . %Action A occurs at stage SN (Note no support yet for multiple branches)
 :- stageAction(SN,A1), stageAction(SN,A2), A1 != A2. %currently only one action can occur per stage
 stage(SN) :- stageAction(SN,A). %if an action occurs at a stage that stage exists
 :- stage(SN), not stage((SN - 1)), SN != 1. %Every stage has to have a stage before it or be the first stage
 
+%we don't want uneccessary stages
+totalStages(N) :- N = #count{stageAction(_,_)}.
+#minimize [totalStages(N) = N @ 1].
+
 %Get quest action
-1 { getQuest(NPCN, SN) : stageRange(SN) : npcNumRange(NPCN) } 1 :- stageAction(SN,getQuest). %A getQuest action requires a npc to be specified to get the quest from
-%:- getQuest(NPCN,SN), npcLocation(NPCN,X,Y,L1), playerAt(L2,SN), L1 != L2. %The player must be in the location of the quest giver to get a quest
+:- stageAction(SN,getQuestAction), SN != 1. %hard code for now that the get quest action can only been done the first stage (later if we want to remove this restriction need to keep track of whether the quest has already been accepted or not so it is not accepted twice)
+1 { getQuest(NPCN,SN) : stageRange(SN) : npcNumRange(NPCN) } 1 :- stageAction(SN,getQuestAction). %A getQuest action requires a npc to be specified to get the quest from
+%:- qetQuest(NPCN,SN), not stageAction(SN,getQuestAction).
+:- getQuest(NPCN,SN), npcLevel(NPCN,L1), playerAt(L2,SN), L1 != L2. %The player must be in the location of the quest giver to get a quest
 :- getQuest(NPCN,SN), not npc(NPCN). %the quest giver must actually exist
+:- getQuest(NPCN,SN), not questGiver(NPCN,QN), questNumRange(QN).
 %constraint to check that npc is the quest giver
+
+%move action
+1 { move(L,SN) : stageRange(SN) : level(L) } 1 :- stageAction(SN,moveAction). %A move action requires a level to be specified to move to
+:- move(L,SN), playerAt(L,SN). %A player can't move to a location he already was in
+
+%kill action
+1 { kill(NPCN,SN) : stageRange(SN) : npcNumRange(NPCN) } 1 :- stageAction(SN,killAction). %A getQuest action requires a npc to be specified to kill
+:- kill(NPCN,SN), friendly(NPCN). %you cannot kill a friendly npc
+:- kill(NPCN,SN), npcLevel(NPCN,L1), playerAt(L2,SN), L1 != L2. %The player must be in the location of the npc to kill them
+:- kill(NPCN,SN), dead(NPCN,SN). %the npc cannot already be dead
+
+%alive dead update rules
+alive(NPCN,SN + 1) :- stage(SN), stage(SN + 1), alive(NPCN,SN), not kill(NPCN,SN). %a npc will be alive in subsequent stages if not killed
+dead(NPCN,SN + 1) :- stage(SN), stage(SN + 1), alive(NPCN,SN),  kill(NPCN,SN). %a living npc will be dead in subsequent stages if killed
+dead(NPCN,SN + 1) :- stage(SN), stage(SN + 1), dead(NPCN,SN). %if a npc is dead in a stage it will be dead in all subsequent stages
+
+%questComplete(QN,S) :- dead(NPCN,S), questTarget(QN, NPCN), questObjectiveType(QN, killObjective). %if the target of a quest is dead the quest is complete
+1 { questComplete(QN,S) : questNumRange(QN) : stageRange(S) } 1. %the quest must be complete for at least one stage
+:- questComplete(QN,S), not dead(NPCN,S), not kill(NPCN,S), questTarget(QN, NPCN), questObjectiveType(QN, killObjective). %if the quest objective is to kill the target the quest is only complete if the target is either dead or killed during that stage
+
 
 %-----------------------------------------
 %Fixed Elements
@@ -235,3 +273,24 @@ stage(SN) :- stageAction(SN,A). %if an action occurs at a stage that stage exist
 levelLengthX(8,indoor_dungeon).
 levelLengthY(8,indoor_dungeon).
 playerAt(outdoors,1). 
+stageAction(1,getQuestAction).
+
+%-----------------------------------------
+%
+%------------------------------------
+#hide lengthXDim/2.
+#hide lengthYDim/2.
+#hide tile/3.
+#hide connectedUp/5.
+#hide connectedDown/5.
+#hide connectedRight/5.
+#hide connectedLeft/5.
+#hide connection/5.
+#hide wallSizeRange/1.
+#hide floorSizeRange/1.
+#hide wallXDim/2.
+#hide wallYDim/2.
+#hide barricadeX/3.
+#hide barricadeY/3.
+#hide nonEdgeXDim/2.
+#hide targetIndexRange/1.
