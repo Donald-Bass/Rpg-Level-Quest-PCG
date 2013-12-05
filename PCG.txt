@@ -124,6 +124,9 @@ connection(X1,Y1,X2,Y2,L) :- connectedRight(X1,Y1,X2,Y2,L).
 %two connected tiles cannot be connected in none of the 4 directions
 :- connection(X1,Y1,X2,Y2,L), not connectedUp(X1,Y1,X2,Y2,L), not connectedDown(X1,Y1,X2,Y2,L), not connectedLeft(X1,Y1,X2,Y2,L), not connectedRight(X1,Y1,X2,Y2,L).
 
+%quick hack for testing purposes
+notFloor(X,Y,0) :- not floor(X,Y,0), lengthXDim(X,0), lengthYDim(Y,0).
+
 %------------------------------------------------------------------------------------------
 %Reachable tiles
 %------------------------------------------------------------------------------------------
@@ -282,21 +285,22 @@ dead(NPCN,SN + 1) :- stage(SN), stage(SN + 1), dead(NPCN,SN). %if a npc is dead 
 %-----------------------------------------
 %Fixed Elements
 %------------------------------------
+level(0).
+interior(0).
 level(1).
-interior(1).
-level(2).
-exterior(2).
-:- questTarget(QN, T), not npcLevel(T,1). %hack for now to force target to be within dungeon
+exterior(1).
+:- questTarget(QN, T), not npcLevel(T,0). %hack for now to force target to be within dungeon
 
 
-levelLengthX(8,1).
-levelLengthY(8,1).
-playerAt(2,1). 
+levelLengthX(8,0).
+levelLengthY(8,0).
+playerAt(1,1). 
 stageAction(1,getQuestAction).
 
 %-----------------------------------------
 %Hidden elements
 %------------------------------------
+#hide level/1.
 #hide lengthXDim/2.
 #hide lengthYDim/2.
 #hide tile/3.
@@ -318,3 +322,4 @@ stageAction(1,getQuestAction).
 #hide npcNumRange/1.
 #hide questNumRange/1.
 #hide stageRange/1.
+#hide reachable/3.

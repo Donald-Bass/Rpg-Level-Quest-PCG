@@ -56,6 +56,12 @@ namespace PCG_GUI
             return values[i];
         }
 
+        //convert a value into an int before returning it
+        public int getNumericValue(int i)
+        {
+            return Convert.ToInt32(values[i]);
+        }
+
         //returns a string representation of the fact in the same format clingo would output
         public string getStringRepresentation()
         {

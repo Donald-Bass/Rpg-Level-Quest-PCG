@@ -67,6 +67,9 @@ namespace PCG_GUI
             System.IO.StreamReader file = new System.IO.StreamReader("results.txt");
 
             World test = new World();
+            test.parseClingoFile(file);
+
+            test.drawLevel(1, canvasMap);
 
             //Fact[] allFacts = test.parseClingoFile(file);
 
