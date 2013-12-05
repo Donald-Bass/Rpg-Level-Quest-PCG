@@ -20,10 +20,7 @@ floorSizeRange(0 .. (maxAreaSize - 1)). %range of valid floor positions
 %Level Basics
 %----------------------------------------------------------------------------
 
-level(indoor_dungeon).
-interior(indoor_dungeon).
-level(outdoors).
-exterior(outdoors).
+totalLevels(N) :- N = #count{level(_)}. %count the number of levels
 
 %A level must be either outside or inside, but not both
 :- level(x), not interior(x), not exterior(x). 
@@ -214,8 +211,6 @@ targetIndexRange(1..maxTargetIndex). %range of possible indexs for the quest tar
 :- questTarget(QN, T), questObjectiveType(QN, killObjective), not npc(T). %The target must be an actual npcs
 :- questTarget(QN, T), questObjectiveType(QN, killObjective), not hostile(T). %The target must be a hostile npc
 
-:- questTarget(QN, T), not npcLevel(T,indoor_dungeon). %hack for now to force target to be within dungeon
-
 %fetch quest target rules
 %to come later
 
@@ -253,8 +248,8 @@ stage(SN) :- stageAction(SN,A). %if an action occurs at a stage that stage exist
 :- stage(SN), not stage((SN - 1)), SN != 1. %Every stage has to have a stage before it or be the first stage
 
 %we don't want uneccessary stages
-totalStages(N) :- N = #count{stageAction(_,_)}. %count the number of stages
 %#minimize [totalStages(N) = N @ 1].
+totalStages(N) :- N = #count{stageAction(_,_)}. %count the number of stages
 
 %Get quest action. Currently this only supports a single quest existing
 :- stageAction(SN,getQuestAction), SN != 1. %hard code for now that the get quest action can only been done the first stage (later if we want to remove this restriction need to keep track of whether the quest has already been accepted or not so it is not accepted twice)
@@ -287,9 +282,16 @@ dead(NPCN,SN + 1) :- stage(SN), stage(SN + 1), dead(NPCN,SN). %if a npc is dead 
 %-----------------------------------------
 %Fixed Elements
 %------------------------------------
-levelLengthX(8,indoor_dungeon).
-levelLengthY(8,indoor_dungeon).
-playerAt(outdoors,1). 
+level(1).
+interior(1).
+level(2).
+exterior(2).
+:- questTarget(QN, T), not npcLevel(T,1). %hack for now to force target to be within dungeon
+
+
+levelLengthX(8,1).
+levelLengthY(8,1).
+playerAt(2,1). 
 stageAction(1,getQuestAction).
 
 %-----------------------------------------

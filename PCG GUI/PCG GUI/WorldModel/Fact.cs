@@ -18,9 +18,15 @@ namespace PCG_GUI
         }
 
         //constructor that parses a fact from a clingo output file. The string factString should start with the predicate and end with the )
+        //TODO: ? Add error checking
         public Fact(string factString) 
         {
+            int parIndex; //index of the (
 
+            parIndex = factString.IndexOf("("); //find where the ( is ending the name of the predicate
+            predicate = factString.Substring(0, parIndex);
+
+            values = factString.Substring(parIndex + 1, factString.Count() - parIndex - 2).Split(',');
         }
 
         public Fact(string predicate, String[] values)

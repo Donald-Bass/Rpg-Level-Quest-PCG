@@ -61,7 +61,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Fact.cs" />
+    <Compile Include="WorldModel\Level.cs" />
+    <Compile Include="WorldModel\Tile.cs" />
+    <Compile Include="WorldModel\World.cs" />
+    <Compile Include="WorldModel\Fact.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

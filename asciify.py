@@ -26,9 +26,9 @@ def display_maze(facts):
 	  x, y = int(x), int(y)
 	  pos = (x,y,l)
 	  
-	  if(l == "indoor_dungeon"):
+	  if(l == "1"):
 		max_x_i, max_y_i = max(x, max_x_i), max(y, max_y_i)
-	  if(l == "outdoors"):
+	  if(l == "2"):
 		max_x_o, max_y_o = max(x, max_x_o), max(y, max_y_o)
 	  if functor == "tile":
 		tile[pos] = True
@@ -60,7 +60,7 @@ def display_maze(facts):
 	#print top wall
 	line = ""
 	for x in range(0, max_x_i+1):
-		pos = (x,y,"indoor_dungeon")
+		pos = (x,y,"1")
 		if(pos in wallX):
 			line = line + " -"
 		else:
@@ -70,14 +70,14 @@ def display_maze(facts):
 	line = ""
 	
 	for x in range(0, max_x_i+1):		
-		pos = (x,y,"indoor_dungeon")
+		pos = (x,y,"1")
 		
 		if(pos in wallY):
 			line = line + "|"
 		else:
 			line = line + " "
 		
-		line = line + code(x,y,"indoor_dungeon")
+		line = line + code(x,y,"1")
 	print line
 	
   print("\n\n\n\n")
@@ -89,7 +89,7 @@ def display_maze(facts):
 	
 	for x in range(0, max_x_o+1):		
 
-		line = line + code(x,y,"outdoors")
+		line = line + code(x,y,"2")
 	print line
 
 def main():
