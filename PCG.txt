@@ -281,22 +281,6 @@ dead(NPCN,SN + 1) :- stage(SN), stage(SN + 1), dead(NPCN,SN). %if a npc is dead 
 1 { questComplete(QN,S) : questNumRange(QN) : stageRange(S) } 1. %the quest must be complete for at least one stage
 :- questComplete(QN,S), not dead(NPCN,S), not kill(NPCN,S), questTarget(QN, NPCN), questObjectiveType(QN, killObjective). %if the quest objective is to kill the target the quest is only complete if the target is either dead or killed during that stage
 
-
-%-----------------------------------------
-%Fixed Elements
-%------------------------------------
-level(0).
-interior(0).
-level(1).
-exterior(1).
-:- questTarget(QN, T), not npcLevel(T,0). %hack for now to force target to be within dungeon
-
-
-levelLengthX(8,0).
-levelLengthY(8,0).
-playerAt(1,1). 
-stageAction(1,getQuestAction).
-
 %-----------------------------------------
 %Hidden elements
 %------------------------------------

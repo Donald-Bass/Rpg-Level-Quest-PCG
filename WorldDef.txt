@@ -1,0 +1,14 @@
+%-----------------------------------------
+%Fixed Elements
+%------------------------------------
+level(0).
+interior(0).
+level(1).
+exterior(1).
+:- questTarget(QN, T), not npcLevel(T,0). %hack for now to force target to be within dungeon
+
+
+levelLengthX(8,0).
+levelLengthY(8,0).
+playerAt(1,1). 
+stageAction(1,getQuestAction).

@@ -69,7 +69,7 @@ namespace PCG_GUI
             World test = new World();
             test.parseClingoFile(file);
 
-            test.drawLevel(1, canvasMap);
+            test.drawLevel(0, canvasMap);
 
             //Fact[] allFacts = test.parseClingoFile(file);
 
