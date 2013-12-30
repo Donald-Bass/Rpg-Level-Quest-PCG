@@ -1,4 +1,5 @@
 ﻿using PCG_GUI.Facts;
+using PCG_GUI.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,62 +25,18 @@ namespace PCG_GUI
         public MainWindow()
         {
             InitializeComponent();
-            drawGrid(32, 32);
+            LevelViewModel viewModel = new LevelViewModel();
+            DataContext = viewModel;
         }
 
-        private void drawGrid(int xLength, int yLength)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            //draw horizontal lines
-            for(int i = 0; i < yLength + 1; i++)
-            {
-                Line gridLine = new Line();
-                gridLine.Stroke = System.Windows.Media.Brushes.Black;
-                gridLine.X1 = 0;
-                gridLine.X2 = xLength * 20;
-                gridLine.Y1 = i * 20;
-                gridLine.Y2 = i * 20;
-                gridLine.StrokeThickness = 1;
 
-                canvasMap.Children.Add(gridLine);
-            }
-
-            //draw vertical lines
-            for (int i = 0; i < xLength + 1; i++)
-            {
-                Line gridLine = new Line();
-                gridLine.Stroke = System.Windows.Media.Brushes.Black;
-                gridLine.X1 = i * 20;
-                gridLine.X2 = i * 20;
-                gridLine.Y1 = 0;
-                gridLine.Y2 = yLength * 20;
-                gridLine.StrokeThickness = 1;
-
-                canvasMap.Children.Add(gridLine);
-            }
+            System.Windows.Data.CollectionViewSource levelViewModelViewSource = ((System.Windows.Data.CollectionViewSource)(this.FindResource("levelViewModelViewSource")));
+            // Load data by setting the CollectionViewSource.Source property:
+            // levelViewModelViewSource.Source = [generic data source]
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
-        {
-            //String[] valueTest = new String[2];
-
-            //valueTest[0] = "5";
-           //valueTest[1] = "7";
-            System.IO.StreamReader file = new System.IO.StreamReader("results.txt");
-
-            World test = new World();
-            test.parseClingoFile(file);
-
-            test.drawLevel(0, canvasMap);
-
-            //Fact[] allFacts = test.parseClingoFile(file);
-
-            file.Close();
-
-            //foreach(Fact f in allFacts)
-            //{
-            //    System.Console.WriteLine(f.getStringRepresentation());
-            //}
-        }
 
     }
 }

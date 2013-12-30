@@ -237,9 +237,10 @@ namespace PCG_GUI.Facts
             }
         }
 
-        public void drawLevel(int i, Canvas c)
+        //setters and getters
+        public Level getLevel(int levelNum)
         {
-            allLevels[i].drawLevel(c);
+            return allLevels[levelNum];
         }
     }
 
