@@ -16,7 +16,7 @@ namespace PCG_GUI.Facts
         public Tile[,] levelMap { get; private set; } //all the tiles making up the level[x,y]. 0,0 is upper left
         public levelType typeOfLevel { get; set; }
 
-        public string levelName; //TODO FIGURE OUT NAME GEN
+        public string levelName { get; set; } //TODO FIGURE OUT NAME GEN
 
         public Level(int xDim, int yDim)
         {
@@ -31,6 +31,8 @@ namespace PCG_GUI.Facts
                     levelMap[i, j] = new Tile();
                 }
             }
+
+            levelName = "";
 
             typeOfLevel = levelType.interior; //default to interior for now
 
@@ -99,6 +101,19 @@ namespace PCG_GUI.Facts
 
             curFact = new Fact("levelLengthY", new String[] { yDimension.ToString(), levelNumber.ToString() });
             file.Write(curFact.getStringRepresentation() + " ");
+
+            //output level type
+            if (typeOfLevel == levelType.interior)
+            {
+                curFact = new Fact("interior", new String[] { levelNumber.ToString() });
+            }
+
+            else
+            {
+                curFact = new Fact("exterior", new String[] { levelNumber.ToString() });
+            }
+            file.Write(curFact.getStringRepresentation() + " ");
+
 
             for(int i = 0; i < xDimension; i++)
             {

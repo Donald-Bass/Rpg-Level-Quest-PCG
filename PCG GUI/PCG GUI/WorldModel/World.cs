@@ -17,15 +17,16 @@ namespace PCG_GUI.Facts
         private List<Fact> levelDimensionFacts; //facts storying dimensions of levels
         public int numLevels { get; private set; } //how many different levels are there
         int[,] levelDimensions; //dimensions of each level. First index is level number second is x/y (0 is x dimension 1 is y dimension)
-        Level[] allLevels; //all levels
+        private List<Level> allLevels; //all levels
 
         public World()
         {
-            numLevels = -1;
+            numLevels = 0;
             npcFacts = new List<Fact>();
             levelFacts = new List<Fact>();
             levelDimensionFacts = new List<Fact>();
-            questFacts = new List<Fact>(); 
+            questFacts = new List<Fact>();
+            allLevels = new List<Level>();
         }
 
         public void parseClingoFile(System.IO.StreamReader file)
@@ -194,12 +195,10 @@ namespace PCG_GUI.Facts
                 processDimensionFact(f);
             }
 
-            //generate level objects
-            allLevels = new Level[numLevels];
-
             for(int i = 0; i < numLevels; i++)
             {
-                allLevels[i] = new Level(levelDimensions[i, 0], levelDimensions[i, 1]);
+                Level newLevel = new Level(levelDimensions[i, 0], levelDimensions[i, 1]);
+                allLevels.Add(newLevel);
             }
         }
 
@@ -266,6 +265,14 @@ namespace PCG_GUI.Facts
         public Level getLevel(int levelNum)
         {
             return allLevels[levelNum];
+        }
+
+        //add an additional level
+        public void addLevel(int x, int y)
+        {
+            Level newLevel = new Level(x, y);
+            allLevels.Add(newLevel);
+            numLevels++;
         }
     }
 

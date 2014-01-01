@@ -15,20 +15,48 @@ namespace PCG_GUI.ViewModels
     class LevelViewModel : INotifyPropertyChanged
     {
         public ObservableCollection<Shape> levelGraphic { get; private set; }
+        public ObservableCollection<levelData> levelList { get; private set; }
         public String X_Dimension { get; private set; }
         public String Y_Dimension { get; private set; }
-        public int NumberOfLevels { get; private set; }
+        public int NumberOfLevels { get; private set; } //TODO: refactor this out and replace with references to number of levels in world?
+
+        public Boolean levelInterior { get; private set;}
+
+
+        public Boolean levelExterior { get; private set; }
+
+        public Boolean worldAttached { get; private set; } //is there a world attached to the view model
 
         private World world;
         private int curLevel;
+        public int selectedLevel  {
+            get 
+            {
+                return curLevel; 
+            }
+            set 
+            {
+                 curLevel = value;
+                 changeLevel(value);
+                 RaisePropertyChanged("selectedLevel");
+
+            }
+        }
+        
 
         public LevelViewModel()
         {
+            NumberOfLevels = 0;
             world = null;
             levelGraphic = new ObservableCollection<Shape>();
+            levelList = new ObservableCollection<levelData>();
             X_Dimension = "";
             Y_Dimension = "";
-            curLevel = -1;
+            selectedLevel = -1;
+
+            levelInterior = false;
+            levelExterior = false;
+            worldAttached = false;
         }
 
         //open the world contained in Filename
@@ -48,9 +76,29 @@ namespace PCG_GUI.ViewModels
 
             if (NumberOfLevels >= 1) //if there is at least one level
             {
-                changeLevel(0); //open the first level by default
+                selectedLevel = 0; //open the first level by default
             }
             file.Close();
+
+            setUpLevelList();
+            worldAttached = true;
+            RaisePropertyChanged("worldAttached");
+        }
+
+        public void setUpLevelList()
+        {
+            if(world != null)
+            {
+                levelList.Clear();
+
+                for(int i = 0; i < world.numLevels; i++)
+                {
+                    levelData curLevelData = new levelData();
+                    curLevelData.levelName = world.getLevel(i).levelName;
+                    curLevelData.levelNumber = i;
+                    levelList.Add(curLevelData);
+                }
+            }
         }
 
         public void save(string Filename)
@@ -68,23 +116,41 @@ namespace PCG_GUI.ViewModels
         {
             closeWorld(); //close the previous world
             world = new World();
+            worldAttached = true;
+            NumberOfLevels = 0;
+            RaisePropertyChanged("worldAttached");
         }
 
         public void changeLevel(int level)
         {
-            if (world != null) //sanity check
+            if (world != null && level != -1) //sanity check
             {
 
                 if(level < NumberOfLevels) //if the level to change to actually exists
                 {
 
-                curLevel = level;
+                //curLevel = level;
                 X_Dimension = world.getLevel(curLevel).xDimension.ToString();
                 Y_Dimension = world.getLevel(curLevel).yDimension.ToString();
                 drawLevel(curLevel);
 
+                if(world.getLevel(curLevel).typeOfLevel == levelType.interior)
+                {
+                    levelInterior = true;
+                    levelExterior = false;
+                }
+                    
+                else
+                {
+                    levelInterior = false;
+                    levelExterior = true;
+
+                }
+
                 RaisePropertyChanged("X_Dimension");
                 RaisePropertyChanged("Y_Dimension");
+                RaisePropertyChanged("levelInterior");
+                RaisePropertyChanged("levelExterior");
                 }
             }
         }
@@ -95,24 +161,55 @@ namespace PCG_GUI.ViewModels
         }
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public void setLevelType(levelType type)
+        {
+            if (selectedLevel != -1)
+            {
+
+                if (type == levelType.interior)
+                {
+                    levelInterior = true;
+                    levelExterior = false;
+                }
+
+                else
+                {
+                    levelInterior = false;
+                    levelExterior = true;
+                }
+
+                world.getLevel(selectedLevel).typeOfLevel = type;
+
+                RaisePropertyChanged("levelInterior");
+                RaisePropertyChanged("levelExterior");
+
+            }
+        }
+
         //Removes the world model attached to the view model
         public void closeWorld()
         {
             //remove all stored values
             world = null;
             curLevel = -1;
-            NumberOfLevels = -1;
+            NumberOfLevels = 0;
             X_Dimension = "";
             Y_Dimension = "";
-
-            //System.Console.WriteLine(levelGraphic.Count);
+            levelInterior = false;
+            levelExterior = false;
 
             levelGraphic.Clear();
-            //System.Console.WriteLine(levelGraphic.Count);
+            levelList.Clear();
 
             //tell gui values have been removed
             RaisePropertyChanged("X_Dimension");
             RaisePropertyChanged("Y_Dimension");
+            RaisePropertyChanged("levelInterior");
+            RaisePropertyChanged("levelExterior");
+
+            worldAttached = false;
+            RaisePropertyChanged("worldAttached");
+
         }
 
         private void drawLevel(int levelNum)
@@ -216,6 +313,26 @@ namespace PCG_GUI.ViewModels
             }
         }
 
+        //level display list type stuff
+        public class levelData
+        {
+            public int levelNumber { get; set; }
+            public string levelName { get; set; }
+        }
+
+
+        public void addLevel(int x, int y)
+        {
+            //validate numbers here eventually
+            world.addLevel(x, y);
+            NumberOfLevels++;
+
+            levelData newLevelData = new levelData();
+            newLevelData.levelNumber = NumberOfLevels - 1;
+            newLevelData.levelName = "";
+            levelList.Add(newLevelData);
+            selectedLevel = NumberOfLevels - 1; //select the new level
+        }
 
     }
 

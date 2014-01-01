@@ -84,5 +84,26 @@ namespace PCG_GUI
             viewModel.closeWorld();
         }
 
+        private void InteriorButton_Checked(object sender, RoutedEventArgs e)
+        {
+            viewModel.setLevelType(levelType.interior);
+        }
+
+        private void ExteriorButton_Checked(object sender, RoutedEventArgs e)
+        {
+            viewModel.setLevelType(levelType.exterior);
+        }
+
+        private void CreateLevel_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                viewModel.addLevel(Convert.ToInt32(NewLevelSizeX.Text), Convert.ToInt32(NewLevelSizeY.Text));
+            }
+            catch (FormatException exception)
+            {
+               System.Console.WriteLine("error");
+            }
+        }
     }
 }

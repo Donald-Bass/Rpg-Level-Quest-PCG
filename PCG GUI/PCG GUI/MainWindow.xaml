@@ -24,11 +24,16 @@
             </ItemsControl>
         </Border>
         <Label Content="Map" HorizontalAlignment="Left" Margin="29,299,0,0" VerticalAlignment="Top"/>
-        <Grid Margin="587,330,180,470">
-            <Label Content="X Length:" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.45,-0.038"/>
-            <TextBox HorizontalAlignment="Left" Height="23" Margin="65,3,0,0" TextWrapping="Wrap" Text="{Binding X_Dimension}" VerticalAlignment="Top" Width="57" Focusable="False" IsEnabled="False"/>
+        <Grid Margin="277,278,490,522">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="57*"/>
+                <ColumnDefinition Width="16*"/>
+                <ColumnDefinition Width="61*"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="X Length:" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.45,-0.038" Grid.ColumnSpan="2"/>
+            <TextBox HorizontalAlignment="Left" Height="23" Margin="8,3,0,0" TextWrapping="Wrap" Text="{Binding X_Dimension}" VerticalAlignment="Top" Width="57" Focusable="False" IsEnabled="False" Grid.Column="1" Grid.ColumnSpan="2"/>
         </Grid>
-        <Grid Margin="587,361,181,439">
+        <Grid Margin="416,278,352,522">
             <Label Content="Y Length:" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.45,-0.038"/>
             <TextBox HorizontalAlignment="Left" Height="23" Margin="64,3,0,0" TextWrapping="Wrap" Text="{Binding Y_Dimension}" VerticalAlignment="Top" Width="57" Focusable="False" IsEnabled="False"/>
         </Grid>
@@ -39,8 +44,33 @@
                 <MenuItem Header="_Open" Click="Menu_Open" />
                 <MenuItem Header="_Save" Click="Menu_Save" />
                 <MenuItem Header="_Close" Click="Menu_Close" />
-                </MenuItem>
+            </MenuItem>
         </Menu>
+        <Grid Margin="793,330,26,460">
+            <RadioButton x:Name="InteriorButton" Content="Interior" HorizontalAlignment="Left" VerticalAlignment="Top" GroupName="LevelType" IsChecked="{Binding levelInterior}" Checked="InteriorButton_Checked" IsEnabled="{Binding worldAttached}"/>
+            <RadioButton x:Name="ExteriorButton" Content="Exterior" HorizontalAlignment="Left" Margin="0,21,0,0" VerticalAlignment="Top" GroupName="LevelType" IsChecked="{Binding levelExterior}" Checked="ExteriorButton_Checked" IsEnabled="{Binding worldAttached}"/>
+        </Grid>
+
+        <ListView ItemsSource="{Binding levelList}" Margin="566,330,151,341" SelectedIndex="{Binding selectedLevel}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Width="40" Header="Level" 
+              DisplayMemberBinding="{Binding levelNumber}"  />
+                    <GridViewColumn Width="140" Header="Name"  
+              DisplayMemberBinding="{Binding levelName}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="130" Margin="566,548,0,0" VerticalAlignment="Top" Width="199">
+            <Grid>
+                <Label Content="X Size" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="NewLevelSizeX" HorizontalAlignment="Left" Height="23" Margin="68,13,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+                <Label Content="Y Size" HorizontalAlignment="Left" Margin="10,49,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="NewLevelSizeY" HorizontalAlignment="Left" Height="23" Margin="68,52,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+                <Button x:Name="CreateLevel" Content="Create New Level" HorizontalAlignment="Left" VerticalAlignment="Top" Width="105" Margin="10,93,0,0" Click="CreateLevel_Click" IsEnabled="{Binding worldAttached}"/>
+            </Grid>
+        </Border>
+        <Label Content="Add Level" HorizontalAlignment="Left" Margin="566,517,0,0" VerticalAlignment="Top"/>
     </Grid>
 
 
