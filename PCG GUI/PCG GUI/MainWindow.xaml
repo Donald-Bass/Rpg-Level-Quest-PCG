@@ -7,7 +7,7 @@
     </Window.Resources>
     <Grid>
         <Border BorderBrush="Black" BorderThickness="1" Margin="29,330,352,34">
-            <ItemsControl ItemsSource="{Binding levelGraphic}"
+            <ItemsControl x:Name="LevelViewer" ItemsSource="{Binding levelGraphic}"
         		HorizontalAlignment="Left" Height="461" VerticalAlignment="Top" Width="507" Margin="0,0,-1,-1">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -35,10 +35,10 @@
 
         <Menu Width="901" Margin="0,0,0,823" HorizontalAlignment="Left" Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}">
             <MenuItem Header="_File">
-                <MenuItem Header="_New" />
-                <MenuItem Header="_Open" />
-                <MenuItem Header="_Save" />
-                <MenuItem Header="_Close" />
+                <MenuItem Header="_New" Click="Menu_New" />
+                <MenuItem Header="_Open" Click="Menu_Open" />
+                <MenuItem Header="_Save" Click="Menu_Save" />
+                <MenuItem Header="_Close" Click="Menu_Close" />
                 </MenuItem>
         </Menu>
     </Grid>

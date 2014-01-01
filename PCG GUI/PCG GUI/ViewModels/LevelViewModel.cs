@@ -8,43 +8,85 @@ using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows.Shapes;
 using System.Windows.Media;
+using System.Collections.ObjectModel;
 
 namespace PCG_GUI.ViewModels
 {
     class LevelViewModel : INotifyPropertyChanged
     {
-        public List<Shape> levelGraphic { get; private set;}
+        public ObservableCollection<Shape> levelGraphic { get; private set; }
         public String X_Dimension { get; private set; }
         public String Y_Dimension { get; private set; }
+        public int NumberOfLevels { get; private set; }
 
         private World world;
         private int curLevel;
 
         public LevelViewModel()
         {
-            System.Console.WriteLine("Test");
+            world = null;
+            levelGraphic = new ObservableCollection<Shape>();
+            X_Dimension = "";
+            Y_Dimension = "";
+            curLevel = -1;
+        }
 
-            levelGraphic = new List<Shape>();
+        //open the world contained in Filename
+        public void open(string Filename)
+        {
+            if (world != null)
+            {
+                closeWorld(); //close the world currently open
+            }
 
-            System.IO.StreamReader file = new System.IO.StreamReader("results.txt");
-
+            //load the new world
             world = new World();
+            System.IO.StreamReader file = new System.IO.StreamReader(Filename);
             world.parseClingoFile(file);
 
-            changeLevel(0);
+            NumberOfLevels = world.numLevels;
 
+            if (NumberOfLevels >= 1) //if there is at least one level
+            {
+                changeLevel(0); //open the first level by default
+            }
             file.Close();
         }
 
-        private void changeLevel(int level)
+        public void save(string Filename)
         {
-            curLevel = level;
-            X_Dimension = world.getLevel(curLevel).xDimension.ToString();
-            Y_Dimension = world.getLevel(curLevel).yDimension.ToString();
-            drawLevel(curLevel);
+            if (world != null)
+            {           
+                System.IO.StreamWriter file = new System.IO.StreamWriter(Filename);
+                world.writeClingoFile(file);
+                file.Close();
+            }
 
-            RaisePropertyChanged("X_Dimension");
-            RaisePropertyChanged("Y_Dimension");
+        }
+
+        public void newWorld()
+        {
+            closeWorld(); //close the previous world
+            world = new World();
+        }
+
+        public void changeLevel(int level)
+        {
+            if (world != null) //sanity check
+            {
+
+                if(level < NumberOfLevels) //if the level to change to actually exists
+                {
+
+                curLevel = level;
+                X_Dimension = world.getLevel(curLevel).xDimension.ToString();
+                Y_Dimension = world.getLevel(curLevel).yDimension.ToString();
+                drawLevel(curLevel);
+
+                RaisePropertyChanged("X_Dimension");
+                RaisePropertyChanged("Y_Dimension");
+                }
+            }
         }
 
         internal void RaisePropertyChanged(string prop)
@@ -53,23 +95,46 @@ namespace PCG_GUI.ViewModels
         }
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void drawLevel(int levelNum)
+        //Removes the world model attached to the view model
+        public void closeWorld()
         {
+            //remove all stored values
+            world = null;
+            curLevel = -1;
+            NumberOfLevels = -1;
+            X_Dimension = "";
+            Y_Dimension = "";
+
+            //System.Console.WriteLine(levelGraphic.Count);
+
             levelGraphic.Clear();
+            //System.Console.WriteLine(levelGraphic.Count);
 
-            Level levelToDraw = world.getLevel(levelNum);
+            //tell gui values have been removed
+            RaisePropertyChanged("X_Dimension");
+            RaisePropertyChanged("Y_Dimension");
+        }
 
-            for (int i = 0; i < levelToDraw.xDimension; i++)
+        private void drawLevel(int levelNum)
+        {
+            if (world != null) //sanity check
             {
-                for (int j = 0; j < levelToDraw.yDimension; j++)
+                System.Console.WriteLine("Test");
+
+                levelGraphic.Clear();
+
+                Level levelToDraw = world.getLevel(levelNum);
+
+                for (int i = 0; i < levelToDraw.xDimension; i++)
                 {
-                    drawTile(levelToDraw.levelMap[i,j], i, j);
+                    for (int j = 0; j < levelToDraw.yDimension; j++)
+                    {
+                        drawTile(levelToDraw.levelMap[i, j], i, j);
+                    }
                 }
+
+                drawWallGrid(levelToDraw);
             }
-
-            drawWallGrid(levelToDraw);
-
-            RaisePropertyChanged("levelGraphic");
         }
         private void drawTile(Tile t, int x, int y)
         {

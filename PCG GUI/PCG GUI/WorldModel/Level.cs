@@ -88,5 +88,61 @@ namespace PCG_GUI.Facts
             }
         }
 
+        //write the contents of the level to file (levelNumber is the number to give to this level in the file)
+        public void write(System.IO.StreamWriter file, int levelNumber)
+        {
+            Fact curFact;
+
+            //output dimensions
+            curFact = new Fact("levelLengthX", new String[] { xDimension.ToString(), levelNumber.ToString() });
+            file.Write(curFact.getStringRepresentation() + " ");
+
+            curFact = new Fact("levelLengthY", new String[] { yDimension.ToString(), levelNumber.ToString() });
+            file.Write(curFact.getStringRepresentation() + " ");
+
+            for(int i = 0; i < xDimension; i++)
+            {
+                for (int j = 0; j < yDimension; j++)
+                {
+                    if(levelMap[i,j].tType == TileType.floor)
+                    {
+                        curFact = new Fact("floor", new String[] { i.ToString(), j.ToString(), levelNumber.ToString() });
+                        file.Write(curFact.getStringRepresentation() + " ");
+                    }
+
+                    else if (levelMap[i, j].tType == TileType.blocked)
+                    {
+                        //don't do anything yet. Representing a blocked floor is only necessary when passing to clingo and there are several other format changes necessary for that as well
+                    }
+
+                    //check for north and west walls (south and east walls will normally be caught by tile to south/east
+                    if(levelMap[i,j].westWall)
+                    {
+                        curFact = new Fact("wallY", new String[] { i.ToString(), j.ToString(), levelNumber.ToString() });
+                        file.Write(curFact.getStringRepresentation() + " ");
+                    }
+
+                    if (levelMap[i, j].northWall)
+                    {
+                        curFact = new Fact("wallX", new String[] { i.ToString(), j.ToString(), levelNumber.ToString() });
+                        file.Write(curFact.getStringRepresentation() + " ");
+                    }
+
+                    //if at the east or south edges check for east/south wall
+                    if(i == xDimension - 1 && levelMap[i,j].eastWall)
+                    {
+                        curFact = new Fact("wallY", new String[] { (i + 1).ToString(), j.ToString(), levelNumber.ToString() });
+                        file.Write(curFact.getStringRepresentation() + " ");
+                    }
+
+                    if (j == yDimension - 1 && levelMap[i, j].southWall)
+                    {
+                        curFact = new Fact("wallX", new String[] { i.ToString(), (j + 1).ToString(), levelNumber.ToString() });
+                        file.Write(curFact.getStringRepresentation() + " ");
+                    }
+                }
+            }
+        }
+
     }
 }

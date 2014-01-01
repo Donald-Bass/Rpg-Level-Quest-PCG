@@ -22,21 +22,67 @@ namespace PCG_GUI
     /// </summary>
     public partial class MainWindow : Window
     {
+        LevelViewModel viewModel;
+
         public MainWindow()
         {
             InitializeComponent();
-            LevelViewModel viewModel = new LevelViewModel();
+            viewModel = new LevelViewModel();
             DataContext = viewModel;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
 
-            System.Windows.Data.CollectionViewSource levelViewModelViewSource = ((System.Windows.Data.CollectionViewSource)(this.FindResource("levelViewModelViewSource")));
-            // Load data by setting the CollectionViewSource.Source property:
-            // levelViewModelViewSource.Source = [generic data source]
         }
 
+        private void Menu_New(object sender, RoutedEventArgs e)
+        {
+            viewModel.newWorld();
+        }
+
+        private void Menu_Open(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+
+            // Set filter for file extension and default file extension
+            dlg.Filter = "PCG files (*.pcg)| *.pcg| All files (*.*)| *.*";
+
+            // Display OpenFileDialog by calling ShowDialog method
+            Nullable<bool> result = dlg.ShowDialog();
+
+            // Get the selected file name and display in a TextBox
+            if (result == true)
+            {
+                // Open document
+                string filename = dlg.FileName;
+                viewModel.open(filename);
+            }
+        }
+
+        private void Menu_Save(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+
+            // Set filter for file extension and default file extension
+            dlg.Filter = "PCG files (*.pcg)| *.pcg";
+
+            // Display OpenFileDialog by calling ShowDialog method
+            Nullable<bool> result = dlg.ShowDialog();
+
+            // Get the selected file name and display in a TextBox
+            if (result == true)
+            {
+                // Open document
+                string filename = dlg.FileName;
+                viewModel.save(filename);
+            }
+        }
+
+        private void Menu_Close(object sender, RoutedEventArgs e)
+        {
+            viewModel.closeWorld();
+        }
 
     }
 }

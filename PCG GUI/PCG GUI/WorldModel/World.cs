@@ -15,7 +15,7 @@ namespace PCG_GUI.Facts
         private List<Fact> questFacts; //facts necessary to build the level
         private List<Fact> levelFacts; //facts necessary to build the level
         private List<Fact> levelDimensionFacts; //facts storying dimensions of levels
-        int numLevels; //how many different levels are there
+        public int numLevels { get; private set; } //how many different levels are there
         int[,] levelDimensions; //dimensions of each level. First index is level number second is x/y (0 is x dimension 1 is y dimension)
         Level[] allLevels; //all levels
 
@@ -51,6 +51,31 @@ namespace PCG_GUI.Facts
             buildLevels();
 
             //return allFacts;
+        }
+
+        public void writeClingoFile(System.IO.StreamWriter file)
+        {
+            file.WriteLine(""); //the clingo output has a unecessary line at the start so add an blank line to match the formula
+
+            Fact totalLevels = new Fact("totalLevels", new String[] { numLevels.ToString() });
+            file.Write(totalLevels.getStringRepresentation() + " ");
+
+            //placeholder till npcs are actually stored in memory
+            foreach (Fact f in npcFacts)
+            {
+                file.Write(f.getStringRepresentation() + " ");
+            }
+
+            //placeholder till quests are actually stored in memory
+            foreach (Fact f in questFacts)
+            {
+                file.Write(f.getStringRepresentation() + " ");
+            }
+
+            for(int i = 0; i < numLevels; i++)
+            {
+                allLevels[i].write(file, i);
+            }
         }
 
         //does the inital processing of facts. The order is not all that reliable so store everything that has any prequristies to be processed
