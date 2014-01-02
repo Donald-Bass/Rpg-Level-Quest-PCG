@@ -6,7 +6,7 @@
     <Window.Resources>
     </Window.Resources>
     <Grid>
-        <Border BorderBrush="Black" BorderThickness="1" Margin="29,330,352,34">
+        <Border BorderBrush="Black" BorderThickness="1" Margin="29,330,352,34" MouseLeftButtonDown="Border_MouseLeftButtonDown">
             <ItemsControl x:Name="LevelViewer" ItemsSource="{Binding levelGraphic}"
         		HorizontalAlignment="Left" Height="461" VerticalAlignment="Top" Width="507" Margin="0,0,-1,-1">
                 <ItemsControl.ItemsPanel>
@@ -46,12 +46,12 @@
                 <MenuItem Header="_Close" Click="Menu_Close" />
             </MenuItem>
         </Menu>
-        <Grid Margin="793,330,26,460">
+        <Grid Margin="571,330,248,460">
             <RadioButton x:Name="InteriorButton" Content="Interior" HorizontalAlignment="Left" VerticalAlignment="Top" GroupName="LevelType" IsChecked="{Binding levelInterior}" Checked="InteriorButton_Checked" IsEnabled="{Binding worldAttached}"/>
             <RadioButton x:Name="ExteriorButton" Content="Exterior" HorizontalAlignment="Left" Margin="0,21,0,0" VerticalAlignment="Top" GroupName="LevelType" IsChecked="{Binding levelExterior}" Checked="ExteriorButton_Checked" IsEnabled="{Binding worldAttached}"/>
         </Grid>
 
-        <ListView ItemsSource="{Binding levelList}" Margin="566,330,151,341" SelectedIndex="{Binding selectedLevel}">
+        <ListView ItemsSource="{Binding levelList}" Margin="29,51,688,620" SelectedIndex="{Binding selectedLevel}">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Width="40" Header="Level" 
@@ -61,7 +61,7 @@
                 </GridView>
             </ListView.View>
         </ListView>
-        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="130" Margin="566,548,0,0" VerticalAlignment="Top" Width="199">
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="130" Margin="265,82,0,0" VerticalAlignment="Top" Width="199">
             <Grid>
                 <Label Content="X Size" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
                 <TextBox x:Name="NewLevelSizeX" HorizontalAlignment="Left" Height="23" Margin="68,13,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
@@ -70,7 +70,21 @@
                 <Button x:Name="CreateLevel" Content="Create New Level" HorizontalAlignment="Left" VerticalAlignment="Top" Width="105" Margin="10,93,0,0" Click="CreateLevel_Click" IsEnabled="{Binding worldAttached}"/>
             </Grid>
         </Border>
-        <Label Content="Add Level" HorizontalAlignment="Left" Margin="566,517,0,0" VerticalAlignment="Top"/>
+        <Label Content="Add Level" HorizontalAlignment="Left" Margin="265,51,0,0" VerticalAlignment="Top"/>
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="91" Margin="571,392,0,0" VerticalAlignment="Top" Width="244">
+            <Grid>
+                <RadioButton x:Name="Floor_Mode" Content="Floors" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" GroupName="EditType" IsChecked="{Binding editFloor}" IsEnabled="{Binding worldAttached}"/>
+                <RadioButton x:Name="Add_Walls_Mode" Content="Add Walls" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top" GroupName="EditType" IsEnabled="{Binding worldAttached}" IsChecked="{Binding addWalls}"/>
+                <RadioButton x:Name="Remove_Walls_Mode" Content="Remove Walls" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top" GroupName="EditType" IsEnabled="{Binding worldAttached}" IsChecked="{Binding removeWalls}"/>
+            </Grid>
+        </Border>
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="91" Margin="571,533,0,0" VerticalAlignment="Top" Width="244">
+            <Grid>
+                <RadioButton x:Name="Floor_Mode2" Content="Floor" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" GroupName="Floor Type" IsChecked="{Binding floorTiles}" IsEnabled="{Binding editFloor}"/>
+                <RadioButton x:Name="Blocked_Mode" Content="Blocked" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top" GroupName="Floor Type" IsChecked="{Binding blockedTiles}" IsEnabled="{Binding editFloor}"/>
+                <RadioButton x:Name="Undefined_Mode" Content="Undefined" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top" GroupName="Floor Type" IsEnabled="{Binding editFloor}" IsChecked="{Binding undefinedTiles}"/>
+            </Grid>
+        </Border>
     </Grid>
 
 

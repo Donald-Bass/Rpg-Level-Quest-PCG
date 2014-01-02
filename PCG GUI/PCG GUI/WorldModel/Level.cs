@@ -75,6 +75,38 @@ namespace PCG_GUI.Facts
             }
         }
 
+        public void removeWallX(int x, int y)
+        {
+            //the wall being added goes from X,Y to X+1,Y
+
+            //if not at the very top of the map
+            if (y != 0)
+            {
+                levelMap[x, y - 1].southWall = false;
+            }
+
+            if (y != yDimension)
+            {
+                levelMap[x, y].northWall = false;
+            }
+        }
+
+        public void removeWallY(int x, int y)
+        {
+            //the wall being added goeX from X,Y to X+1,Y
+
+            //if not at the very top of the map
+            if (x != 0)
+            {
+                levelMap[x - 1, y].eastWall = false;
+            }
+
+            if (x != xDimension)
+            {
+                levelMap[x, y].westWall = false;
+            }
+        }
+
         //covert all undefined tiles into blocked tiles
         public void finalizeLevel()
         {

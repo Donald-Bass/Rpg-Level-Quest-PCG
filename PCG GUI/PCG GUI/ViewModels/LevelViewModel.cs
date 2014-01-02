@@ -14,6 +14,9 @@ namespace PCG_GUI.ViewModels
 {
     class LevelViewModel : INotifyPropertyChanged
     {
+        private const int GRID_SIZE = 20;
+        private const int WALL_PIXEL_RANGE = 3; //Range from wall at which a click registers
+
         public ObservableCollection<Shape> levelGraphic { get; private set; }
         public ObservableCollection<levelData> levelList { get; private set; }
         public String X_Dimension { get; private set; }
@@ -26,6 +29,26 @@ namespace PCG_GUI.ViewModels
         public Boolean levelExterior { get; private set; }
 
         public Boolean worldAttached { get; private set; } //is there a world attached to the view model
+
+        //map editing modes
+        public Boolean editFloorTrueValue = false;
+        public Boolean editFloor
+        {
+            get
+            {
+                return editFloorTrueValue;
+            }
+            set
+            {
+                editFloorTrueValue = value;
+                RaisePropertyChanged("editFloor");
+            }
+        }
+        public Boolean addWalls { get; set; }
+        public Boolean removeWalls { get; set; }
+        public Boolean floorTiles { get; set; }
+        public Boolean blockedTiles { get; set; }
+        public Boolean undefinedTiles { get; set; }
 
         private World world;
         private int curLevel;
@@ -237,8 +260,8 @@ namespace PCG_GUI.ViewModels
         {
             Rectangle drawnTile = new Rectangle();
             SolidColorBrush fillBrush = new SolidColorBrush();
-            drawnTile.Height = 20;
-            drawnTile.Width = 20;
+            drawnTile.Height = GRID_SIZE;
+            drawnTile.Width = GRID_SIZE;
 
             switch (t.tType)
             {
@@ -255,8 +278,8 @@ namespace PCG_GUI.ViewModels
 
             drawnTile.Fill = fillBrush;
             levelGraphic.Add(drawnTile);
-            Canvas.SetLeft(drawnTile, x * 20);
-            Canvas.SetTop(drawnTile, y * 20);
+            Canvas.SetLeft(drawnTile, x * GRID_SIZE);
+            Canvas.SetTop(drawnTile, y * GRID_SIZE);
         }
 
         private void drawWallGrid(Level levelToDraw)
@@ -279,10 +302,10 @@ namespace PCG_GUI.ViewModels
                         gridLine.StrokeThickness = 1;
                     }
 
-                    gridLine.X1 = i * 20;
-                    gridLine.X2 = i * 20 + 20;
-                    gridLine.Y1 = j * 20;
-                    gridLine.Y2 = j * 20;
+                    gridLine.X1 = i * GRID_SIZE;
+                    gridLine.X2 = i * GRID_SIZE + GRID_SIZE;
+                    gridLine.Y1 = j * GRID_SIZE;
+                    gridLine.Y2 = j * GRID_SIZE;
                     levelGraphic.Add(gridLine);
                 }
             }
@@ -304,10 +327,10 @@ namespace PCG_GUI.ViewModels
                         gridLine.StrokeThickness = 1;
                     }
 
-                    gridLine.X1 = i * 20;
-                    gridLine.X2 = i * 20;
-                    gridLine.Y1 = j * 20;
-                    gridLine.Y2 = j * 20 + 20;
+                    gridLine.X1 = i * GRID_SIZE;
+                    gridLine.X2 = i * GRID_SIZE;
+                    gridLine.Y1 = j * GRID_SIZE;
+                    gridLine.Y2 = j * GRID_SIZE + GRID_SIZE;
                     levelGraphic.Add(gridLine);
                 }
             }
@@ -334,6 +357,72 @@ namespace PCG_GUI.ViewModels
             selectedLevel = NumberOfLevels - 1; //select the new level
         }
 
+
+        public void editLevel(int x, int y)
+        {
+            if (worldAttached && selectedLevel != -1) //only edit when a level actually is selected
+            {
+
+                if (editFloor)
+                {
+                    int tileX = x / GRID_SIZE;
+                    int tileY = y / GRID_SIZE;
+                    
+                    if(floorTiles)
+                    {
+                        world.getLevel(selectedLevel).setTileType(tileX, tileY, TileType.floor);
+                    }
+
+                    else if(blockedTiles)
+                    {
+                        world.getLevel(selectedLevel).setTileType(tileX, tileY, TileType.blocked);
+                    }
+
+                    else if (undefinedTiles)
+                    {
+                        world.getLevel(selectedLevel).setTileType(tileX, tileY, TileType.undefined);
+                    }
+                }
+
+                else //editing walls
+                {
+                    if((x % GRID_SIZE <= 3 || x % GRID_SIZE >= GRID_SIZE - 3) && ! (y % GRID_SIZE <= 3 || y % GRID_SIZE >= GRID_SIZE - 3)) //if close to a wall along the y axis and not to a wall along the x axis
+                    {
+                        int wallX = (int)Math.Round((double)x / (double)GRID_SIZE);
+                        int wallY = (int)Math.Floor((double)y / (double)GRID_SIZE);
+
+                        if(addWalls)
+                        {
+                            world.getLevel(selectedLevel).addWallY(wallX, wallY);
+                        }
+
+                        else if(removeWalls)
+                        {
+                            world.getLevel(selectedLevel).removeWallY(wallX, wallY);
+                        }
+                    }
+
+                    else if(!(x % GRID_SIZE <= 3 || x % GRID_SIZE >= GRID_SIZE - 3) && (y % GRID_SIZE <= 3 || y % GRID_SIZE >= GRID_SIZE - 3)) //if close to a wall along the x axis and not to a wall along the y axis
+                    {
+                        int wallX = (int)Math.Floor((double)x / (double)GRID_SIZE);
+                        int wallY = (int)Math.Round((double)y / (double)GRID_SIZE);
+
+                        if (addWalls)
+                        {
+                            world.getLevel(selectedLevel).addWallX(wallX, wallY);
+                        }
+
+                        else if (removeWalls)
+                        {
+                            world.getLevel(selectedLevel).removeWallY(wallX, wallY);
+                        }
+                    }
+                    
+                }
+
+                drawLevel(selectedLevel); //redraw the level
+            }
+        }
     }
 
 }

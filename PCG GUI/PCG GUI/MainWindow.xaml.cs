@@ -102,8 +102,15 @@ namespace PCG_GUI
             }
             catch (FormatException exception)
             {
-               System.Console.WriteLine("error");
+                System.Console.WriteLine(exception.ToString());
             }
         }
+
+        private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            viewModel.editLevel((int)e.GetPosition(LevelViewer).X, (int)e.GetPosition(LevelViewer).Y);
+
+        }
+
     }
 }
