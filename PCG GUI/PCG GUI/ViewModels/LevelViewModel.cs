@@ -12,7 +12,7 @@ using System.Collections.ObjectModel;
 
 namespace PCG_GUI.ViewModels
 {
-    class LevelViewModel : INotifyPropertyChanged
+    public class LevelViewModel : INotifyPropertyChanged
     {
         private const int GRID_SIZE = 20;
         private const int WALL_PIXEL_RANGE = 3; //Range from wall at which a click registers
@@ -129,7 +129,7 @@ namespace PCG_GUI.ViewModels
             if (world != null)
             {           
                 System.IO.StreamWriter file = new System.IO.StreamWriter(Filename);
-                world.writeClingoFile(file);
+                world.writeWorldFile(file);
                 file.Close();
             }
 
@@ -422,6 +422,16 @@ namespace PCG_GUI.ViewModels
 
                 drawLevel(selectedLevel); //redraw the level
             }
+        }
+
+        //numberOfLevels - number of levels to generate. If -1 generate as many as clingo feels is necessary
+        public void runClingo(int numberOfLevels)
+        {
+            System.IO.StreamWriter file = new System.IO.StreamWriter("TempWorldDef.txt");
+
+            world.writeClingoInputFile(file, numberOfLevels);
+
+            file.Close();
         }
     }
 

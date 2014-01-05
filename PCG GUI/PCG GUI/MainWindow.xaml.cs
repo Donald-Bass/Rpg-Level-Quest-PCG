@@ -84,6 +84,12 @@ namespace PCG_GUI
             viewModel.closeWorld();
         }
 
+        private void Menu_Run(object sender, RoutedEventArgs e)
+        {
+            RunPCGWindow runWin = new RunPCGWindow(viewModel);
+            runWin.Show();
+        }
+
         private void InteriorButton_Checked(object sender, RoutedEventArgs e)
         {
             viewModel.setLevelType(levelType.interior);

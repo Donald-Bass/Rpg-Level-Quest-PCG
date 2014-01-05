@@ -54,28 +54,43 @@ namespace PCG_GUI.Facts
             //return allFacts;
         }
 
-        public void writeClingoFile(System.IO.StreamWriter file)
+        public void writeWorldFile(System.IO.StreamWriter file)
         {
             file.WriteLine(""); //the clingo output has a unecessary line at the start so add an blank line to match the formula
 
             Fact totalLevels = new Fact("totalLevels", new String[] { numLevels.ToString() });
-            file.Write(totalLevels.getStringRepresentation() + " ");
+            file.Write(totalLevels.getStringRepresentation());
 
             //placeholder till npcs are actually stored in memory
             foreach (Fact f in npcFacts)
             {
-                file.Write(f.getStringRepresentation() + " ");
+                file.Write(f.getStringRepresentation());
             }
 
             //placeholder till quests are actually stored in memory
             foreach (Fact f in questFacts)
             {
-                file.Write(f.getStringRepresentation() + " ");
+                file.Write(f.getStringRepresentation());
             }
 
             for(int i = 0; i < numLevels; i++)
             {
                 allLevels[i].write(file, i);
+            }
+        }
+
+        //numberOfLevels - number of levels to generate. If -1 generate as many as clingo feels is necessary
+        public void writeClingoInputFile(System.IO.StreamWriter file, int numberOfLevels)
+        {
+            if (numberOfLevels != -1)
+            {
+                Fact totalLevels = new Fact("totalLevels", new String[] { numberOfLevels.ToString() });
+                file.Write(totalLevels.getStringRepresentation(true));
+            }
+
+            for (int i = 0; i < numLevels; i++)
+            {
+                allLevels[i].write(file, i, true);
             }
         }
 

@@ -10,6 +10,7 @@
 #const maxTargetIndex=100. %should be set to the larger of the two above values
 #const maxQuestStages=100. %maximum number of quest stages that can be generated
 #const numQuests=1.
+#const maxNumberOfLevels=100.
 
 areaSizeRange(minAreaSize..maxAreaSize). %range of possible area length/widths
 wallSizeRange(0 .. maxAreaSize). %range of valid wall positions
@@ -19,6 +20,11 @@ floorSizeRange(0 .. (maxAreaSize - 1)). %range of valid floor positions
 %----------------------------------------------------------------------------
 %Level Basics
 %----------------------------------------------------------------------------
+levelNumRange(0 .. maxNumberOfLevels).
+
+%{ level(L) : levelNumRange(L) }.
+%{ interior(X) : levelNumRange(X) }.
+%{ exterior(X) : levelNumRange(X) }.
 
 totalLevels(N) :- N = #count{level(_)}. %count the number of levels
 
@@ -27,12 +33,8 @@ totalLevels(N) :- N = #count{level(_)}. %count the number of levels
 :- level(x), interior(x), exterior(x). 
 
 %determine the size of the area
-{ levelLengthX(X,L) : areaSizeRange(X) :level(L) }. 
-{ levelLengthY(Y,L) : areaSizeRange(Y) :level(L) }. 
-
-%A level cannot have two different lengths
-:- levelLengthX(X1,L), levelLengthX(X2,L), X1 != X2.
-:- levelLengthY(Y1,L), levelLengthY(Y2,L), Y1 != Y2.
+1 { levelLengthX(X,L) : areaSizeRange(X) } 1 :- level(L). 
+1 { levelLengthY(Y,L) : areaSizeRange(Y) } 1 :- level(L). 
 
 %determine valid tile numbers
 lengthXDim(0..(X - 1), L) :- levelLengthX(X, L).
@@ -50,7 +52,7 @@ wallXDim(0..X , L) :- levelLengthX(X, L).
 wallYDim(0..Y , L) :- levelLengthY(Y, L).
 
 %wallX(X,Y,L) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
-{ wallX(X,Y,L) : wallSizeRange(X) : wallSizeRange(Y) : level(L) }. 
+{ wallX(X,Y,L) : wallSizeRange(X) : wallSizeRange(Y) } :- level(L). 
 :- wallX(X,Y,L) , not wallXDim(X,L). %all walls must have a valid x
 :- wallX(X,Y,L), levelLengthX(X,L). %check that wall does not start at rightmost x
 :- wallX(X,Y,L), not wallYDim(Y,L). %all walls must have a valid y 
@@ -58,7 +60,7 @@ wallYDim(0..Y , L) :- levelLengthY(Y, L).
 
 
 %wallY(X,Y,L) from X,Y to X,Y+1. The bottommost y is not a valid y for a wall on the y axis it can only be used for walls on the x Axis
-{ wallY(X,Y,L) : wallSizeRange(X) : wallSizeRange(Y) : level(L) }. 
+{ wallY(X,Y,L) : wallSizeRange(X) : wallSizeRange(Y) } :- level(L). 
 :- wallY(X,Y,L) , not wallXDim(X,L). %all walls must have a valid x
 :- wallY(X,Y,L), levelLengthY(Y,L). %check that wall does not start on bottommost y
 :- wallY(X,Y,L), not wallYDim(Y,L).  %all walls must have a valid y
@@ -77,11 +79,12 @@ barricadeY(X,Y,L) :- wallY(X,Y,L).
 %--------------------------------------------------------------------------------------------------------------------------------------
 
 %define floors
-{ floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) : level(L) } :- level(L).
+{ floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } :- level(L).
 
 %There should be at least one floor in every row and column of a level (otherwise the level is too big)
-1 { floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) : level(L) } :- lengthXDim(X,L).
-1 { floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) : level(L) } :- lengthYDim(Y,L).
+%Need to disable this only for user generated levels
+%1 { floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } :- level(L), lengthXDim(X,L).
+%1 { floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } :- level(L), lengthYDim(Y,L).
 
 :- floor(X,Y,L) , not tile(X,Y,L). %all floors must be on valid tiles
 floor(X,Y,L) :- tile(X,Y,L), exterior(L). %all tiles must be floors outdoors
@@ -97,7 +100,7 @@ wallX(X,(Y+1),L) :- floor(X,Y,L) , not floor(X,(Y + 1),L), interior(L).
 :- wallY(X,Y,L), not floor(X,Y,L), not floor((X-1),Y,L).
 
 %Each level should have a starting tile along one of the edges
-1 { levelStart(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) : level(L) } 1 :- level(L), interior(L). 
+1 { levelStart(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y)} 1 :- level(L), interior(L). 
 
 :- levelStart(X,Y,L), not floor(X,Y,L). %the start must be on a floor
 :- levelStart(X,Y,L), exterior(L). %only interiors have a starting point for now
@@ -108,7 +111,7 @@ nonEdgeYDim(1..(Y - 2), L) :- levelLengthY(Y, L). %Define non edge tiles
 :- levelStart(X,Y,L), nonEdgeXDim(X,L), nonEdgeYDim(Y,L). %both dimensions of a level start can't be non edge dimensions
 
 %define what tiles are connected to what tiles
-{ connection(X1,Y1,X2,Y2, L) : floorSizeRange(X1) : floorSizeRange(Y1) : floorSizeRange(X2) : floorSizeRange(Y2) : level(L) }. 
+{ connection(X1,Y1,X2,Y2, L) : floorSizeRange(X1) : floorSizeRange(Y1) : floorSizeRange(X2) : floorSizeRange(Y2) } :- level(L). 
 
 connectedUp(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), X1 == X2, (Y1 - 1) == Y2, not wallX(X1,Y1,L).
 connectedDown(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), X1 == X2, (Y1 + 1) == Y2, not wallX(X2,Y2,L).
@@ -125,7 +128,7 @@ connection(X1,Y1,X2,Y2,L) :- connectedRight(X1,Y1,X2,Y2,L).
 :- connection(X1,Y1,X2,Y2,L), not connectedUp(X1,Y1,X2,Y2,L), not connectedDown(X1,Y1,X2,Y2,L), not connectedLeft(X1,Y1,X2,Y2,L), not connectedRight(X1,Y1,X2,Y2,L).
 
 %quick hack for testing purposes
-notFloor(X,Y,0) :- not floor(X,Y,0), lengthXDim(X,0), lengthYDim(Y,0).
+%notFloor(X,Y,0) :- not floor(X,Y,0), lengthXDim(X,0), lengthYDim(Y,0).
 
 %------------------------------------------------------------------------------------------
 %Reachable tiles
@@ -156,9 +159,8 @@ reachable(NX,NY,L) :-
 %Outdoor level specific elements
 %------------------------------------------------------------------------
 
-10 { tree(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) : level(L) } 50. 
+{ tree(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } :- level(L), exterior(L).
 :-  tree(X,Y,L), not tile(X,Y,L). %trees must be on valid tiles
-:-  tree(X,Y,L), not exterior(L). %trees must be outside
 
 %-----------------------------------------------
 %Planning With help from Answer set programming and plan generation
@@ -181,10 +183,13 @@ npcNumRange(1..maxNumberOfNpcs). %each npc will be identified with a number (the
 :- npc(NPCN), not friendly(NPCN), not hostile(NPCN). %all npcs are either friendly or hostile
 :- npc(NPCN), friendly(NPCN), hostile(NPCN). %no npc is both friendly and hostile
 
-1 { npcLocation(NPCN,X,Y,L) : npcNumRange(NPCN) : floorSizeRange(X) : floorSizeRange(Y) : level(L) } 1 :- npc(NPCN).%for every npc there is one location they are located
+{ npcLocation(NPCN,X,Y,L) : npcNumRange(NPCN) : floorSizeRange(X) : floorSizeRange(Y)} :- npc(NPCN), level(L).%for every npc there is one location they are located
 :- npcLocation(NPCN,X,Y,L), not floor(X,Y,L). %NPCS must be located on floor tiles
 npcLevel(NPCN,L) :- npcLocation(NPCN,X,Y,L). %shortcut to make it for easier to check if a npc and the player or two npcs are in the same level
 :- npcLevel(NPCN,L1), npcLevel(NPCN, L2), L1 != L2. %don't allow an npc to be on two levels at once 
+%:- npcLocation(NPCN,X1,Y,L), npcLocation(NPCN,X2,Y,L), X1 != X2.
+%:- npcLocation(NPCN,X,Y1,L), npcLocation(NPCN,X,Y2,L), Y1 != Y2.
+
 
 %---------------------------------------------------------------------------------------------------------------------
 % Quests
@@ -307,3 +312,4 @@ dead(NPCN,SN + 1) :- stage(SN), stage(SN + 1), dead(NPCN,SN). %if a npc is dead 
 #hide questNumRange/1.
 #hide stageRange/1.
 #hide reachable/3.
+#hide levelNumRange/1.

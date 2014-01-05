@@ -63,9 +63,18 @@ namespace PCG_GUI
         }
 
         //returns a string representation of the fact in the same format clingo would output
-        public string getStringRepresentation()
+        //If ClingoInput is true then output in the form clingo needs as input (add a .)
+        //If not is true add a not in front of the predicate (only use when ClingoInput is true for now)
+        public string getStringRepresentation(bool ClingoInput = false, bool not = false)
         {
-            string rep = predicate + "(";
+            string rep = "";
+
+            if(not)
+            {
+                rep = rep + ":- ";
+            }
+
+            rep = rep + predicate + "(";
 
             if(values.Length > 0) //if there is at least one value
             {
@@ -78,6 +87,16 @@ namespace PCG_GUI
             }
 
             rep += ")";
+
+            if (ClingoInput)
+            {
+                rep += ".\n"; //all facts in clingo need to end with a .
+            }
+
+            else
+            {
+                rep += " "; //add space before next fact
+            }
 
             return rep;
         }

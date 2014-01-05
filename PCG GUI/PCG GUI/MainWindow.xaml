@@ -44,6 +44,7 @@
                 <MenuItem Header="_Open" Click="Menu_Open" />
                 <MenuItem Header="_Save" Click="Menu_Save" />
                 <MenuItem Header="_Close" Click="Menu_Close" />
+                <MenuItem Header="_Run PCG" Click="Menu_Run" IsEnabled="{Binding worldAttached}" />
             </MenuItem>
         </Menu>
         <Grid Margin="571,330,248,460">
