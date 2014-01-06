@@ -2,15 +2,15 @@
 %Framework
 %----------------------------------------------------------------------------
 
-#const maxAreaSize=32.  %32. %maximum length of a side in number of tiles in an area 
+#const maxAreaSize=20.  %32. %maximum length of a side in number of tiles in an area 
 #const minAreaSize=2. %minimum length of a side in number of tiles in an area
 #const numLevels=2.
-#const maxNumberOfNpcs=100. %maximum number of npcs that can be generated
-#const maxNumberOfItems=100. %maximum number of itesm that can be generated
-#const maxTargetIndex=100. %should be set to the larger of the two above values
+#const maxNumberOfNpcs=10. %maximum number of npcs that can be generated
+#const maxNumberOfItems=10. %maximum number of itesm that can be generated
+#const maxTargetIndex=10. %should be set to the larger of the two above values
 #const maxQuestStages=100. %maximum number of quest stages that can be generated
 #const numQuests=1.
-#const maxNumberOfLevels=100.
+#const maxNumberOfLevels=3.
 
 areaSizeRange(minAreaSize..maxAreaSize). %range of possible area length/widths
 wallSizeRange(0 .. maxAreaSize). %range of valid wall positions
@@ -22,11 +22,17 @@ floorSizeRange(0 .. (maxAreaSize - 1)). %range of valid floor positions
 %----------------------------------------------------------------------------
 levelNumRange(0 .. maxNumberOfLevels).
 
-%{ level(L) : levelNumRange(L) }.
-%{ interior(X) : levelNumRange(X) }.
-%{ exterior(X) : levelNumRange(X) }.
+{ level(L) : levelNumRange(L) }.
+{ interior(X) : levelNumRange(X) }.
+{ exterior(X) : levelNumRange(X) }.
+:- interior(X), not level(X).
+:- exterior(X), not level(X).
+
+:- level(X), X != 0, not level(X - 1). %there can be no gaps in level numbers
 
 totalLevels(N) :- N = #count{level(_)}. %count the number of levels
+
+:- totalLevels(X1), totalLevels(X2), X1 != X2. %there can only be one number of total levels
 
 %A level must be either outside or inside, but not both
 :- level(x), not interior(x), not exterior(x). 
@@ -183,12 +189,10 @@ npcNumRange(1..maxNumberOfNpcs). %each npc will be identified with a number (the
 :- npc(NPCN), not friendly(NPCN), not hostile(NPCN). %all npcs are either friendly or hostile
 :- npc(NPCN), friendly(NPCN), hostile(NPCN). %no npc is both friendly and hostile
 
-{ npcLocation(NPCN,X,Y,L) : npcNumRange(NPCN) : floorSizeRange(X) : floorSizeRange(Y)} :- npc(NPCN), level(L).%for every npc there is one location they are located
+1 { npcLevel(NPCN, L) : levelNumRange(L) } 1 :- npc(NPCN).
+:- npcLevel(NPCN,L) , not level(L).
+1 { npcLocation(NPCN,X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } 1 :- npcLevel(NPCN, L).%for every npc there is one location they are located
 :- npcLocation(NPCN,X,Y,L), not floor(X,Y,L). %NPCS must be located on floor tiles
-npcLevel(NPCN,L) :- npcLocation(NPCN,X,Y,L). %shortcut to make it for easier to check if a npc and the player or two npcs are in the same level
-:- npcLevel(NPCN,L1), npcLevel(NPCN, L2), L1 != L2. %don't allow an npc to be on two levels at once 
-%:- npcLocation(NPCN,X1,Y,L), npcLocation(NPCN,X2,Y,L), X1 != X2.
-%:- npcLocation(NPCN,X,Y1,L), npcLocation(NPCN,X,Y2,L), Y1 != Y2.
 
 
 %---------------------------------------------------------------------------------------------------------------------
@@ -240,7 +244,8 @@ alive(NPCN,1) :- npc(NPCN). %all npcs are alive at stage 1 FOR NOW
 :- dead(NPCN, SN), not stage(SN). 
 
 
-{ playerAt(L,S) : level(L) : stageRange(S) }. %Level the player is in at Stage S
+{ playerAt(L,S) : levelNumRange(L) : stageRange(S) }. %Level the player is in at Stage S
+:- playerAt(L,S) , not level(L).
 playerAt(L,S+1) :- stage(S), stage(S + 1), not stageAction(S,moveAction), playerAt(L,S). %if the player doesn't move during a stage he stays at the same location
 playerAt(L,S+1) :- stage(S), stage(S + 1), stageAction(S,moveAction), move(L,S). %if the player does move he goes to the level he moved to
 
@@ -268,7 +273,8 @@ totalStages(N) :- N = #count{stageAction(_,_)}. %count the number of stages
 :- getQuest(NPCN,SN), not questGiver(NPCN,QN), questNumRange(QN). %A quest can only be goten from a npc that is a quest giver
 
 %move action
-1 { move(L,SN) : stageRange(SN) : level(L) } 1 :- stageAction(SN,moveAction). %A move action requires a level to be specified to move to
+1 { move(L,SN) : stageRange(SN) : levelNumRange(L) } 1 :- stageAction(SN,moveAction). %A move action requires a level to be specified to move to
+:- move(L,SN), not level(L).
 :- move(L,SN), playerAt(L,SN). %A player can't move to a location he already was in
 
 %kill action
@@ -311,5 +317,5 @@ dead(NPCN,SN + 1) :- stage(SN), stage(SN + 1), dead(NPCN,SN). %if a npc is dead 
 #hide npcNumRange/1.
 #hide questNumRange/1.
 #hide stageRange/1.
-#hide reachable/3.
+%#hide reachable/3.
 #hide levelNumRange/1.
