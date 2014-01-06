@@ -1,0 +1,11 @@
+﻿<Window x:Class="PCG_GUI.RunPCGWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Window1" Height="351" Width="377">
+    <Grid>
+        <CheckBox x:Name="numLevelsEnabled" Content="Num Levels" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="numLevelsField" HorizontalAlignment="Left" Height="25" Margin="113,25,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="49" IsEnabled="{Binding IsChecked, ElementName=numLevelsEnabled}"/>
+        <Button x:Name="RunButton" Content="RunClingo" HorizontalAlignment="Left" Margin="284,277,0,0" VerticalAlignment="Top" Width="75" Click="RunButton_Click"/>
+
+    </Grid>
+</Window>
