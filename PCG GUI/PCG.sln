@@ -5,6 +5,11 @@ VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PCG GUI", "PCG GUI\PCG GUI.csproj", "{3C76F1B1-69D9-4689-8325-C58A1328AD65}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A233144E-B477-419C-89DD-E74FAC2282B3}"
+	ProjectSection(SolutionItems) = preProject
+		..\clingo.exe = ..\clingo.exe
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

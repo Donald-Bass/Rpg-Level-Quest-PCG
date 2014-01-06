@@ -1,0 +1,321 @@
+%----------------------------------------------------------------------------
+%Framework
+%----------------------------------------------------------------------------
+
+#const maxAreaSize=20.  %32. %maximum length of a side in number of tiles in an area 
+#const minAreaSize=2. %minimum length of a side in number of tiles in an area
+#const numLevels=2.
+#const maxNumberOfNpcs=10. %maximum number of npcs that can be generated
+#const maxNumberOfItems=10. %maximum number of itesm that can be generated
+#const maxTargetIndex=10. %should be set to the larger of the two above values
+#const maxQuestStages=100. %maximum number of quest stages that can be generated
+#const numQuests=1.
+#const maxNumberOfLevels=3.
+
+areaSizeRange(minAreaSize..maxAreaSize). %range of possible area length/widths
+wallSizeRange(0 .. maxAreaSize). %range of valid wall positions
+floorSizeRange(0 .. (maxAreaSize - 1)). %range of valid floor positions
+#hide areaSizeRange/1. %do not print range
+
+%----------------------------------------------------------------------------
+%Level Basics
+%----------------------------------------------------------------------------
+levelNumRange(0 .. maxNumberOfLevels).
+
+{ level(L) : levelNumRange(L) }.
+{ interior(X) : levelNumRange(X) }.
+{ exterior(X) : levelNumRange(X) }.
+:- interior(X), not level(X).
+:- exterior(X), not level(X).
+
+:- level(X), X != 0, not level(X - 1). %there can be no gaps in level numbers
+
+totalLevels(N) :- N = #count{level(_)}. %count the number of levels
+
+:- totalLevels(X1), totalLevels(X2), X1 != X2. %there can only be one number of total levels
+
+%A level must be either outside or inside, but not both
+:- level(X), not interior(X), not exterior(X). 
+:- level(X), interior(X), exterior(X). 
+
+%determine the size of the area
+1 { levelLengthX(X,L) : areaSizeRange(X) } 1 :- level(L). 
+1 { levelLengthY(Y,L) : areaSizeRange(Y) } 1 :- level(L). 
+
+%determine valid tile numbers
+lengthXDim(0..(X - 1), L) :- levelLengthX(X, L).
+lengthYDim(0..(Y - 1), L) :- levelLengthY(Y, L).
+
+%define tiles
+tile(X,Y,L) :- lengthXDim(X,L), lengthYDim(Y,L), level(L).
+
+%---------------------------------------------------------------------------------
+%Walls and other barricades
+%---------------------------------------------------------------------------------
+
+%walls have to be able to border entire area so valid dimensions range from 0 to X/Y 
+wallXDim(0..X , L) :- levelLengthX(X, L). 
+wallYDim(0..Y , L) :- levelLengthY(Y, L).
+
+%wallX(X,Y,L) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
+{ wallX(X,Y,L) : wallSizeRange(X) : wallSizeRange(Y) } :- level(L). 
+:- wallX(X,Y,L) , not wallXDim(X,L). %all walls must have a valid x
+:- wallX(X,Y,L), levelLengthX(X,L). %check that wall does not start at rightmost x
+:- wallX(X,Y,L), not wallYDim(Y,L). %all walls must have a valid y 
+:- wallX(X,Y,L), not interior(L). %only interiors have walls
+
+
+%wallY(X,Y,L) from X,Y to X,Y+1. The bottommost y is not a valid y for a wall on the y axis it can only be used for walls on the x Axis
+{ wallY(X,Y,L) : wallSizeRange(X) : wallSizeRange(Y) } :- level(L). 
+:- wallY(X,Y,L) , not wallXDim(X,L). %all walls must have a valid x
+:- wallY(X,Y,L), levelLengthY(Y,L). %check that wall does not start on bottommost y
+:- wallY(X,Y,L), not wallYDim(Y,L).  %all walls must have a valid y
+:- wallY(X,Y,L), not interior(L). %only interiors have walls
+
+%Barricades are walls and anything else that occupies the same space (doors for example0
+barricadeX(X,Y,L) :- wallX(X,Y,L).
+barricadeY(X,Y,L) :- wallY(X,Y,L).
+
+%There is no barricade that is freestanding
+:- barricadeX(X,Y,L) , not barricadeX(X+1,Y,L), not barricadeX(X-1,Y,L), not barricadeY(X,Y,L), not barricadeY(X,Y-1,L).
+:- barricadeY(X,Y,L) , not barricadeX(X,Y,L), not barricadeX(X-1,Y,L), not barricadeY(X,Y+1,L), not barricadeY(X,Y-1,L).
+
+%----------------------------------------------------------------------------------------------------------------------------------------------
+%Floors
+%--------------------------------------------------------------------------------------------------------------------------------------
+
+%define floors
+{ floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } :- level(L).
+
+%There should be at least one floor in every row and column of a level (otherwise the level is too big)
+%Need to disable this only for user generated levels
+%1 { floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } :- level(L), lengthXDim(X,L).
+%1 { floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } :- level(L), lengthYDim(Y,L).
+
+:- floor(X,Y,L) , not tile(X,Y,L). %all floors must be on valid tiles
+floor(X,Y,L) :- tile(X,Y,L), exterior(L). %all tiles must be floors outdoors
+
+%There must be a wall between any floor and non floor tile when the level is an interior
+wallY(X,Y,L) :- floor(X,Y,L) , not floor((X - 1),Y,L), interior(L).
+wallY((X + 1),Y,L) :- floor(X,Y,L) , not floor((X + 1),Y,L), interior(L).
+wallX(X,Y,L) :- floor(X,Y,L) , not floor(X,(Y - 1),L), interior(L).
+wallX(X,(Y+1),L) :- floor(X,Y,L) , not floor(X,(Y + 1),L), interior(L).
+
+%There must be a floor on at least one side of a wall
+:- wallX(X,Y,L), not floor(X,Y,L), not floor(X,(Y-1),L).
+:- wallY(X,Y,L), not floor(X,Y,L), not floor((X-1),Y,L).
+
+%Each level should have a starting tile along one of the edges
+1 { levelStart(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y)} 1 :- level(L), interior(L). 
+
+:- levelStart(X,Y,L), not floor(X,Y,L). %the start must be on a floor
+:- levelStart(X,Y,L), exterior(L). %only interiors have a starting point for now
+
+%The starting tile must be on one of the edges
+nonEdgeXDim(1..(X - 2), L) :- levelLengthX(X, L). %Define non edge tiles
+nonEdgeYDim(1..(Y - 2), L) :- levelLengthY(Y, L). %Define non edge tiles
+:- levelStart(X,Y,L), nonEdgeXDim(X,L), nonEdgeYDim(Y,L). %both dimensions of a level start can't be non edge dimensions
+
+%define what tiles are connected to what tiles
+{ connection(X1,Y1,X2,Y2, L) : floorSizeRange(X1) : floorSizeRange(Y1) : floorSizeRange(X2) : floorSizeRange(Y2) } :- level(L). 
+
+connectedUp(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), X1 == X2, (Y1 - 1) == Y2, not wallX(X1,Y1,L).
+connectedDown(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), X1 == X2, (Y1 + 1) == Y2, not wallX(X2,Y2,L).
+connectedLeft(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1,L).
+connectedRight(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), Y1 == Y2, (X1 + 1) == X2, not wallY(X2,Y2,L).
+
+%if a connection exists in any direction the two tiles are connected
+connection(X1,Y1,X2,Y2,L) :- connectedUp(X1,Y1,X2,Y2,L).
+connection(X1,Y1,X2,Y2,L) :- connectedDown(X1,Y1,X2,Y2,L).
+connection(X1,Y1,X2,Y2,L) :- connectedLeft(X1,Y1,X2,Y2,L).
+connection(X1,Y1,X2,Y2,L) :- connectedRight(X1,Y1,X2,Y2,L).
+
+%two connected tiles cannot be connected in none of the 4 directions
+:- connection(X1,Y1,X2,Y2,L), not connectedUp(X1,Y1,X2,Y2,L), not connectedDown(X1,Y1,X2,Y2,L), not connectedLeft(X1,Y1,X2,Y2,L), not connectedRight(X1,Y1,X2,Y2,L).
+
+%quick hack for testing purposes
+%notFloor(X,Y,0) :- not floor(X,Y,0), lengthXDim(X,0), lengthYDim(Y,0).
+
+%------------------------------------------------------------------------------------------
+%Reachable tiles
+%------------------------------------------------------------------------------------------
+
+step(0,-1 ;; 0,1 ;; 1,0 ;; -1,0). %Set up range of possible ways to move one tile over
+
+%The start of the level is automatically reachablea
+reachable(X,Y,L) :- levelStart(X,Y,L).
+
+%A tile is reachable if it is one step from a reachable tile and connected to that tile
+reachable(NX,NY,L) :-
+  reachable(X,Y,L),
+  step(DX,DY),
+  NX = X + DX,
+  NY = Y + DY,
+  floor(NX,NY,L),
+  connection(NX,NY,X,Y,L).
+  
+%Every floor tile should be reachable (This is for the interior only right now because only the interior has a starting position, and there is nothing to block travel between tiles outdoor currently)
+:- floor(X,Y,L), not reachable(X,Y,L), interior(L).
+
+%-----------------------------------------------------------------------
+% Indoor level Specific Elements
+%------------------------------------------------------------------------
+
+%------------------------------------------------------------------------
+%Outdoor level specific elements
+%------------------------------------------------------------------------
+
+{ tree(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } :- level(L), exterior(L).
+:-  tree(X,Y,L), not tile(X,Y,L). %trees must be on valid tiles
+
+%-----------------------------------------------
+%Planning With help from Answer set programming and plan generation
+%http://www.sciencedirect.com/science/article/pii/S0004370202001868 
+%kind of
+%-----------------------------------------------
+
+%----------------------------------------------------------------------------
+%NPCs
+%--------------------------------------------------------------------------
+npcNumRange(1..maxNumberOfNpcs). %each npc will be identified with a number (they will be given names during the conversion to an actual module
+{ npc(NPCN) : npcNumRange(NPCN) }. %each npc has an identifying number
+
+{ friendly(NPCN): npcNumRange(NPCN)}. %states that npc N is friendly
+{ hostile(NPCN): npcNumRange(NPCN)}. %states that npc N is hostile
+%npc location
+
+:- friendly(NPCN) , not npc(NPCN). %friendly must corrospond to an actual npc
+:- hostile(NPCN) , not npc(NPCN). %hostile must corrospond to an actual npc
+:- npc(NPCN), not friendly(NPCN), not hostile(NPCN). %all npcs are either friendly or hostile
+:- npc(NPCN), friendly(NPCN), hostile(NPCN). %no npc is both friendly and hostile
+
+1 { npcLevel(NPCN, L) : levelNumRange(L) } 1 :- npc(NPCN).
+:- npcLevel(NPCN,L) , not level(L).
+1 { npcLocation(NPCN,X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } 1 :- npcLevel(NPCN, L).%for every npc there is one location they are located
+:- npcLocation(NPCN,X,Y,L), not floor(X,Y,L). %NPCS must be located on floor tiles
+
+
+%---------------------------------------------------------------------------------------------------------------------
+% Quests
+%-----------------------------------------------------------------------------------------------------------------------
+
+questNumRange(1..numQuests). %each quest will be each npc will be identified with a number (they will be given names during the conversion to an actual module)
+numQuests { quest(QN) : questNumRange(QN) } numQuests. %each npc has an identifying number
+
+numQuests { questGiver(QN, NPCN) : questNumRange(QN) : npcNumRange(NPCN)} numQuests. %each quest has an npc that gives the quest
+:- questGiver(QN, NPCN), not quest(QN). %a npc can only give an real quest
+:- questGiver(QN, NPCN), not npc(NPCN). %
+:- questGiver(QN, NPCN), hostile(NPCN). %the quest giver cannot be hostile 
+:- questGiver(QN, NPCN1), questGiver(QN, NPCN2), NPCN1 != NPCN2. %there cannot be two quest givers 
+
+%Types of quest objectives
+typeOfObjective(killObjective).
+%typeOfObjective(fetch).
+
+1 { questObjectiveType(QN, OBJTYPE) : questNumRange(QN) : typeOfObjective(OBJTYPE) } 1 :- quest(QN).
+%:- questObjectiveType(QN, OBJTYPE1), questObjectiveType(QN, OBJTYPE2), OBJTYPE1 != OBJTYPE2.
+
+targetIndexRange(1..maxTargetIndex). %range of possible indexs for the quest target
+1 { questTarget(QN, T) : questNumRange(QN) : targetIndexRange(T) }  1 :- quest(QN). %the target of a quest (a npc/item to fetch/kill)
+:- questTarget(QN1, T), questTarget(QN2, T), questObjectiveType(QN1, TYPE), questObjectiveType(QN2, TYPE), QN1 != QN2. %Two quests cannot have the same target
+
+%Kill quest target rules
+:- questTarget(QN, T), questObjectiveType(QN, killObjective), not npc(T). %The target must be an actual npcs
+:- questTarget(QN, T), questObjectiveType(QN, killObjective), not hostile(T). %The target must be a hostile npc
+
+%fetch quest target rules
+%to come later
+
+%------------------------------------------------------------------------------------------------------------
+%Quest Stages rules
+%--------------------------------------------------------------------------------------------------------------
+stageRange(1..maxQuestStages). %range of allowable quest stages
+
+{ alive(NPCN,S) : npcNumRange(NPCN) : stageRange(S) }. %npc NPCN is alive during stage S
+{ dead(NPCN,S) : npcNumRange(NPCN) : stageRange(S) }. %npc NPCN is dead during stage S
+
+:- alive(NPCN, S), dead(NPCN, S). %an npc cannot be both dead and alive at the same time
+alive(NPCN,1) :- npc(NPCN). %all npcs are alive at stage 1 FOR NOW
+
+%only bother keeping track of alive/dead status for actual npcs during actual quest stages
+:- alive(NPCN, SN), not npc(NPCN). 
+:- dead(NPCN, SN), not npc(NPCN). 
+:- alive(NPCN, SN), not stage(SN). 
+:- dead(NPCN, SN), not stage(SN). 
+
+
+{ playerAt(L,S) : levelNumRange(L) : stageRange(S) }. %Level the player is in at Stage S
+:- playerAt(L,S) , not level(L).
+playerAt(L,S+1) :- stage(S), stage(S + 1), not stageAction(S,moveAction), playerAt(L,S). %if the player doesn't move during a stage he stays at the same location
+playerAt(L,S+1) :- stage(S), stage(S + 1), stageAction(S,moveAction), move(L,S). %if the player does move he goes to the level he moved to
+
+
+%Possible actions
+action(getQuestAction). %pick up a quest from a quest giver
+action(moveAction). %move to another level
+action(killAction). %kill a npc
+
+{ stageAction(SN,A) : stageRange(SN) : action(A) } . %Action A occurs at stage SN (Note no support yet for multiple branches)
+:- stageAction(SN,A1), stageAction(SN,A2), A1 != A2. %currently only one action can occur per stage
+stage(SN) :- stageAction(SN,A). %if an action occurs at a stage that stage exists
+:- stage(SN), not stage((SN - 1)), SN != 1. %Every stage has to have a stage before it or be the first stage
+
+%we don't want uneccessary stages
+%#minimize [totalStages(N) = N @ 1].
+totalStages(N) :- N = #count{stageAction(_,_)}. %count the number of stages
+
+%Get quest action. Currently this only supports a single quest existing
+:- stageAction(SN,getQuestAction), SN != 1. %hard code for now that the get quest action can only been done the first stage (later if we want to remove this restriction need to keep track of whether the quest has already been accepted or not so it is not accepted twice)
+1 { getQuest(NPCN,SN) : stageRange(SN) : npcNumRange(NPCN) } 1 :- stageAction(SN,getQuestAction). %A getQuest action requires a npc to be specified to get the quest from
+%:- qetQuest(NPCN,SN), not stageAction(SN,getQuestAction).
+:- getQuest(NPCN,SN), npcLevel(NPCN,L1), playerAt(L2,SN), L1 != L2. %The player must be in the location of the quest giver to get a quest
+:- getQuest(NPCN,SN), not npc(NPCN). %the quest giver must actually exist
+:- getQuest(NPCN,SN), not questGiver(NPCN,QN), questNumRange(QN). %A quest can only be goten from a npc that is a quest giver
+
+%move action
+1 { move(L,SN) : stageRange(SN) : levelNumRange(L) } 1 :- stageAction(SN,moveAction). %A move action requires a level to be specified to move to
+:- move(L,SN), not level(L).
+:- move(L,SN), playerAt(L,SN). %A player can't move to a location he already was in
+
+%kill action
+1 { kill(NPCN,SN) : stageRange(SN) : npcNumRange(NPCN) } 1 :- stageAction(SN,killAction). %A getQuest action requires a npc to be specified to kill
+:- kill(NPCN,SN), friendly(NPCN). %you cannot kill a friendly npc
+:- kill(NPCN,SN), npcLevel(NPCN,L1), playerAt(L2,SN), L1 != L2. %The player must be in the location of the npc to kill them
+:- kill(NPCN,SN), dead(NPCN,SN). %the npc cannot already be dead
+
+%rulees to update alive dead status accounting for kill action
+alive(NPCN,SN + 1) :- stage(SN), stage(SN + 1), alive(NPCN,SN), not kill(NPCN,SN). %a npc will be alive in subsequent stages if not killed
+dead(NPCN,SN + 1) :- stage(SN), stage(SN + 1), alive(NPCN,SN),  kill(NPCN,SN). %a living npc will be dead in subsequent stages if killed
+dead(NPCN,SN + 1) :- stage(SN), stage(SN + 1), dead(NPCN,SN). %if a npc is dead in a stage it will be dead in all subsequent stages
+
+%questComplete(QN,S) :- dead(NPCN,S), questTarget(QN, NPCN), questObjectiveType(QN, killObjective). %if the target of a quest is dead the quest is complete
+1 { questComplete(QN,S) : questNumRange(QN) : stageRange(S) } 1. %the quest must be complete for at least one stage
+:- questComplete(QN,S), not dead(NPCN,S), not kill(NPCN,S), questTarget(QN, NPCN), questObjectiveType(QN, killObjective). %if the quest objective is to kill the target the quest is only complete if the target is either dead or killed during that stage
+
+%-----------------------------------------
+%Hidden elements
+%------------------------------------
+%#hide level/1.
+#hide lengthXDim/2.
+#hide lengthYDim/2.
+#hide tile/3.
+#hide connectedUp/5.
+#hide connectedDown/5.
+#hide connectedRight/5.
+#hide connectedLeft/5.
+#hide connection/5.
+#hide wallSizeRange/1.
+#hide floorSizeRange/1.
+#hide wallXDim/2.
+#hide wallYDim/2.
+#hide barricadeX/3.
+#hide barricadeY/3.
+#hide nonEdgeXDim/2.
+#hide targetIndexRange/1.
+#hide nonEdgeXDim/2.
+#hide nonEdgeYDim/2.
+#hide npcNumRange/1.
+#hide questNumRange/1.
+#hide stageRange/1.
+%#hide reachable/3.
+#hide levelNumRange/1.

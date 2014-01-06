@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Shapes;
 using System.Windows.Media;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 namespace PCG_GUI.ViewModels
 {
@@ -72,6 +73,7 @@ namespace PCG_GUI.ViewModels
             NumberOfLevels = 0;
             world = null;
             levelGraphic = new ObservableCollection<Shape>();
+
             levelList = new ObservableCollection<levelData>();
             X_Dimension = "";
             Y_Dimension = "";
@@ -432,6 +434,18 @@ namespace PCG_GUI.ViewModels
             world.writeClingoInputFile(file, numberOfLevels);
 
             file.Close();
+
+            System.Diagnostics.Process process = new System.Diagnostics.Process();
+            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
+            startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+            startInfo.FileName = "cmd.exe";
+            startInfo.Arguments = "/C clingo.exe PCG.txt TempWorldDef.txt > TempResults.pcg";
+            process.StartInfo = startInfo;
+            process.Start();
+            process.WaitForExit();
+
+            closeWorld();
+            open("TempResults.pcg");
         }
     }
 
