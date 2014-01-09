@@ -18,7 +18,9 @@ namespace PCG_GUI.ViewModels
         public const int GRID_SIZE = 20;
         public const int WALL_PIXEL_RANGE = 3; //Range from wall at which a click registers
 
-        public ObservableCollection<Shape> levelGraphic { get;  set; }
+        public SmartObservableCollection<Shape> levelGraphic { get;  private set; }
+        public SmartObservableCollection<Shape> npcGraphic { get; private set; }
+
         public Boolean worldAttached { get; set; } //is there a world attached to the view model
         public World world;
         public int NumberOfLevels { get;  set; } //TODO: refactor this out and replace with references to number of levels in world?
@@ -27,7 +29,8 @@ namespace PCG_GUI.ViewModels
         public BaseViewModel()
         {
             world = null;
-            levelGraphic = new ObservableCollection<Shape>();
+            levelGraphic = new SmartObservableCollection<Shape>();
+            npcGraphic = new SmartObservableCollection<Shape>();
             worldAttached = false;
         }
 
@@ -106,11 +109,20 @@ namespace PCG_GUI.ViewModels
 
         public void drawLevel(int levelNum)
         {
+            drawLevelBody(levelNum, levelGraphic);
+            drawLevelBody(levelNum, npcGraphic);
+
+        }
+
+        public void drawLevelBody(int levelNum, SmartObservableCollection<Shape> graphic)
+        {
             if (world != null) //sanity check
             {
                 System.Console.WriteLine("Test");
 
-                levelGraphic.Clear();
+                graphic.Clear();
+
+                List<Shape> toDraw = new List<Shape>();
 
                 Level levelToDraw = world.getLevel(levelNum);
 
@@ -118,14 +130,17 @@ namespace PCG_GUI.ViewModels
                 {
                     for (int j = 0; j < levelToDraw.yDimension; j++)
                     {
-                        drawTile(levelToDraw.levelMap[i, j], i, j);
+                        drawTile(levelToDraw.levelMap[i, j], i, j, toDraw);
                     }
                 }
 
-                drawWallGrid(levelToDraw);
+                drawWallGrid(levelToDraw, toDraw);
+
+                graphic.AddRange(toDraw);
+
             }
         }
-        private void drawTile(Tile t, int x, int y)
+        private void drawTile(Tile t, int x, int y, List<Shape> toDraw)
         {
             Rectangle drawnTile = new Rectangle();
             SolidColorBrush fillBrush = new SolidColorBrush();
@@ -146,12 +161,12 @@ namespace PCG_GUI.ViewModels
             }
 
             drawnTile.Fill = fillBrush;
-            levelGraphic.Add(drawnTile);
             Canvas.SetLeft(drawnTile, x * GRID_SIZE);
-            Canvas.SetTop(drawnTile, y * GRID_SIZE);
+            Canvas.SetTop(drawnTile, y * GRID_SIZE);            
+            toDraw.Add(drawnTile);
         }
 
-        private void drawWallGrid(Level levelToDraw)
+        private void drawWallGrid(Level levelToDraw, List<Shape> toDraw)
         {
             //draw horizontal lines
             for (int i = 0; i < levelToDraw.xDimension; i++)
@@ -175,7 +190,7 @@ namespace PCG_GUI.ViewModels
                     gridLine.X2 = i * GRID_SIZE + GRID_SIZE;
                     gridLine.Y1 = j * GRID_SIZE;
                     gridLine.Y2 = j * GRID_SIZE;
-                    levelGraphic.Add(gridLine);
+                    toDraw.Add(gridLine);
                 }
             }
             //draw horizontal lines
@@ -200,7 +215,7 @@ namespace PCG_GUI.ViewModels
                     gridLine.X2 = i * GRID_SIZE;
                     gridLine.Y1 = j * GRID_SIZE;
                     gridLine.Y2 = j * GRID_SIZE + GRID_SIZE;
-                    levelGraphic.Add(gridLine);
+                    toDraw.Add(gridLine);
                 }
             }
         }

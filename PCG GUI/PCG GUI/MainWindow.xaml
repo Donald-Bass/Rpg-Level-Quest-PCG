@@ -14,11 +14,11 @@
             </MenuItem>
         </Menu>
         <TabControl HorizontalAlignment="Left" Height="925" Margin="0,29,0,0" VerticalAlignment="Top" Width="935">
-            <TabItem Header="Level">
+            <TabItem Header="Level" x:Name="LevelTab">
                 <local:LevelControl x:Name="LevelView" Margin="0,0,-5,0"/>
             </TabItem>
-            <TabItem Header="TabItem">
-                <Grid Background="#FFE5E5E5"/>
+            <TabItem Header="NPC">
+                <local:NPC_Control x:Name="NPCView" Margin="0,0,-10,-31"/>
             </TabItem>
         </TabControl>
     </Grid>

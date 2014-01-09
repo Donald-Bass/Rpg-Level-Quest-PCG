@@ -22,7 +22,7 @@ namespace PCG_GUI
     /// </summary>
     public partial class LevelControl : UserControl
     {
-        public ViewModelParent viewModel;
+        public ViewModelParent viewModel { get; set;  }
 
         public LevelControl()
         {

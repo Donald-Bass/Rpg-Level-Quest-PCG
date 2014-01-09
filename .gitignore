@@ -34,3 +34,16 @@ PCG GUI/PCG GUI/obj/Release/TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5AD
 PCG GUI/PCG GUI/obj/Release/TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs
 PCG GUI/PCG GUI/obj/Release/TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs
 PCG GUI/PCG GUI/obj/Release/TempPE/Properties.Resources.Designer.cs.dll
+PCG GUI/PCG GUI/bin/Debug/clingo.exe
+PCG GUI/PCG GUI/bin/Debug/Good Results.pcg
+PCG GUI/PCG GUI/bin/Debug/PCG.txt
+PCG GUI/PCG GUI/bin/Debug/TempResults.pcg
+PCG GUI/PCG GUI/bin/Debug/TempWorldDef.txt
+PCG GUI/PCG GUI/bin/Debug/Test.pcg
+PCG GUI/PCG GUI/bin/Debug/test.txt
+PCG GUI/PCG GUI/bin/Debug/Test6.pcg
+PCG GUI/PCG GUI/bin/Release/clingo.exe
+PCG GUI/PCG GUI/bin/Release/PCG.txt
+PCG GUI/PCG GUI/bin/Release/TempResults.pcg
+PCG GUI/PCG GUI/bin/Release/TempWorldDef.txt
+PCG GUI/PCG GUI/CopyResources.bat

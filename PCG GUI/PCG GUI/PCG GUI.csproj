@@ -42,6 +42,8 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -74,6 +76,10 @@
     <Compile Include="LevelControl.xaml.cs">
       <DependentUpon>LevelControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="NPC Control.xaml.cs">
+      <DependentUpon>NPC Control.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SmartObservableCollection.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\LevelViewModel.cs" />
     <Compile Include="RunPCG.xaml.cs">
@@ -88,6 +94,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="NPC Control.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="RunPCG.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             mc:Ignorable="d" Height="908" Width="879">
+             mc:Ignorable="d" Width="879">
     <Grid HorizontalAlignment="Left" Height="898" Margin="10,10,0,0" VerticalAlignment="Top" Width="869">
         <Grid.RowDefinitions>
             <RowDefinition Height="201*"/>

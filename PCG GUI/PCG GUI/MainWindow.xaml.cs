@@ -31,6 +31,9 @@ namespace PCG_GUI
             DataContext = viewModel;
             LevelView.viewModel = this.viewModel;
             LevelView.DataContext = viewModel;
+            NPCView.viewModel = this.viewModel;
+            NPCView.DataContext = viewModel;
+
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
