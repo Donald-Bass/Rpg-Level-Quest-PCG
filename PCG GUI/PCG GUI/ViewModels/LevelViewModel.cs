@@ -15,21 +15,17 @@ namespace PCG_GUI.ViewModels
 {
     public class LevelViewModel : INotifyPropertyChanged
     {
-        private const int GRID_SIZE = 20;
-        private const int WALL_PIXEL_RANGE = 3; //Range from wall at which a click registers
+        private BaseViewModel baseView;
 
-        public ObservableCollection<Shape> levelGraphic { get; private set; }
         public ObservableCollection<levelData> levelList { get; private set; }
         public String X_Dimension { get; private set; }
         public String Y_Dimension { get; private set; }
-        public int NumberOfLevels { get; private set; } //TODO: refactor this out and replace with references to number of levels in world?
 
         public Boolean levelInterior { get; private set;}
 
 
         public Boolean levelExterior { get; private set; }
 
-        public Boolean worldAttached { get; private set; } //is there a world attached to the view model
 
         //map editing modes
         public Boolean editFloorTrueValue = false;
@@ -51,7 +47,6 @@ namespace PCG_GUI.ViewModels
         public Boolean blockedTiles { get; set; }
         public Boolean undefinedTiles { get; set; }
 
-        private World world;
         private int curLevel;
         public int selectedLevel  {
             get 
@@ -68,11 +63,9 @@ namespace PCG_GUI.ViewModels
         }
         
 
-        public LevelViewModel()
+        public LevelViewModel(BaseViewModel baseView)
         {
-            NumberOfLevels = 0;
-            world = null;
-            levelGraphic = new ObservableCollection<Shape>();
+            this.baseView = baseView;
 
             levelList = new ObservableCollection<levelData>();
             X_Dimension = "";
@@ -81,85 +74,48 @@ namespace PCG_GUI.ViewModels
 
             levelInterior = false;
             levelExterior = false;
-            worldAttached = false;
-        }
-
-        //open the world contained in Filename
-        public void open(string Filename)
-        {
-            if (world != null)
-            {
-                closeWorld(); //close the world currently open
-            }
-
-            //load the new world
-            world = new World();
-            System.IO.StreamReader file = new System.IO.StreamReader(Filename);
-            world.parseClingoFile(file);
-
-            NumberOfLevels = world.numLevels;
-
-            if (NumberOfLevels >= 1) //if there is at least one level
-            {
-                selectedLevel = 0; //open the first level by default
-            }
-            file.Close();
-
-            setUpLevelList();
-            worldAttached = true;
-            RaisePropertyChanged("worldAttached");
         }
 
         public void setUpLevelList()
         {
-            if(world != null)
+            if (baseView.world != null)
             {
                 levelList.Clear();
 
-                for(int i = 0; i < world.numLevels; i++)
+                for (int i = 0; i < baseView.world.numLevels; i++)
                 {
                     levelData curLevelData = new levelData();
-                    curLevelData.levelName = world.getLevel(i).levelName;
+                    curLevelData.levelName = baseView.world.getLevel(i).levelName;
                     curLevelData.levelNumber = i;
                     levelList.Add(curLevelData);
                 }
             }
         }
 
-        public void save(string Filename)
+        public void finishOpen()
         {
-            if (world != null)
-            {           
-                System.IO.StreamWriter file = new System.IO.StreamWriter(Filename);
-                world.writeWorldFile(file);
-                file.Close();
+            if (baseView.NumberOfLevels >= 1) //if there is at least one level
+            {
+                selectedLevel = 0; //open the first level by default
             }
 
-        }
-
-        public void newWorld()
-        {
-            closeWorld(); //close the previous world
-            world = new World();
-            worldAttached = true;
-            NumberOfLevels = 0;
-            RaisePropertyChanged("worldAttached");
+            setUpLevelList();
         }
 
         public void changeLevel(int level)
         {
-            if (world != null && level != -1) //sanity check
+            if (baseView.world != null && level != -1) //sanity check
             {
 
-                if(level < NumberOfLevels) //if the level to change to actually exists
+                if (level < baseView.NumberOfLevels) //if the level to change to actually exists
                 {
 
                 //curLevel = level;
-                X_Dimension = world.getLevel(curLevel).xDimension.ToString();
-                Y_Dimension = world.getLevel(curLevel).yDimension.ToString();
-                drawLevel(curLevel);
+                X_Dimension = baseView.world.getLevel(curLevel).xDimension.ToString();
+                Y_Dimension = baseView.world.getLevel(curLevel).yDimension.ToString();
+                baseView.drawLevel(curLevel);
 
-                if(world.getLevel(curLevel).typeOfLevel == levelType.interior)
+                if (baseView.world.getLevel(curLevel).typeOfLevel == levelType.interior)
                 {
                     levelInterior = true;
                     levelExterior = false;
@@ -180,11 +136,6 @@ namespace PCG_GUI.ViewModels
             }
         }
 
-        internal void RaisePropertyChanged(string prop)
-        {
-            if (PropertyChanged != null) { PropertyChanged(this, new PropertyChangedEventArgs(prop)); }
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
 
         public void setLevelType(levelType type)
         {
@@ -203,7 +154,7 @@ namespace PCG_GUI.ViewModels
                     levelExterior = true;
                 }
 
-                world.getLevel(selectedLevel).typeOfLevel = type;
+                baseView.world.getLevel(selectedLevel).typeOfLevel = type;
 
                 RaisePropertyChanged("levelInterior");
                 RaisePropertyChanged("levelExterior");
@@ -212,18 +163,15 @@ namespace PCG_GUI.ViewModels
         }
 
         //Removes the world model attached to the view model
-        public void closeWorld()
+        public void finishClose() 
         {
             //remove all stored values
-            world = null;
             curLevel = -1;
-            NumberOfLevels = 0;
             X_Dimension = "";
             Y_Dimension = "";
             levelInterior = false;
             levelExterior = false;
 
-            levelGraphic.Clear();
             levelList.Clear();
 
             //tell gui values have been removed
@@ -232,110 +180,6 @@ namespace PCG_GUI.ViewModels
             RaisePropertyChanged("levelInterior");
             RaisePropertyChanged("levelExterior");
 
-            worldAttached = false;
-            RaisePropertyChanged("worldAttached");
-
-        }
-
-        private void drawLevel(int levelNum)
-        {
-            if (world != null) //sanity check
-            {
-                System.Console.WriteLine("Test");
-
-                levelGraphic.Clear();
-
-                Level levelToDraw = world.getLevel(levelNum);
-
-                for (int i = 0; i < levelToDraw.xDimension; i++)
-                {
-                    for (int j = 0; j < levelToDraw.yDimension; j++)
-                    {
-                        drawTile(levelToDraw.levelMap[i, j], i, j);
-                    }
-                }
-
-                drawWallGrid(levelToDraw);
-            }
-        }
-        private void drawTile(Tile t, int x, int y)
-        {
-            Rectangle drawnTile = new Rectangle();
-            SolidColorBrush fillBrush = new SolidColorBrush();
-            drawnTile.Height = GRID_SIZE;
-            drawnTile.Width = GRID_SIZE;
-
-            switch (t.tType)
-            {
-                case TileType.floor:
-                    fillBrush.Color = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF); //white
-                    break;
-                case TileType.blocked:
-                    fillBrush.Color = Color.FromArgb(0xFF, 0, 0, 0); //black
-                    break;
-                case TileType.undefined:
-                    fillBrush.Color = Color.FromArgb(0xFF, 0xD3, 0xD3, 0xD3); //white
-                    break;
-            }
-
-            drawnTile.Fill = fillBrush;
-            levelGraphic.Add(drawnTile);
-            Canvas.SetLeft(drawnTile, x * GRID_SIZE);
-            Canvas.SetTop(drawnTile, y * GRID_SIZE);
-        }
-
-        private void drawWallGrid(Level levelToDraw)
-        {
-            //draw horizontal lines
-            for (int i = 0; i < levelToDraw.xDimension; i++)
-            {
-                for (int j = 0; j <= levelToDraw.yDimension; j++)
-                {
-                    Line gridLine = new Line();
-
-                    if ((j == levelToDraw.yDimension && levelToDraw.levelMap[i, j - 1].southWall) || (j != levelToDraw.yDimension && levelToDraw.levelMap[i, j].northWall))
-                    {
-                        gridLine.Stroke = System.Windows.Media.Brushes.Black;
-                        gridLine.StrokeThickness = 2;
-                    }
-                    else
-                    {
-                        gridLine.Stroke = System.Windows.Media.Brushes.Gray;
-                        gridLine.StrokeThickness = 1;
-                    }
-
-                    gridLine.X1 = i * GRID_SIZE;
-                    gridLine.X2 = i * GRID_SIZE + GRID_SIZE;
-                    gridLine.Y1 = j * GRID_SIZE;
-                    gridLine.Y2 = j * GRID_SIZE;
-                    levelGraphic.Add(gridLine);
-                }
-            }
-            //draw horizontal lines
-            for (int i = 0; i <= levelToDraw.xDimension; i++)
-            {
-                for (int j = 0; j < levelToDraw.yDimension; j++)
-                {
-                    Line gridLine = new Line();
-
-                    if ((i == levelToDraw.xDimension && levelToDraw.levelMap[i - 1, j].eastWall) || (i != levelToDraw.xDimension && levelToDraw.levelMap[i, j].westWall))
-                    {
-                        gridLine.Stroke = System.Windows.Media.Brushes.Black;
-                        gridLine.StrokeThickness = 2;
-                    }
-                    else
-                    {
-                        gridLine.Stroke = System.Windows.Media.Brushes.Gray;
-                        gridLine.StrokeThickness = 1;
-                    }
-
-                    gridLine.X1 = i * GRID_SIZE;
-                    gridLine.X2 = i * GRID_SIZE;
-                    gridLine.Y1 = j * GRID_SIZE;
-                    gridLine.Y2 = j * GRID_SIZE + GRID_SIZE;
-                    levelGraphic.Add(gridLine);
-                }
-            }
         }
 
         //level display list type stuff
@@ -349,104 +193,95 @@ namespace PCG_GUI.ViewModels
         public void addLevel(int x, int y)
         {
             //validate numbers here eventually
-            world.addLevel(x, y);
-            NumberOfLevels++;
+            baseView.world.addLevel(x, y);
+            baseView.NumberOfLevels++;
 
             levelData newLevelData = new levelData();
-            newLevelData.levelNumber = NumberOfLevels - 1;
+            newLevelData.levelNumber = baseView.NumberOfLevels - 1;
             newLevelData.levelName = "";
             levelList.Add(newLevelData);
-            selectedLevel = NumberOfLevels - 1; //select the new level
+            selectedLevel = baseView.NumberOfLevels - 1; //select the new level
         }
 
 
         public void editLevel(int x, int y)
         {
-            if (worldAttached && selectedLevel != -1) //only edit when a level actually is selected
+            if (baseView.worldAttached && selectedLevel != -1) //only edit when a level actually is selected
             {
 
                 if (editFloor)
                 {
-                    int tileX = x / GRID_SIZE;
-                    int tileY = y / GRID_SIZE;
+                    int tileX = x / BaseViewModel.GRID_SIZE;
+                    int tileY = y / BaseViewModel.GRID_SIZE;
                     
                     if(floorTiles)
                     {
-                        world.getLevel(selectedLevel).setTileType(tileX, tileY, TileType.floor);
+                        baseView.world.getLevel(selectedLevel).setTileType(tileX, tileY, TileType.floor);
                     }
 
                     else if(blockedTiles)
                     {
-                        world.getLevel(selectedLevel).setTileType(tileX, tileY, TileType.blocked);
+                        baseView.world.getLevel(selectedLevel).setTileType(tileX, tileY, TileType.blocked);
                     }
 
                     else if (undefinedTiles)
                     {
-                        world.getLevel(selectedLevel).setTileType(tileX, tileY, TileType.undefined);
+                        baseView.world.getLevel(selectedLevel).setTileType(tileX, tileY, TileType.undefined);
                     }
                 }
 
                 else //editing walls
                 {
-                    if((x % GRID_SIZE <= 3 || x % GRID_SIZE >= GRID_SIZE - 3) && ! (y % GRID_SIZE <= 3 || y % GRID_SIZE >= GRID_SIZE - 3)) //if close to a wall along the y axis and not to a wall along the x axis
+                    if ((x % BaseViewModel.GRID_SIZE <= 3 || x % BaseViewModel.GRID_SIZE >= BaseViewModel.GRID_SIZE - 3) && !(y % BaseViewModel.GRID_SIZE <= 3 || y % BaseViewModel.GRID_SIZE >= BaseViewModel.GRID_SIZE - 3)) //if close to a wall along the y axis and not to a wall along the x axis
                     {
-                        int wallX = (int)Math.Round((double)x / (double)GRID_SIZE);
-                        int wallY = (int)Math.Floor((double)y / (double)GRID_SIZE);
+                        int wallX = (int)Math.Round((double)x / (double)BaseViewModel.GRID_SIZE);
+                        int wallY = (int)Math.Floor((double)y / (double)BaseViewModel.GRID_SIZE);
 
                         if(addWalls)
                         {
-                            world.getLevel(selectedLevel).addWallY(wallX, wallY);
+                            baseView.world.getLevel(selectedLevel).addWallY(wallX, wallY);
                         }
 
                         else if(removeWalls)
                         {
-                            world.getLevel(selectedLevel).removeWallY(wallX, wallY);
+                            baseView.world.getLevel(selectedLevel).removeWallY(wallX, wallY);
                         }
                     }
 
-                    else if(!(x % GRID_SIZE <= 3 || x % GRID_SIZE >= GRID_SIZE - 3) && (y % GRID_SIZE <= 3 || y % GRID_SIZE >= GRID_SIZE - 3)) //if close to a wall along the x axis and not to a wall along the y axis
+                    else if (!(x % BaseViewModel.GRID_SIZE <= 3 || x % BaseViewModel.GRID_SIZE >= BaseViewModel.GRID_SIZE - 3) && (y % BaseViewModel.GRID_SIZE <= 3 || y % BaseViewModel.GRID_SIZE >= BaseViewModel.GRID_SIZE - 3)) //if close to a wall along the x axis and not to a wall along the y axis
                     {
-                        int wallX = (int)Math.Floor((double)x / (double)GRID_SIZE);
-                        int wallY = (int)Math.Round((double)y / (double)GRID_SIZE);
+                        int wallX = (int)Math.Floor((double)x / (double)BaseViewModel.GRID_SIZE);
+                        int wallY = (int)Math.Round((double)y / (double)BaseViewModel.GRID_SIZE);
 
                         if (addWalls)
                         {
-                            world.getLevel(selectedLevel).addWallX(wallX, wallY);
+                            baseView.world.getLevel(selectedLevel).addWallX(wallX, wallY);
                         }
 
                         else if (removeWalls)
                         {
-                            world.getLevel(selectedLevel).removeWallY(wallX, wallY);
+                            baseView.world.getLevel(selectedLevel).removeWallY(wallX, wallY);
                         }
                     }
                     
                 }
 
-                drawLevel(selectedLevel); //redraw the level
+                baseView.drawLevel(selectedLevel); //redraw the level
             }
         }
 
         //numberOfLevels - number of levels to generate. If -1 generate as many as clingo feels is necessary
-        public void runClingo(int numberOfLevels)
+        //public override void runClingo(int numberOfLevels)
+        //{
+            //runClingoBody(numberOfLevels);
+            //open("TempResults.pcg");
+        //}
+
+        internal void RaisePropertyChanged(string prop)
         {
-            System.IO.StreamWriter file = new System.IO.StreamWriter("TempWorldDef.txt");
-
-            world.writeClingoInputFile(file, numberOfLevels);
-
-            file.Close();
-
-            System.Diagnostics.Process process = new System.Diagnostics.Process();
-            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
-            startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-            startInfo.FileName = "cmd.exe";
-            startInfo.Arguments = "/C clingo.exe PCG.txt TempWorldDef.txt > TempResults.pcg";
-            process.StartInfo = startInfo;
-            process.Start();
-            process.WaitForExit();
-
-            closeWorld();
-            open("TempResults.pcg");
+            if (PropertyChanged != null) { PropertyChanged(this, new PropertyChangedEventArgs(prop)); }
         }
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 
 }

@@ -22,13 +22,15 @@ namespace PCG_GUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        LevelViewModel viewModel;
+        ViewModelParent viewModel;
 
         public MainWindow()
         {
             InitializeComponent();
-            viewModel = new LevelViewModel();
+            viewModel = new ViewModelParent();
             DataContext = viewModel;
+            LevelView.viewModel = this.viewModel;
+            LevelView.DataContext = viewModel;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -56,7 +58,7 @@ namespace PCG_GUI
             {
                 // Open document
                 string filename = dlg.FileName;
-                viewModel.open(filename);
+                viewModel.Open(filename);
             }
         }
 
@@ -75,13 +77,13 @@ namespace PCG_GUI
             {
                 // Open document
                 string filename = dlg.FileName;
-                viewModel.save(filename);
+                viewModel.BaseView.save(filename);
             }
         }
 
         private void Menu_Close(object sender, RoutedEventArgs e)
         {
-            viewModel.closeWorld();
+            viewModel.Close();
         }
 
         private void Menu_Run(object sender, RoutedEventArgs e)
@@ -90,33 +92,7 @@ namespace PCG_GUI
             runWin.Show();
         }
 
-        private void InteriorButton_Checked(object sender, RoutedEventArgs e)
-        {
-            viewModel.setLevelType(levelType.interior);
-        }
-
-        private void ExteriorButton_Checked(object sender, RoutedEventArgs e)
-        {
-            viewModel.setLevelType(levelType.exterior);
-        }
-
-        private void CreateLevel_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                viewModel.addLevel(Convert.ToInt32(NewLevelSizeX.Text), Convert.ToInt32(NewLevelSizeY.Text));
-            }
-            catch (FormatException exception)
-            {
-                System.Console.WriteLine(exception.ToString());
-            }
-        }
-
-        private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            viewModel.editLevel((int)e.GetPosition(LevelViewer).X, (int)e.GetPosition(LevelViewer).Y);
-
-        }
+      
 
     }
 }

@@ -9,7 +9,7 @@ using System.Windows.Controls;
 
 namespace PCG_GUI.Facts
 {
-    class World
+    public class World
     {
         private List<Fact> npcFacts; //facts necessary to build the level
         private List<Fact> questFacts; //facts necessary to build the level

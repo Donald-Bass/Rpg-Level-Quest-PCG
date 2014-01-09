@@ -59,6 +59,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="LevelControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -67,10 +71,15 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="LevelControl.xaml.cs">
+      <DependentUpon>LevelControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\LevelViewModel.cs" />
     <Compile Include="RunPCG.xaml.cs">
       <DependentUpon>RunPCG.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\ViewModelParent.cs" />
     <Compile Include="WorldModel\Level.cs" />
     <Compile Include="WorldModel\Tile.cs" />
     <Compile Include="WorldModel\World.cs" />

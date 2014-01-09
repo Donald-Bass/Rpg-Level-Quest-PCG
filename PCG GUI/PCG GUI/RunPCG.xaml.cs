@@ -20,8 +20,8 @@ namespace PCG_GUI
     /// </summary>
     public partial class RunPCGWindow : Window
     {
-        public LevelViewModel viewModel {get; set;} 
-        public RunPCGWindow(LevelViewModel viewModel)
+        public ViewModelParent viewModel {get; set;}
+        public RunPCGWindow(ViewModelParent viewModel)
         {
             InitializeComponent();
             this.viewModel = viewModel;

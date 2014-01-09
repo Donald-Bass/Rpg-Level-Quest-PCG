@@ -9,7 +9,7 @@ namespace PCG_GUI.Facts
 {
     public enum levelType{interior, exterior};
 
-    class Level
+    public class Level
     {
         public int xDimension { get; private set; }  //length of level (x)
         public int yDimension { get; private set; } //height of level (y)

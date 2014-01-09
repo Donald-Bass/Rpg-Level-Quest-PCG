@@ -1,0 +1,82 @@
+﻿<UserControl x:Class="PCG_GUI.LevelControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" Height="908" Width="879">
+    <Grid HorizontalAlignment="Left" Height="898" Margin="10,10,0,0" VerticalAlignment="Top" Width="869">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="201*"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Border BorderBrush="Black" BorderThickness="1" Margin="20,294,351,22" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+            <ItemsControl x:Name="LevelViewer" ItemsSource="{Binding Path=BaseView.levelGraphic}"
+				HorizontalAlignment="Left" Height="461" VerticalAlignment="Top" Width="507" Margin="0,0,-1,-1">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemContainerStyle>
+                    <Style>
+                        <Setter Property="Canvas.Top" Value="{Binding Y}" />
+                        <Setter Property="Canvas.Left" Value="{Binding X}" />
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+
+            </ItemsControl>
+        </Border>
+        <Label Content="Map" HorizontalAlignment="Left" Margin="20,263,0,0" VerticalAlignment="Top" Height="26" Width="34"/>
+        <Grid Margin="268,242,489,513">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="57*"/>
+                <ColumnDefinition Width="16*"/>
+                <ColumnDefinition Width="61*"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="X Length:" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.45,-0.038" Grid.ColumnSpan="2"/>
+            <TextBox HorizontalAlignment="Left" Height="23" Margin="8,3,0,0" TextWrapping="Wrap" Text="{Binding Path=LevelView.X_Dimension}" VerticalAlignment="Top" Width="57" Focusable="False" IsEnabled="False" Grid.Column="1" Grid.ColumnSpan="2"/>
+        </Grid>
+        <Grid Margin="407,242,351,513">
+            <Label Content="Y Length:" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.45,-0.038"/>
+            <TextBox HorizontalAlignment="Left" Height="23" Margin="64,3,0,0" TextWrapping="Wrap" Text="{Binding Path=LevelView.Y_Dimension}" VerticalAlignment="Top" Width="57" Focusable="False" IsEnabled="False"/>
+        </Grid>
+        <Grid Margin="562,294,247,451">
+            <RadioButton x:Name="InteriorButton" Content="Interior" HorizontalAlignment="Left" VerticalAlignment="Top" GroupName="LevelType" IsChecked="{Binding Path=LevelView.levelInterior}" Checked="InteriorButton_Checked" IsEnabled="{Binding Path=BaseView.worldAttached}"/>
+            <RadioButton x:Name="ExteriorButton" Content="Exterior" HorizontalAlignment="Left" Margin="0,21,0,0" VerticalAlignment="Top" GroupName="LevelType" IsChecked="{Binding Path=LevelView.levelExterior}" Checked="ExteriorButton_Checked" IsEnabled="{Binding Path=BaseView.worldAttached}"/>
+        </Grid>
+        <ListView ItemsSource="{Binding Path=LevelView.levelList}" Margin="20,15,687,611" SelectedIndex="{Binding Path=LevelView.selectedLevel}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Width="40" Header="Level" 
+						DisplayMemberBinding="{Binding levelNumber}"  />
+                    <GridViewColumn Width="140" Header="Name"  
+						DisplayMemberBinding="{Binding levelName}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="130" Margin="256,46,0,0" VerticalAlignment="Top" Width="199">
+            <Grid>
+                <Label Content="X Size" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="NewLevelSizeX" HorizontalAlignment="Left" Height="23" Margin="68,13,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+                <Label Content="Y Size" HorizontalAlignment="Left" Margin="10,49,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="NewLevelSizeY" HorizontalAlignment="Left" Height="23" Margin="68,52,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+                <Button x:Name="CreateLevel" Content="Create New Level" HorizontalAlignment="Left" VerticalAlignment="Top" Width="105" Margin="10,93,0,0" Click="CreateLevel_Click" IsEnabled="{Binding Path=BaseView.worldAttached}"/>
+            </Grid>
+        </Border>
+        <Label Content="Add Level" HorizontalAlignment="Left" Margin="256,15,0,0" VerticalAlignment="Top" Height="26" Width="62"/>
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="91" Margin="562,356,0,0" VerticalAlignment="Top" Width="244">
+            <Grid>
+                <RadioButton x:Name="Floor_Mode" Content="Floors" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" GroupName="EditType" IsChecked="{Binding Path=LevelView.editFloor}" IsEnabled="{Binding Path=BaseView.worldAttached}"/>
+                <RadioButton x:Name="Add_Walls_Mode" Content="Add Walls" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top" GroupName="EditType" IsEnabled="{Binding Path=BaseView.worldAttached}" IsChecked="{Binding Path=LevelView.addWalls}"/>
+                <RadioButton x:Name="Remove_Walls_Mode" Content="Remove Walls" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top" GroupName="EditType" IsEnabled="{Binding Path=BaseView.worldAttached}" IsChecked="{Binding Path=LevelView.removeWalls}"/>
+            </Grid>
+        </Border>
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="91" Margin="562,497,0,0" VerticalAlignment="Top" Width="244">
+            <Grid>
+                <RadioButton x:Name="Floor_Mode2" Content="Floor" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" GroupName="Floor Type" IsChecked="{Binding Path=LevelView.floorTiles}" IsEnabled="{Binding Path=LevelView.editFloor}"/>
+                <RadioButton x:Name="Blocked_Mode" Content="Blocked" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top" GroupName="Floor Type" IsChecked="{Binding Path=LevelView.blockedTiles}" IsEnabled="{Binding Path=LevelView.editFloor}"/>
+                <RadioButton x:Name="Undefined_Mode" Content="Undefined" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top" GroupName="Floor Type" IsEnabled="{Binding Path = LevelView.editFloor}" IsChecked="{Binding Path = LevelView.undefinedTiles}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
