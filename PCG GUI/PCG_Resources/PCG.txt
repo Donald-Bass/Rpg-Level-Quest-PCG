@@ -161,6 +161,33 @@ reachable(NX,NY,L) :-
 % Indoor level Specific Elements
 %------------------------------------------------------------------------
 
+%A room (defined by the top left (XUL,YUL) and Bottom Right (XBR, YBR) corners
+3 { room(XUL, YUL, XBR, YBR, L) : floorSizeRange(XUL) : floorSizeRange(YUL) : floorSizeRange(XBR) : floorSizeRange(YBR) } :- level(L), interior(L).
+
+%ensure corners are actually proper corners
+:- room(XUL, YUL, XBR, YBR, L), XUL >= XBR.
+:- room(XUL, YUL, XBR, YBR, L), YUL >= YBR.
+
+floor(X,Y,L) :- room(XUL, YUL, XBR, YBR, L),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, floorSizeRange(X), floorSizeRange(Y). %all tiles in the room must be floor
+noWallX(X,Y,L) :- room(XUL, YUL, XBR, YBR, L),  X >= XUL, X <= XBR, Y > YUL, Y <= YBR, floorSizeRange(X), floorSizeRange(Y). %there can be no wall inside the room
+noWallY(X,Y,L) :- room(XUL, YUL, XBR, YBR, L),  X > XUL, X <= XBR, Y >= YUL, Y <= YBR, floorSizeRange(X), floorSizeRange(Y). %all tiles in the room must be floor
+%floor(X,Y,L) :- room(XUL, YUL, XBR, YBR, L),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, floorSizeRange(X), floorSizeRange(Y). %all tiles in the room must be floor
+
+:- wallX(X,Y,L), noWallX(X,Y,L).
+:- wallY(X,Y,L), noWallY(X,Y,L).
+
+%the corners of each room have walls
+wallX(XUL,YUL,L) :- room(XUL, YUL, XBR, YBR, L).
+wallX(XBR,YUL,L) :- room(XUL, YUL, XBR, YBR, L).
+wallX(XUL,(YBR + 1),L) :- room(XUL, YUL, XBR, YBR, L).
+wallX(XBR,(YBR + 1),L) :- room(XUL, YUL, XBR, YBR, L). 
+wallY(XUL,YUL,L) :- room(XUL, YUL, XBR, YBR, L). 
+wallY((XBR + 1),YUL,L) :- room(XUL, YUL, XBR, YBR, L). 
+wallY(XUL,YBR,L) :- room(XUL, YUL, XBR, YBR, L).
+wallY((XBR + 1),YBR,L) :- room(XUL, YUL, XBR, YBR, L).
+
+%Limit size of rooms
+
 %------------------------------------------------------------------------
 %Outdoor level specific elements
 %------------------------------------------------------------------------

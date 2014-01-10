@@ -10,7 +10,7 @@
                 <MenuItem Header="_Open" Click="Menu_Open" />
                 <MenuItem Header="_Save" Click="Menu_Save" />
                 <MenuItem Header="_Close" Click="Menu_Close" />
-                <MenuItem Header="_Run PCG" Click="Menu_Run" IsEnabled="{Binding Path=worldAttached}" />
+                <MenuItem Header="_Run PCG" Click="Menu_Run" IsEnabled="{Binding Path=BaseView.worldAttached}" />
             </MenuItem>
         </Menu>
         <TabControl HorizontalAlignment="Left" Height="925" Margin="0,29,0,0" VerticalAlignment="Top" Width="935">
