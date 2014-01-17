@@ -58,19 +58,19 @@ wallXDim(0..X , L) :- levelLengthX(X, L).
 wallYDim(0..Y , L) :- levelLengthY(Y, L).
 
 %wallX(X,Y,L) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
-{ wallX(X,Y,L) : wallSizeRange(X) : wallSizeRange(Y) } :- level(L). 
-:- wallX(X,Y,L) , not wallXDim(X,L). %all walls must have a valid x
+{ wallX(X,Y,L) } :- wallXDim(X,L), wallYDim(Y,L), level(L), interior(L). 
+%:- wallX(X,Y,L) , not wallXDim(X,L). %all walls must have a valid x
 :- wallX(X,Y,L), levelLengthX(X,L). %check that wall does not start at rightmost x
-:- wallX(X,Y,L), not wallYDim(Y,L). %all walls must have a valid y 
-:- wallX(X,Y,L), not interior(L). %only interiors have walls
+%:- wallX(X,Y,L), not wallYDim(Y,L). %all walls must have a valid y 
+%:- wallX(X,Y,L), not interior(L). %only interiors have walls
 
 
 %wallY(X,Y,L) from X,Y to X,Y+1. The bottommost y is not a valid y for a wall on the y axis it can only be used for walls on the x Axis
-{ wallY(X,Y,L) : wallSizeRange(X) : wallSizeRange(Y) } :- level(L). 
-:- wallY(X,Y,L) , not wallXDim(X,L). %all walls must have a valid x
+{ wallY(X,Y,L) } :- wallXDim(X,L), wallYDim(Y,L), level(L), interior(L). 
+%:- wallY(X,Y,L) , not wallXDim(X,L). %all walls must have a valid x
 :- wallY(X,Y,L), levelLengthY(Y,L). %check that wall does not start on bottommost y
-:- wallY(X,Y,L), not wallYDim(Y,L).  %all walls must have a valid y
-:- wallY(X,Y,L), not interior(L). %only interiors have walls
+%:- wallY(X,Y,L), not wallYDim(Y,L).  %all walls must have a valid y
+%:- wallY(X,Y,L), not interior(L). %only interiors have walls
 
 %Barricades are walls and anything else that occupies the same space (doors for example0
 barricadeX(X,Y,L) :- wallX(X,Y,L).
@@ -85,14 +85,13 @@ barricadeY(X,Y,L) :- wallY(X,Y,L).
 %--------------------------------------------------------------------------------------------------------------------------------------
 
 %define floors
-{ floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } :- level(L).
-
+{ floor(X,Y,L) } :- lengthXDim(X,L), lengthYDim(Y,L), level(L).
 %There should be at least one floor in every row and column of a level (otherwise the level is too big)
 %Need to disable this only for user generated levels
 %1 { floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } :- level(L), lengthXDim(X,L).
 %1 { floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } :- level(L), lengthYDim(Y,L).
 
-:- floor(X,Y,L) , not tile(X,Y,L). %all floors must be on valid tiles
+%:- floor(X,Y,L) , not tile(X,Y,L). %all floors must be on valid tiles
 floor(X,Y,L) :- tile(X,Y,L), exterior(L). %all tiles must be floors outdoors
 
 %There must be a wall between any floor and non floor tile when the level is an interior
@@ -168,23 +167,38 @@ reachable(NX,NY,L) :-
 :- room(XUL, YUL, XBR, YBR, L), XUL >= XBR.
 :- room(XUL, YUL, XBR, YBR, L), YUL >= YBR.
 
-floor(X,Y,L) :- room(XUL, YUL, XBR, YBR, L),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, floorSizeRange(X), floorSizeRange(Y). %all tiles in the room must be floor
-noWallX(X,Y,L) :- room(XUL, YUL, XBR, YBR, L),  X >= XUL, X <= XBR, Y > YUL, Y <= YBR, floorSizeRange(X), floorSizeRange(Y). %there can be no wall inside the room
-noWallY(X,Y,L) :- room(XUL, YUL, XBR, YBR, L),  X > XUL, X <= XBR, Y >= YUL, Y <= YBR, floorSizeRange(X), floorSizeRange(Y). %all tiles in the room must be floor
-%floor(X,Y,L) :- room(XUL, YUL, XBR, YBR, L),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, floorSizeRange(X), floorSizeRange(Y). %all tiles in the room must be floor
+floor(X,Y,L) :- room(XUL, YUL, XBR, YBR, L),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X,L), lengthYDim(Y,L). %all tiles in the room must be floor
+noWallX(X,Y,L) :- room(XUL, YUL, XBR, YBR, L),  X >= XUL, X <= XBR, Y > YUL, Y <= YBR, lengthXDim(X,L), lengthYDim(Y,L). %there can be no wall inside the room
+noWallY(X,Y,L) :- room(XUL, YUL, XBR, YBR, L),  X > XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X,L), lengthYDim(Y,L). %all tiles in the room must be floor
 
-:- wallX(X,Y,L), noWallX(X,Y,L).
-:- wallY(X,Y,L), noWallY(X,Y,L).
+:- noWallX(X,Y,L), wallX(X,Y,L).
+:- noWallY(X,Y,L), wallY(X,Y,L).
 
-%the corners of each room have walls
-wallX(XUL,YUL,L) :- room(XUL, YUL, XBR, YBR, L).
-wallX(XBR,YUL,L) :- room(XUL, YUL, XBR, YBR, L).
-wallX(XUL,(YBR + 1),L) :- room(XUL, YUL, XBR, YBR, L).
-wallX(XBR,(YBR + 1),L) :- room(XUL, YUL, XBR, YBR, L). 
-wallY(XUL,YUL,L) :- room(XUL, YUL, XBR, YBR, L). 
-wallY((XBR + 1),YUL,L) :- room(XUL, YUL, XBR, YBR, L). 
-wallY(XUL,YBR,L) :- room(XUL, YUL, XBR, YBR, L).
-wallY((XBR + 1),YBR,L) :- room(XUL, YUL, XBR, YBR, L).
+{ noWallX(X,Y,L) : wallSizeRange(X) : wallSizeRange(Y) } :- level(L), interior(L). 
+{ noWallY(X,Y,L) : wallSizeRange(X) : wallSizeRange(Y) } :- level(L), interior(L). 
+
+noWallX(X,Y,L) :- not wallX(X,Y,L), level(L), interior(L), lengthXDim(X,L), lengthYDim(Y,L).
+noWallY(X,Y,L) :- not wallY(X,Y,L), level(L), interior(L), lengthXDim(X,L), lengthYDim(Y,L).
+wallX(X,Y,L) :- not noWallX(X,Y,L), level(L), interior(L), lengthXDim(X,L), lengthYDim(Y,L).
+wallY(X,Y,L) :- not noWallY(X,Y,L), level(L), interior(L), lengthXDim(X,L), lengthYDim(Y,L).
+
+
+% %the corners of each room have walls
+wallX(XUL,YUL,L) :- room(XUL, YUL, XBR, YBR, L).  %horizontal component of top left cornor
+wallX(XBR,YUL,L) :- room(XUL, YUL, XBR, YBR, L).  %horizontal component of top right cornor
+wallX(XUL,(YBR + 1),L) :- room(XUL, YUL, XBR, YBR, L). %horizontal component of bottom left corner
+wallX(XBR,(YBR + 1),L) :- room(XUL, YUL, XBR, YBR, L). %horizontal component of bottom right corner
+wallY(XUL,YUL,L) :- room(XUL, YUL, XBR, YBR, L).  %vertical component of top left cornor
+wallY((XBR + 1),YUL,L) :- room(XUL, YUL, XBR, YBR, L).  %vertical component of top right cornor
+wallY(XUL,YBR,L) :- room(XUL, YUL, XBR, YBR, L). %vertical component of bottom left cornor
+wallY((XBR + 1),YBR,L) :- room(XUL, YUL, XBR, YBR, L). %vertical component of bottom right cornor
+
+%There can only be gaps one wide in the walls of the room
+%wallX((XW - 1),YUL,L) :- room(XUL, YUL, XBR, YBR, L), noWallX(XW,YUL,L), XW > XUL, XW <= XBR. %check for walls on top of the room
+%wallX((XW - 1),(YBR + 1),L) :- room(XUL, YUL, XBR, YBR, L), noWallX(XW,(YBR + 1),L), XW > XUL, XW <= XBR. %check for walls on bottom of the room
+%wallY(XUL,(YW - 1),L) :- room(XUL, YUL, XBR, YBR, L), noWallY(XUL,YW,L), YW > YUL, YW <= YBR. %check for walls on left side of the room
+%wallY((XBR + 1),(YW - 1),L) :- room(XUL, YUL, XBR, YBR, L), noWallY((XBR + 1),YW,L), YW > YUL, YW <= YBR. %check for walls on left side of the room
+
 
 %Limit size of rooms
 
