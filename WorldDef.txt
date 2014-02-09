@@ -4,8 +4,11 @@
 level(0).
 interior(0).
 level(1).
-exterior(1).
-:- questTarget(QN, T), not npcLevel(T,0). %hack for now to force target to be within dungeon
+interior(1).
+level(2).
+interior(2).
+%exterior(1).
+%:- questTarget(QN, T), not npcLevel(T,0). %hack for now to force target to be within dungeon
 
-playerAt(1,1). 
-stageAction(1,getQuestAction).
+%playerAt(1,1). 
+%stageAction(1,getQuestAction).

@@ -1,4 +1,6 @@
-﻿using System;
+﻿//NOTE: NEED TO ADD ABILITY TO ADD DOORS AT LATER POINT
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -239,7 +241,7 @@ namespace PCG_GUI.ViewModels
 
                         if(addWalls)
                         {
-                            baseView.world.getLevel(selectedLevel).addWallY(wallX, wallY);
+                            baseView.world.getLevel(selectedLevel).addWallY(wallX, wallY, WallType.wall);
                         }
 
                         else if(removeWalls)
@@ -255,7 +257,7 @@ namespace PCG_GUI.ViewModels
 
                         if (addWalls)
                         {
-                            baseView.world.getLevel(selectedLevel).addWallX(wallX, wallY);
+                            baseView.world.getLevel(selectedLevel).addWallX(wallX, wallY, WallType.wall);
                         }
 
                         else if (removeWalls)

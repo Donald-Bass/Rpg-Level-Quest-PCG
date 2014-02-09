@@ -175,11 +175,19 @@ namespace PCG_GUI.ViewModels
                 {
                     Line gridLine = new Line();
 
-                    if ((j == levelToDraw.yDimension && levelToDraw.levelMap[i, j - 1].southWall) || (j != levelToDraw.yDimension && levelToDraw.levelMap[i, j].northWall))
+                    if ((j == levelToDraw.yDimension && levelToDraw.levelMap[i, j - 1].southWall == WallType.wall) || (j != levelToDraw.yDimension && levelToDraw.levelMap[i, j].northWall == WallType.wall))
                     {
                         gridLine.Stroke = System.Windows.Media.Brushes.Black;
                         gridLine.StrokeThickness = 2;
                     }
+
+                    else if ((j == levelToDraw.yDimension && levelToDraw.levelMap[i, j - 1].southWall == WallType.door) || (j != levelToDraw.yDimension && levelToDraw.levelMap[i, j].northWall == WallType.door))
+                    {
+                        gridLine.Stroke = System.Windows.Media.Brushes.Brown;
+                        gridLine.StrokeThickness = 2;
+                    }
+
+
                     else
                     {
                         gridLine.Stroke = System.Windows.Media.Brushes.Gray;
@@ -200,11 +208,18 @@ namespace PCG_GUI.ViewModels
                 {
                     Line gridLine = new Line();
 
-                    if ((i == levelToDraw.xDimension && levelToDraw.levelMap[i - 1, j].eastWall) || (i != levelToDraw.xDimension && levelToDraw.levelMap[i, j].westWall))
+                    if ((i == levelToDraw.xDimension && levelToDraw.levelMap[i - 1, j].eastWall == WallType.wall) || (i != levelToDraw.xDimension && levelToDraw.levelMap[i, j].westWall == WallType.wall))
                     {
                         gridLine.Stroke = System.Windows.Media.Brushes.Black;
                         gridLine.StrokeThickness = 2;
                     }
+
+                    else if ((i == levelToDraw.xDimension && levelToDraw.levelMap[i - 1, j].eastWall == WallType.door) || (i != levelToDraw.xDimension && levelToDraw.levelMap[i, j].westWall == WallType.door))
+                    {
+                        gridLine.Stroke = System.Windows.Media.Brushes.Brown;
+                        gridLine.StrokeThickness = 2;
+                    }
+
                     else
                     {
                         gridLine.Stroke = System.Windows.Media.Brushes.Gray;
