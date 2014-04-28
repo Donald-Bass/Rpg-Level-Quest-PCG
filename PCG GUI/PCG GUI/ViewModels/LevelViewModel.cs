@@ -23,10 +23,8 @@ namespace PCG_GUI.ViewModels
         public String X_Dimension { get; private set; }
         public String Y_Dimension { get; private set; }
 
-        public Boolean levelInterior { get; private set;}
-
-
-        public Boolean levelExterior { get; private set; }
+        public int X_Length { get; private set; }
+        public int Y_Length { get; private set; }
 
 
         //map editing modes
@@ -71,11 +69,11 @@ namespace PCG_GUI.ViewModels
 
             levelList = new ObservableCollection<levelData>();
             X_Dimension = "";
+            X_Length = 0;
             Y_Dimension = "";
+            Y_Length = 0;
             selectedLevel = -1;
 
-            levelInterior = false;
-            levelExterior = false;
         }
 
         public void setUpLevelList()
@@ -114,7 +112,9 @@ namespace PCG_GUI.ViewModels
 
                 //curLevel = level;
                 X_Dimension = baseView.world.getLevel(curLevel).xDimension.ToString();
+                X_Length = baseView.world.getLevel(curLevel).xDimension * 10;
                 Y_Dimension = baseView.world.getLevel(curLevel).yDimension.ToString();
+                Y_Length = baseView.world.getLevel(curLevel).yDimension * 10;
                 baseView.drawLevel(curLevel);
 
                 /*if (baseView.world.getLevel(curLevel).typeOfLevel == levelType.interior)
@@ -131,6 +131,8 @@ namespace PCG_GUI.ViewModels
                 }*/
 
                 RaisePropertyChanged("X_Dimension");
+                RaisePropertyChanged("X_Length");
+                RaisePropertyChanged("Y_Length");
                 RaisePropertyChanged("Y_Dimension");
                 RaisePropertyChanged("levelInterior");
                 RaisePropertyChanged("levelExterior");
@@ -171,14 +173,17 @@ namespace PCG_GUI.ViewModels
             curLevel = -1;
             X_Dimension = "";
             Y_Dimension = "";
-            levelInterior = false;
-            levelExterior = false;
+            X_Length = 0;
+            Y_Length = 0;
 
             levelList.Clear();
 
             //tell gui values have been removed
             RaisePropertyChanged("X_Dimension");
             RaisePropertyChanged("Y_Dimension");
+            RaisePropertyChanged("X_Length");
+            RaisePropertyChanged("Y_Length");
+
             RaisePropertyChanged("levelInterior");
             RaisePropertyChanged("levelExterior");
 
@@ -210,7 +215,6 @@ namespace PCG_GUI.ViewModels
         {
             if (baseView.worldAttached && selectedLevel != -1) //only edit when a level actually is selected
             {
-
                 if (editFloor)
                 {
                     int tileX = x / BaseViewModel.GRID_SIZE;

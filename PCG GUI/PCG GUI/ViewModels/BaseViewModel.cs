@@ -118,8 +118,6 @@ namespace PCG_GUI.ViewModels
         {
             if (world != null) //sanity check
             {
-                System.Console.WriteLine("Test");
-
                 graphic.Clear();
 
                 List<Shape> toDraw = new List<Shape>();

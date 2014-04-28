@@ -21,7 +21,7 @@
 %----------------------------------------------------------------------------
 
 #const maxAreaSize=32.  %32. %maximum length of a side in number of tiles in an area 
-#const minAreaSize=8. %minimum length of a side in number of tiles in an area
+#const minAreaSize=32. %minimum length of a side in number of tiles in an area
 #const numLevels=2.
 #const maxNumberOfNpcs=10. %maximum number of npcs that can be generated
 #const maxNumberOfItems=10. %maximum number of itesm that can be generated

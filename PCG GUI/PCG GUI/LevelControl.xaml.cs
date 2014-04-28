@@ -51,10 +51,11 @@ namespace PCG_GUI
             }
         }
 
-        private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void Map_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             viewModel.LevelView.editLevel((int)e.GetPosition(LevelViewer).X, (int)e.GetPosition(LevelViewer).Y);
 
         }
+
     }
 }
