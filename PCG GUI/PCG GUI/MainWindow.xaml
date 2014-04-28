@@ -13,14 +13,7 @@
                 <MenuItem Header="_Run PCG" Click="Menu_Run" IsEnabled="{Binding Path=BaseView.worldAttached}" />
             </MenuItem>
         </Menu>
-        <TabControl HorizontalAlignment="Left" Height="925" Margin="0,29,0,0" VerticalAlignment="Top" Width="935">
-            <TabItem Header="Level" x:Name="LevelTab">
-                <local:LevelControl x:Name="LevelView" Margin="0,0,-5,0"/>
-            </TabItem>
-            <TabItem Header="NPC">
-                <local:NPC_Control x:Name="NPCView" Margin="0,0,-10,-31"/>
-            </TabItem>
-        </TabControl>
+        <local:LevelControl x:Name="LevelView" Margin="0,29,56,32"/>
     </Grid>
 
 

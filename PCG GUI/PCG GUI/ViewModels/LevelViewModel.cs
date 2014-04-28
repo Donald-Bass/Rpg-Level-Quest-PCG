@@ -117,7 +117,7 @@ namespace PCG_GUI.ViewModels
                 Y_Dimension = baseView.world.getLevel(curLevel).yDimension.ToString();
                 baseView.drawLevel(curLevel);
 
-                if (baseView.world.getLevel(curLevel).typeOfLevel == levelType.interior)
+                /*if (baseView.world.getLevel(curLevel).typeOfLevel == levelType.interior)
                 {
                     levelInterior = true;
                     levelExterior = false;
@@ -128,7 +128,7 @@ namespace PCG_GUI.ViewModels
                     levelInterior = false;
                     levelExterior = true;
 
-                }
+                }*/
 
                 RaisePropertyChanged("X_Dimension");
                 RaisePropertyChanged("Y_Dimension");
@@ -139,7 +139,7 @@ namespace PCG_GUI.ViewModels
         }
 
 
-        public void setLevelType(levelType type)
+       /* public void setLevelType(levelType type)
         {
             if (selectedLevel != -1)
             {
@@ -162,7 +162,7 @@ namespace PCG_GUI.ViewModels
                 RaisePropertyChanged("levelExterior");
 
             }
-        }
+        }*/
 
         //Removes the world model attached to the view model
         public void finishClose() 

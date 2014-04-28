@@ -47,3 +47,5 @@ PCG GUI/PCG GUI/bin/Release/PCG.txt
 PCG GUI/PCG GUI/bin/Release/TempResults.pcg
 PCG GUI/PCG GUI/bin/Release/TempWorldDef.txt
 PCG GUI/PCG GUI/CopyResources.bat
+/clingo.exe
+Timing Test/

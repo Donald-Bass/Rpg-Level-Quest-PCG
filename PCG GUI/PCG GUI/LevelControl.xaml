@@ -40,10 +40,7 @@
             <Label Content="Y Length:" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.45,-0.038"/>
             <TextBox HorizontalAlignment="Left" Height="23" Margin="64,3,0,0" TextWrapping="Wrap" Text="{Binding Path=LevelView.Y_Dimension}" VerticalAlignment="Top" Width="57" Focusable="False" IsEnabled="False"/>
         </Grid>
-        <Grid Margin="562,294,247,451">
-            <RadioButton x:Name="InteriorButton" Content="Interior" HorizontalAlignment="Left" VerticalAlignment="Top" GroupName="LevelType" IsChecked="{Binding Path=LevelView.levelInterior}" Checked="InteriorButton_Checked" IsEnabled="{Binding Path=BaseView.worldAttached}"/>
-            <RadioButton x:Name="ExteriorButton" Content="Exterior" HorizontalAlignment="Left" Margin="0,21,0,0" VerticalAlignment="Top" GroupName="LevelType" IsChecked="{Binding Path=LevelView.levelExterior}" Checked="ExteriorButton_Checked" IsEnabled="{Binding Path=BaseView.worldAttached}"/>
-        </Grid>
+        <Grid Margin="562,294,247,451"/>
         <ListView ItemsSource="{Binding Path=LevelView.levelList}" Margin="20,15,687,611" SelectedIndex="{Binding Path=LevelView.selectedLevel}">
             <ListView.View>
                 <GridView>

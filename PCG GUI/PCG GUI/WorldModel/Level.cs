@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace PCG_GUI.Facts
 {
-    public enum levelType{interior, exterior};
+    //public enum levelType{interior, exterior};
 
     public class Level
     {
         public int xDimension { get; private set; }  //length of level (x)
         public int yDimension { get; private set; } //height of level (y)
         public Tile[,] levelMap { get; private set; } //all the tiles making up the level[x,y]. 0,0 is upper left
-        public levelType typeOfLevel { get; set; }
+        //public levelType typeOfLevel { get; set; }
 
         public string levelName { get; set; } //TODO FIGURE OUT NAME GEN
 
@@ -34,7 +34,7 @@ namespace PCG_GUI.Facts
 
             levelName = "";
 
-            typeOfLevel = levelType.interior; //default to interior for now
+            //typeOfLevel = levelType.interior; //default to interior for now
 
         }
 
@@ -137,6 +137,7 @@ namespace PCG_GUI.Facts
             curFact = new Fact("levelLengthY", new String[] { yDimension.ToString(), levelNumber.ToString() });
             file.Write(curFact.getStringRepresentation(ClingoInput));
 
+            /*
             //output level type
             if (typeOfLevel == levelType.interior)
             {
@@ -147,7 +148,7 @@ namespace PCG_GUI.Facts
             {
                 curFact = new Fact("exterior", new String[] { levelNumber.ToString() });
             }
-            file.Write(curFact.getStringRepresentation(ClingoInput));
+            file.Write(curFact.getStringRepresentation(ClingoInput));*/
 
 
             for(int i = 0; i < xDimension; i++)

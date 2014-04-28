@@ -33,13 +33,15 @@ namespace PCG_GUI.Facts
         {
             Fact curFact;
             
-            file.ReadLine(); //the first line is the number of answers which we can skip
+            file.ReadLine(); //the first fours line are information we can skip
+            file.ReadLine();
+            file.ReadLine();
+            file.ReadLine(); 
+
             String[] StringFacts = file.ReadLine().Trim().Split(' '); //the second line has the model so split all the facts into seperate strings
 
             //parse all facts
             //allFacts = new Fact[StringFacts.Length];
-
-
 
             for (int i = 0; i < StringFacts.Length; i++ )
             {
@@ -56,11 +58,16 @@ namespace PCG_GUI.Facts
 
         public void writeWorldFile(System.IO.StreamWriter file)
         {
-            file.WriteLine(""); //the clingo output has a unecessary line at the start so add an blank line to match the formula
+            file.WriteLine(""); //the clingo output has 4 unecessary line at the start so add blank lines to match the formula
+            file.WriteLine("");
+            file.WriteLine(""); 
+            file.WriteLine("");
 
-            Fact totalLevels = new Fact("totalLevels", new String[] { numLevels.ToString() });
+
+            Fact totalLevels = new Fact("totalLevels", new String[] { "1" });
             file.Write(totalLevels.getStringRepresentation());
 
+            /*
             //placeholder till npcs are actually stored in memory
             foreach (Fact f in npcFacts)
             {
@@ -71,7 +78,7 @@ namespace PCG_GUI.Facts
             foreach (Fact f in questFacts)
             {
                 file.Write(f.getStringRepresentation());
-            }
+            }*/
 
             for(int i = 0; i < numLevels; i++)
             {
@@ -114,7 +121,7 @@ namespace PCG_GUI.Facts
                 case "floor":
                     levelFacts.Add(fact);
                     break;
-                case "tree":
+                /*case "tree":
                     levelFacts.Add(fact);
                     break;
                 case "interior":
@@ -122,7 +129,7 @@ namespace PCG_GUI.Facts
                     break;
                 case "exterior":
                     levelFacts.Add(fact);
-                    break;
+                    break;*/
                 case "wallX":
                     levelFacts.Add(fact);
                     break;
@@ -136,7 +143,7 @@ namespace PCG_GUI.Facts
                     levelFacts.Add(fact);
                     break;
                 //npc facts
-                case "npc":
+                /*case "npc":
                     npcFacts.Add(fact);
                     break;
                 case "friendly":
@@ -196,7 +203,7 @@ namespace PCG_GUI.Facts
                 case "dead":
                     break;
                 case "npcLevel":
-                    break;
+                    break;*/
                 default:
                     System.Console.Error.WriteLine("Unknown predicate type " + fact.getPredicate());
                     break;
@@ -254,7 +261,7 @@ namespace PCG_GUI.Facts
                     case "floor": //floor format is (X,Y,L)
                         allLevels[f.getNumericValue(2)].setTileType(f.getNumericValue(0), f.getNumericValue(1), TileType.floor);
                         break;
-                    case "tree":
+                    /*case "tree":
                         //levelFacts.Add(fact);
                         break;
                     case "interior": //interior format is (L)
@@ -262,7 +269,7 @@ namespace PCG_GUI.Facts
                         break;
                     case "exterior": //exterior format is (L)
                         allLevels[f.getNumericValue(0)].typeOfLevel = levelType.exterior;
-                        break;
+                        break;*/
                     case "wallX": //wallX(X,Y,L) is a wall from X,Y to X+1,Y in L
                         allLevels[f.getNumericValue(2)].addWallX(f.getNumericValue(0), f.getNumericValue(1), WallType.wall);
                         break;

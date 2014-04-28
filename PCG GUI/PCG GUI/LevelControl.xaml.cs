@@ -29,7 +29,7 @@ namespace PCG_GUI
             InitializeComponent();
         }
 
-        private void InteriorButton_Checked(object sender, RoutedEventArgs e)
+        /*private void InteriorButton_Checked(object sender, RoutedEventArgs e)
         {
             viewModel.LevelView.setLevelType(levelType.interior);
         }
@@ -37,7 +37,7 @@ namespace PCG_GUI
         private void ExteriorButton_Checked(object sender, RoutedEventArgs e)
         {
             viewModel.LevelView.setLevelType(levelType.exterior);
-        }
+        }*/
 
         private void CreateLevel_Click(object sender, RoutedEventArgs e)
         {
