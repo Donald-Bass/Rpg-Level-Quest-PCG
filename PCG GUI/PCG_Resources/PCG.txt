@@ -13,7 +13,7 @@
 %Big success 20x20 now down to just 400 mb
 %25x25 is 800 mb
 %32 x 32 is less then 2 GB
-
+%16 x 16 is 400 mb?
 %Removed some pointless connection code tiny improvement
 
 %----------------------------------------------------------------------------
@@ -252,8 +252,10 @@ rectangle(X, YU, X, (YU + LENGTH), L,corY)  :- corridorY(YU, LENGTH, X, L).
 %the left of 1 is to the left or in line with the right of 2
 %the right of 1 is to the right or in line of the left of 2
 
-floor(X,Y,L) :- rectangle(XUL, YUL, XBR, YBR, L,_),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X,L), lengthYDim(Y,L). %all tiles in the room must be floor
 floorType(X,Y,L,T) :- rectangle(XUL, YUL, XBR, YBR, L,T),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X,L), lengthYDim(Y,L). %all tiles in the room must be floor
+floor(X,Y,L) :- floorType(X,Y,L,T). %seperate atom for when we need need a floor and the type of room it's from doesn't matter
+corFloor(X,Y,L) :- floorType(X,Y,L,corX). %seperate atom for when we need a floor from a corridor
+corFloor(X,Y,L) :- floorType(X,Y,L,corY). %seperate atom for when we need a floor from a corridor
 
 
 %collision detection hack for each tile remember seperatly the 4 corners of the rectangle of the room it's from, if any tile has two of those registered there is a collision
@@ -274,26 +276,39 @@ overLap(X,Y,L,T1,T2) :- floorYBR(X,Y,YBR1,L,T1), floorYBR(X,Y,YBR2,L,T2), YBR1 !
 :- overLap(X,Y,L,T1,T2), T2 = room.
 :- overLap(X,Y,L,T1,T2), T1 = T2.
 
-:- overLap(X1,Y1,L,_,_), overLap(X2,Y2,L,_,_), X1 < X2, (X2 - X1) <= 2.
-:- overLap(X1,Y1,L,_,_), overLap(X2,Y2,L,_,_), Y1 < Y2, (Y2 - Y1) <= 2.
+:- overLap(X1,Y1,L,corX,corY), overLap(X2,Y2,L,corX,corY), X1 < X2, (X2 - X1) <= 2.
+:- overLap(X1,Y1,L,corX,corY), overLap(X2,Y2,L,corX,corY), Y1 < Y2, (Y2 - Y1) <= 2.
 
 roomBarricadeX(XW,YUL,L) :- rectangle(XUL, YUL, XBR, YBR, L,_), lengthXDim(XW,L), XW >= XUL, XW <= XBR. %add walls on top of the room
 roomBarricadeX(XW,(YBR + 1),L) :- rectangle(XUL, YUL, XBR, YBR, L,_), lengthXDim(XW,L), XW >= XUL, XW <= XBR. %add walls on bottom of the room
 roomBarricadeY(XUL,YW,L) :- rectangle(XUL, YUL, XBR, YBR, L,_), lengthYDim(YW,L), YW >= YUL, YW <= YBR. %add walls on left of the room
 roomBarricadeY((XBR + 1),YW,L) :- rectangle(XUL, YUL, XBR, YBR, L,_), lengthYDim(YW,L), YW >= YUL, YW <= YBR. %add walls on left of the room
 
-%wallX(X,Y,L) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
 %Add condition that neither side of the wall is an overlap
 barricadeX(X,Y,L) :- roomBarricadeX(X,Y,L), not overLap(X,Y,L,corX,corY), not overLap(X,Y-1,L,corX,corY).
 barricadeY(X,Y,L) :- roomBarricadeY(X,Y,L), not overLap(X,Y,L,corX,corY), not overLap(X-1,Y,L,corX,corY).
 
+%wallX(X,Y,L) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
+%If there is an overlap and there is a room adjacent to the overlap the room should still have its wall
+
+barricadeX(X,Y,L) :- roomBarricadeX(X,Y,L), overLap(X,Y,L,corX,corY), floorType(X,Y-1,L,room).   %Condition   R  (R = room, O = overlap)
+																						               %           ---
+																						               %            O
+barricadeX(X,Y,L) :- roomBarricadeX(X,Y,L), overLap(X,Y-1,L,corX,corY), floorType(X,Y,L,room).   %Condition   O  (R = room, O = overlap)
+																						               %           ---
+																						               %            R
+barricadeY(X,Y,L) :- roomBarricadeY(X,Y,L), overLap(X,Y,L,corX,corY), floorType(X-1,Y,L,room).   %Condition   R|O  (R = room, O = overlap)
+
+barricadeY(X,Y,L) :- roomBarricadeY(X,Y,L), overLap(X-1,Y,L,corX,corY), floorType(X,Y,L,room).   %Condition   O|R  (R = room, O = overlap)					
+					
 :- barricadeX(X,Y,L), not roomBarricadeX(X,Y,L).
 :- barricadeY(X,Y,L), not roomBarricadeY(X,Y,L).
 
-:- barricadeX(X,Y,L), overLap(X,Y-1,L,corX,corY).
-:- barricadeX(X,Y,L), overLap(X,Y,L,corX,corY).
-:- barricadeY(X,Y,L), overLap(X-1,Y,L,corX,corY).
-:- barricadeY(X,Y,L), overLap(X,Y,L,corX,corY).
+%if there is an overlap between two corrdiors explictely prevent any barricades from blocking the junction between the associated corridor spaces
+:- barricadeX(X,Y,L), overLap(X,Y-1,L,corX,corY), corFloor(X,Y,L), corFloor(X,Y-1,L). %this is probally a dupe of the second, same with the 3rd being a dupe of the 4th
+:- barricadeX(X,Y,L), overLap(X,Y,L,corX,corY), corFloor(X,Y,L), corFloor(X,Y-1,L).
+:- barricadeY(X,Y,L), overLap(X-1,Y,L,corX,corY), corFloor(X,Y,L), corFloor(X-1,Y,L).
+:- barricadeY(X,Y,L), overLap(X,Y,L,corX,corY), corFloor(X,Y,L), corFloor(X-1,Y,L).
 
 %TODO. Finish debugging
 
@@ -313,6 +328,57 @@ corEndConnectedRoom(XUL,YUL,L) :- corEnd(XUL, YUL, L), connection(XUL,YUL,XUL,YU
 
 %every end of a corridor must be connected to a room or overlapping another corridor
 :- corEnd(XBR, YBR, L), not corEndConnectedRoom(XBR, YBR, L), not overLap(XBR, YBR, L,_,_).
+
+%corridors shouldn't be parallel and adjacent. (Allow this though if the adjacent spaces are both edges of corridors, could create some intresting shapes)
+:- floorType(X,Y,L,corX), floorType(X,Y-1,L,corX), not corEnd(X,Y,L).
+:- floorType(X,Y,L,corY), floorType(X-1,Y,L,corY), not corEnd(X,Y,L).
+:- floorType(X,Y,L,corX), floorType(X,Y-1,L,corX), not corEnd(X,Y-1,L).
+:- floorType(X,Y,L,corY), floorType(X-1,Y,L,corY), not corEnd(X-1,Y,L).
+
+%corridors should connect two or more rooms, or have 1 end be an overlap. To save memory only check connections at the ends. These is still moderatly memory intensive
+
+%for each end of the corridor corridor, find all connected tiles that are in a room and store the upper left corner of that room (Since rooms can't overlap, that corner will be unique)
+connectToRoomXUL(X,Y,XUL,L) :- corEnd(X,Y,L), connection(X,Y,X2,Y2,L), floorXUL(X2,Y2,XUL,L,room), step(DX,DY), X2 = X + DX, Y2 = Y + DY.
+connectToRoomYUL(X,Y,YUL,L) :- connectToRoomXUL(X,Y,XUL,L), floorXUL(X,Y,XUL,L,room), floorYUL(X,Y,YUL,L,room).
+
+%check both ends of corridor to see if room differs in x coordinate of upper left corner
+connectsTwoRooms(XUL, YUL, XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, T), connectToRoomXUL(XUL, YUL, N1, L) , connectToRoomXUL(XBR, XBR, N2, L) , N1 != N2, T != room.
+
+%check both ends of corridor to see if room differs in y coordinate of upper left corner
+connectsTwoRooms(XUL, YUL, XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, T), connectToRoomYUL(XUL, YUL, N1, L) , connectToRoomYUL(XBR, XBR, N2, L) , N1 != N2, T != room.
+
+%A corridor must bec connected to at least two rooms
+:- rectangle(XUL, YUL, XBR, YBR, L, corX), not connectsTwoRooms(XUL, YUL, XBR, YBR, L), not overLap(XUL,YUL,L,corX,corY), not overLap(XBR,YBR,L,corX,corY).
+:- rectangle(XUL, YUL, XBR, YBR, L, corY), not connectsTwoRooms(XUL, YUL, XBR, YBR, L), not overLap(XUL,YUL,L,corX,corY), not overLap(XBR,YBR,L,corX,corY).
+
+%THE FOLLOWING ACCEPTS CONNECTIONS AT ANY 2 POINTS IN THE CORRIDOR AND IS CONSIDERABBLY MEMORY INTENSIVE
+
+%for each floor space in a corridor, find all connected tiles that are in a room and store the upper left corner of that room (Since rooms can't overlap, that corner will be unique)
+%connectToRoomXUL(X,Y,XUL,L) :- corFloor(X,Y,L), connection(X,Y,X2,Y2,L), floorXUL(X2,Y2,XUL,L,room), step(DX,DY), X2 = X + DX, Y2 = Y + DY.
+%connectToRoomYUL(X,Y,YUL,L) :- connectToRoomXUL(X,Y,XUL,L), floorXUL(X,Y,XUL,L,room), floorYUL(X,Y,YUL,L,room).
+%connectToRoomXUL(X,Y,XUL,L) :- floorType(X,Y,L,corY), connection(X,Y,X2,Y2,L), floorXUL(X2,Y2,XUL,L,room), step(DX,DY), X2 = X + DX, Y2 = Y + DY. 
+%connectToRoomYUL(X,Y,YUL,L) :- floorType(X,Y,L,corX), connection(X,Y,X2,Y2,L), floorYUL(X2,Y2,YUL,L,room), step(DX,DY), X2 = X + DX, Y2 = Y + DY.
+%connectToRoomYUL(X,Y,YUL,L) :- floorType(X,Y,L,corY), connection(X,Y,X2,Y2,L), floorYUL(X2,Y2,YUL,L,room), step(DX,DY), X2 = X + DX, Y2 = Y + DY.
+
+% %check for corrdiors along the x axis, which floor tiles are connected to a room then check if two of those rooms vary in the x corrdinate of their upper left corner
+% corConnectsToRoomXUL(XUL, YUL, corX, N, L) :- rectangle(XUL, YUL, XBR, YBR, L, corX), connectToRoomXUL(X1,YUL,N,L), X1 >= XUL, X1 <= XBR.
+% connectsTwoRooms(XUL, YUL, XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, corX), corConnectsToRoomXUL(XUL, YUL, corX, N1, L) , corConnectsToRoomXUL(XUL, YUL, corX, N2, L), N1 != N2.
+
+% %check for corrdiors along the y axis, which floor tiles are connected to a room then check if two of those rooms vary in the y corrdinate of their upper left corner
+% corConnectsToRoomXUL(XUL, YUL, corY, N, L) :- rectangle(XUL, YUL, XBR, YBR, L, corY), connectToRoomXUL(XUL,Y1,N,L), Y1 >= YUL, Y1 <= YBR.
+% connectsTwoRooms(XUL, YUL, XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, corY), corConnectsToRoomXUL(XUL, YUL, corY, N1, L) , corConnectsToRoomXUL(XUL, YUL, corY, N2, L), N1 != N2.
+
+% %check for corrdiors along the y axis, which floor tiles are connected to a room then check if two of those rooms vary in the x corrdinate of their upper left corner
+% corConnectsToRoomYUL(XUL, YUL, corX, N, L) :- rectangle(XUL, YUL, XBR, YBR, L, corX), connectToRoomYUL(X1,YUL,N,L), X1 >= XUL, X1 <= XBR.
+% connectsTwoRooms(XUL, YUL, XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, corX), corConnectsToRoomYUL(XUL, YUL, corX, N1, L) , corConnectsToRoomYUL(XUL, YUL, corX, N2, L), N1 != N2.
+
+% %check for corrdiors along the y axis, which floor tiles are connected to a room then check if two of those rooms vary in the y corrdinate of their upper left corner
+% corConnectsToRoomYUL(XUL, YUL, corY, N, L) :- rectangle(XUL, YUL, XBR, YBR, L, corY), connectToRoomYUL(XUL,Y1,N,L), Y1 >= YUL, Y1 <= YBR.
+% connectsTwoRooms(XUL, YUL, XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, corY), corConnectsToRoomYUL(XUL, YUL, corY, N1, L) , corConnectsToRoomYUL(XUL, YUL, corY, N2, L), N1 != N2.
+
+% %A corridor must bec connected to at least two rooms
+% :- rectangle(XUL, YUL, XBR, YBR, L, corX), not connectsTwoRooms(XUL, YUL, XBR, YBR, L).
+% :- rectangle(XUL, YUL, XBR, YBR, L, corY), not connectsTwoRooms(XUL, YUL, XBR, YBR, L).
 
 %TODO Possible replace floorType with just floor with a type term. (Would possibly require modifying GUI code)
 %TODO Edge case. A T intersection of a corridor with a room along the other wall, will have no door or wall 
@@ -489,6 +555,9 @@ corEndConnectedRoom(XUL,YUL,L) :- corEnd(XUL, YUL, L), connection(XUL,YUL,XUL,YU
 #show roomBarricadeY/3.
 #show barricadeX/3.
 #show barricadeY/3.
+%#show connectsTwoRooms/5.
+%#show corConnectsToRoomXUL/7.
+%#show corConnectsToRoomYUL/7.
 %#hide lengthXDim/2.
 %#hide lengthYDim/2.
 %#hide tile/3.
