@@ -2,26 +2,12 @@
 %Changes. Hide doesn't work. Need to instead use show I believe
 %Can't have multiple :'s inside {} replace all but the first with ,
 
-%Optimizations - Fixing number of levels to a set value severely reduces memory consumption in case of 1 level and leaves consumption unchanged when set to max number used previously?
-%Down to 1.1?
-%Can't do it in here but fixing area size greatly reduces problems
-%Removing NPC's and Quest Junk had no real effect
-%20x20 now only 2.4 gb compared to 7.8
-%can handle 25x25 with just 7.8
-
-%IDEA: REPLACE ROOM AND CORRIDOR DEFINITIONS TO HAVE CORNER + WIDTH AND HEIGHT INSTEAD OF TWO CORNERS. GREATLY LIMIT THE BAD POSSIBILITIES
-%Big success 20x20 now down to just 400 mb
-%25x25 is 800 mb
-%32 x 32 is less then 2 GB
-%16 x 16 is 400 mb?
-%Removed some pointless connection code tiny improvement
-
 %----------------------------------------------------------------------------
 %Framework
 %----------------------------------------------------------------------------
 
-#const maxAreaSize=50.  %32. %maximum length of a side in number of tiles in an area 
-#const minAreaSize=50. %minimum length of a side in number of tiles in an area
+#const maxAreaSize=32.  %32. %maximum length of a side in number of tiles in an area 
+#const minAreaSize=32. %minimum length of a side in number of tiles in an area
 #const numLevels=2.
 #const maxNumberOfNpcs=10. %maximum number of npcs that can be generated
 #const maxNumberOfItems=10. %maximum number of itesm that can be generated
@@ -30,7 +16,6 @@
 #const maxRects=20.
 #const numQuests=1.
 #const numberOfLevels=1.
-
 #const maxLength=10.
 #const minLength=3.
 
@@ -39,35 +24,17 @@ wallSizeRange(0 .. maxAreaSize). %range of valid wall positions
 floorSizeRange(0 .. (maxAreaSize - 1)). %range of valid floor positions
 roomSizeRange(minLength .. maxLength).
 %rectRange(0 .. maxRects).
-%#hide roomRange/1.
-%#hide areaSizeRange/1. %do not print range
 
 %----------------------------------------------------------------------------
 %Level Basics
 %----------------------------------------------------------------------------
 levelNumRange(0 .. (numberOfLevels - 1)).
 
-%numberOfLevels { level(L) : levelNumRange(L) } numberOfLevels.
-%{ interior(X) : levelNumRange(X) }.
-%{ exterior(X) : levelNumRange(X) }.
-%:- interior(X), not level(X).
-%:- exterior(X), not level(X).
-
 level(L) :- levelNumRange(L).
 
 interior(X) :- level(X).
 
 totalLevels(numberOfLevels).
-
-%:- level(X), X != 0, not level(X - 1). %there can be no gaps in level numbers
-
-%totalLevels(N) :- N = #count{L : level(L)}. %count the number of levels
-
-%:- totalLevels(X1), totalLevels(X2), X1 != X2. %there can only be one number of total levels
-
-%A level must be either outside or inside, but not both
-%:- level(X), not interior(X), not exterior(X). 
-%:- level(X), interior(X), exterior(X). 
 
 %determine the size of the area
 1 { levelLengthX(X,L) : areaSizeRange(X) } 1 :- level(L). 
@@ -94,23 +61,14 @@ wallYDim(0..Y , L) :- levelLengthY(Y, L).
 %wallX(X,Y,L) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
 { wallX(X,Y,L) } :- wallXDim(X,L), wallYDim(Y,L), level(L), interior(L). 
 { doorX(X,Y,L) } :- wallXDim(X,L), wallYDim(Y,L), level(L), interior(L). 
-%:- wallX(X,Y,L), levelLengthX(X,L). %check that wall does not start at rightmost x
 
 %wallY(X,Y,L) from X,Y to X,Y+1. The bottommost y is not a valid y for a wall on the y axis it can only be used for walls on the x Axis
 { wallY(X,Y,L) } :- wallXDim(X,L), wallYDim(Y,L), level(L), interior(L). 
 { doorY(X,Y,L) } :- wallXDim(X,L), wallYDim(Y,L), level(L), interior(L). 
-%:- wallY(X,Y,L), levelLengthY(Y,L). %check that wall does not start on bottommost y
-
-%{ barricadeX(X,Y,L) } :- wallXDim(X,L), wallYDim(Y,L), level(L), interior(L).
-%{ barricadeY(X,Y,L) } :- wallXDim(X,L), wallYDim(Y,L), level(L), interior(L).
-
-%:- barricadeX(X,Y,L), levelLengthX(X,L). %check that wall does not start at rightmost x
-%:- barricadeY(X,Y,L), levelLengthY(Y,L). %check that wall does not start on bottommost y
 
 %There is no barricade that is freestanding
 :- barricadeX(X,Y,L) , not barricadeX(X+1,Y,L), not barricadeX(X-1,Y,L), not barricadeY(X,Y,L), not barricadeY(X,Y-1,L).
 :- barricadeY(X,Y,L) , not barricadeX(X,Y,L), not barricadeX(X-1,Y,L), not barricadeY(X,Y+1,L), not barricadeY(X,Y-1,L).
-
 
 %Barricades are walls and anything else that occupies the same space (doors for example0
 :- not wallX(X,Y,L), not doorX(X,Y,L), barricadeX(X,Y,L).
@@ -133,18 +91,7 @@ barricadeY(X,Y,L) :- doorY(X,Y,L).
 
 %----------------------------------------------------------------------------------------------------------------------------------------------
 %Floors
-%--------------------------------------------------------------------------------------------------------------------------------------
-
-%define floors
-%{ floor(X,Y,L) } :- lengthXDim(X,L), lengthYDim(Y,L), level(L).
-%There should be at least one floor in every row and column of a level (otherwise the level is too big)
-%Need to disable this only for user generated levels
-%1 { floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } :- level(L), lengthXDim(X,L).
-%1 { floor(X,Y,L) : floorSizeRange(X) : floorSizeRange(Y) } :- level(L), lengthYDim(Y,L).
-
-%:- floor(X,Y,L) , not tile(X,Y,L). %all floors must be on valid tiles
-%floor(X,Y,L) :- tile(X,Y,L), exterior(L). %all tiles must be floors outdoors
-
+%----------------------------------------------------------------------------------------------------------------------------------------------
 %There must be a wall between any floor and non floor tile when the level is an interior
 wallY(X,Y,L) :- floor(X,Y,L) , not floor((X - 1),Y,L), interior(L).
 wallY((X + 1),Y,L) :- floor(X,Y,L) , not floor((X + 1),Y,L), interior(L).
@@ -159,7 +106,6 @@ wallX(X,(Y+1),L) :- floor(X,Y,L) , not floor(X,(Y + 1),L), interior(L).
 1 { levelStart(X,Y,L) : floorSizeRange(X) , floorSizeRange(Y)} 1 :- level(L), interior(L). 
 
 :- levelStart(X,Y,L), not floor(X,Y,L). %the start must be on a floor
-%:- levelStart(X,Y,L), exterior(L). %only interiors have a starting point for now
 
 %The starting tile must be on one of the edges
 nonEdgeXDim(1..(X - 2), L) :- levelLengthX(X, L). %Define non edge tiles
@@ -167,8 +113,6 @@ nonEdgeYDim(1..(Y - 2), L) :- levelLengthY(Y, L). %Define non edge tiles
 :- levelStart(X,Y,L), nonEdgeXDim(X,L), nonEdgeYDim(Y,L). %both dimensions of a level start can't be non edge dimensions
 
 %define what tiles are connected to what tiles
-%{ connection(X1,Y1,X2,Y2, L) : floorSizeRange(X1) , floorSizeRange(Y1) , floorSizeRange(X2) , floorSizeRange(Y2) } :- level(L). 
-
 connectedUp(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), X1 == X2, (Y1 - 1) == Y2, not wallX(X1,Y1,L).
 connectedDown(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), X1 == X2, (Y1 + 1) == Y2, not wallX(X2,Y2,L).
 connectedLeft(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1,L).
@@ -179,12 +123,6 @@ connection(X1,Y1,X2,Y2,L) :- connectedUp(X1,Y1,X2,Y2,L).
 connection(X1,Y1,X2,Y2,L) :- connectedDown(X1,Y1,X2,Y2,L).
 connection(X1,Y1,X2,Y2,L) :- connectedLeft(X1,Y1,X2,Y2,L).
 connection(X1,Y1,X2,Y2,L) :- connectedRight(X1,Y1,X2,Y2,L).
-
-%two connected tiles cannot be connected in none of the 4 directions
-%:- connection(X1,Y1,X2,Y2,L), not connectedUp(X1,Y1,X2,Y2,L), not connectedDown(X1,Y1,X2,Y2,L), not connectedLeft(X1,Y1,X2,Y2,L), not connectedRight(X1,Y1,X2,Y2,L).
-
-%quick hack for testing purposes
-%notFloor(X,Y,0) :- not floor(X,Y,0), lengthXDim(X,0), lengthYDim(Y,0).
 
 %------------------------------------------------------------------------------------------
 %Reachable tiles
@@ -214,49 +152,22 @@ reachable(NX,NY,L) :-
 %A room (defined by the top left (XUL,YUL) and Bottom Right (XBR, YBR) corners
 6 { room(XUL, YUL, LENGTH, HEIGHT, L) : floorSizeRange(XUL) , floorSizeRange(YUL) , roomSizeRange(LENGTH) , roomSizeRange(HEIGHT)} 15 :- level(L), interior(L).
 
-%ensure corners are actually proper corners
-%:- room(XUL, YUL, XBR, YBR, L), (XUL + 3) >= XBR.
-%:- room(XUL, YUL, XBR, YBR, L), (YUL + 3) >= YBR.
-
 1 { corridorX(XL, LENGTH, Y, L) : floorSizeRange(XL) , roomSizeRange(LENGTH)  , floorSizeRange(Y) } 15 :- level(L), interior(L).
-%:- corridorX(XL, XR, Y, L), XR < (XL + 4). %corriders have a minimum length
 
 1 { corridorY(YU, LENGTH, X, L) : floorSizeRange(YU) , roomSizeRange(LENGTH)  , floorSizeRange(X) } 15 :- level(L), interior(L).
-%:- corridorY(YU, YD, X, L), YD < (YU + 4). %corriders have a minimum length
-
 
 %Rectangle covers shared rules for corriders and rooms
 rectangle(XUL, YUL, (XUL + LENGTH), (YUL + HEIGHT), L, room) :- room(XUL, YUL, LENGTH, HEIGHT, L).
 rectangle(XL, Y, (XL + LENGTH), Y, L,corX)  :- corridorX(XL, LENGTH, Y, L).
 rectangle(X, YU, X, (YU + LENGTH), L,corY)  :- corridorY(YU, LENGTH, X, L).
 
-%rnUsed(RN) :- rectangle(XUL, YUL, XBR, YBR, L, RN).
-
-%:- rnUsed(RN), RN != 0, not rnUsed((RN - 1)).
-
 :- rectangle(XUL, YUL, XBR, YBR, L,_), levelLengthX(X,L), XBR > X.
 :- rectangle(XUL, YUL, XBR, YBR, L,_), levelLengthY(Y,L), YBR > Y.
-
-%only one rectangle can exist per RN
-%:- rectangle(XUL1, YUL1, XBR1, YBR1, L1, RN), rectangle(XUL2, YUL2, XBR2, YBR2, L2, RN), XUL2 != XUL2.
-%:- rectangle(XUL1, YUL1, XBR1, YBR1, L1, RN), rectangle(XUL2, YUL2, XBR2, YBR2, L2, RN), YUL1 != YUL2.
-%:- rectangle(XUL1, YUL1, XBR1, YBR1, L1, RN), rectangle(XUL2, YUL2, XBR2, YBR2, L2, RN), XBR1 != XBR2.
-%:- rectangle(XUL1, YUL1, XBR1, YBR1, L1, RN), rectangle(XUL2, YUL2, XBR2, YBR2, L2, RN), YBR1 != YBR2.
-%:- rectangle(XUL1, YUL1, XBR1, YBR1, L1, RN), rectangle(XUL2, YUL2, XBR2, YBR2, L2, RN), L1 != L2.
-
-%do basic collision detection. Check if the top edge of two comes between the two y edges and same with the left edge and x edges
-%:- room(XUL1, YUL1, XBR1, YBR1, L), room(XUL2, YUL2, XBR2, YBR2, L), YUL1 <= YUL2, YBR1 >= YUL2, XUL1 <= XUL2, XBR1 >= XUL2.
-
-%the bottom of 1 is below or in line with the top of 2
-%the top of 1 is above or in line with the bottom of 2
-%the left of 1 is to the left or in line with the right of 2
-%the right of 1 is to the right or in line of the left of 2
 
 floorType(X,Y,L,T) :- rectangle(XUL, YUL, XBR, YBR, L,T),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X,L), lengthYDim(Y,L). %all tiles in the room must be floor
 floor(X,Y,L) :- floorType(X,Y,L,T). %seperate atom for when we need need a floor and the type of room it's from doesn't matter
 corFloor(X,Y,L) :- floorType(X,Y,L,corX). %seperate atom for when we need a floor from a corridor
 corFloor(X,Y,L) :- floorType(X,Y,L,corY). %seperate atom for when we need a floor from a corridor
-
 
 %collision detection hack for each tile remember seperatly the 4 corners of the rectangle of the room it's from, if any tile has two of those registered there is a collision
 floorXUL(X,Y,XUL,L,T) :- rectangle(XUL, YUL, XBR, YBR, L,T),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X,L), lengthYDim(Y,L). %all tiles in the room must be floor
@@ -353,199 +264,11 @@ connectsTwoRooms(XUL, YUL, XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, T), 
 
 %check if there are too many doors. From a door, go in each direction see if there are and perpendicular walls before another door is seen. (A perpendicular wall means the corridor/room on one side has ended
 
-%wallX(X,Y,L) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
-%wallY(X,Y,L) from X,Y to X,Y+1. The bottommost y is not a valid y for a wall on the y axis it can only be used for walls on the x Axis
+doorXOkay(X1,Y,L) :- doorX(X1,Y,L), doorX(X2,Y,L), wallY(X3,Y2,L), X1 < X2, X3 > X1, X3 < X2, Y2 <= Y, Y2 >= Y-1.
+:- doorX(X1,Y,L), doorX(X2,Y,L), X1 < X2, not doorXOkay(X1,Y,L).
 
-wallY(X3,Y2,L) :- doorX(X1,Y,L), doorX(X2,Y,L), X1 < X2, X3 > X1, X3 < X2, wallXDim(X3,L), wallYDim(Y2,L), Y2 <= Y, Y2 >= Y-1.
-wallX(X2,Y3,L) :- doorY(X,Y1,L), doorY(X,Y2,L), Y1 < Y2, Y3 > Y1, Y3 < Y2, wallXDim(X2,L), wallYDim(Y3,L), X2 <= X, X2 >= X-1.
-
-%doorX(0,4), doorX(0,3)
-
-%THE FOLLOWING ACCEPTS CONNECTIONS AT ANY 2 POINTS IN THE CORRIDOR AND IS CONSIDERABBLY MEMORY INTENSIVE
-
-%for each floor space in a corridor, find all connected tiles that are in a room and store the upper left corner of that room (Since rooms can't overlap, that corner will be unique)
-%connectToRoomXUL(X,Y,XUL,L) :- corFloor(X,Y,L), connection(X,Y,X2,Y2,L), floorXUL(X2,Y2,XUL,L,room), step(DX,DY), X2 = X + DX, Y2 = Y + DY.
-%connectToRoomYUL(X,Y,YUL,L) :- connectToRoomXUL(X,Y,XUL,L), floorXUL(X,Y,XUL,L,room), floorYUL(X,Y,YUL,L,room).
-%connectToRoomXUL(X,Y,XUL,L) :- floorType(X,Y,L,corY), connection(X,Y,X2,Y2,L), floorXUL(X2,Y2,XUL,L,room), step(DX,DY), X2 = X + DX, Y2 = Y + DY. 
-%connectToRoomYUL(X,Y,YUL,L) :- floorType(X,Y,L,corX), connection(X,Y,X2,Y2,L), floorYUL(X2,Y2,YUL,L,room), step(DX,DY), X2 = X + DX, Y2 = Y + DY.
-%connectToRoomYUL(X,Y,YUL,L) :- floorType(X,Y,L,corY), connection(X,Y,X2,Y2,L), floorYUL(X2,Y2,YUL,L,room), step(DX,DY), X2 = X + DX, Y2 = Y + DY.
-
-% %check for corrdiors along the x axis, which floor tiles are connected to a room then check if two of those rooms vary in the x corrdinate of their upper left corner
-% corConnectsToRoomXUL(XUL, YUL, corX, N, L) :- rectangle(XUL, YUL, XBR, YBR, L, corX), connectToRoomXUL(X1,YUL,N,L), X1 >= XUL, X1 <= XBR.
-% connectsTwoRooms(XUL, YUL, XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, corX), corConnectsToRoomXUL(XUL, YUL, corX, N1, L) , corConnectsToRoomXUL(XUL, YUL, corX, N2, L), N1 != N2.
-
-% %check for corrdiors along the y axis, which floor tiles are connected to a room then check if two of those rooms vary in the y corrdinate of their upper left corner
-% corConnectsToRoomXUL(XUL, YUL, corY, N, L) :- rectangle(XUL, YUL, XBR, YBR, L, corY), connectToRoomXUL(XUL,Y1,N,L), Y1 >= YUL, Y1 <= YBR.
-% connectsTwoRooms(XUL, YUL, XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, corY), corConnectsToRoomXUL(XUL, YUL, corY, N1, L) , corConnectsToRoomXUL(XUL, YUL, corY, N2, L), N1 != N2.
-
-% %check for corrdiors along the y axis, which floor tiles are connected to a room then check if two of those rooms vary in the x corrdinate of their upper left corner
-% corConnectsToRoomYUL(XUL, YUL, corX, N, L) :- rectangle(XUL, YUL, XBR, YBR, L, corX), connectToRoomYUL(X1,YUL,N,L), X1 >= XUL, X1 <= XBR.
-% connectsTwoRooms(XUL, YUL, XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, corX), corConnectsToRoomYUL(XUL, YUL, corX, N1, L) , corConnectsToRoomYUL(XUL, YUL, corX, N2, L), N1 != N2.
-
-% %check for corrdiors along the y axis, which floor tiles are connected to a room then check if two of those rooms vary in the y corrdinate of their upper left corner
-% corConnectsToRoomYUL(XUL, YUL, corY, N, L) :- rectangle(XUL, YUL, XBR, YBR, L, corY), connectToRoomYUL(XUL,Y1,N,L), Y1 >= YUL, Y1 <= YBR.
-% connectsTwoRooms(XUL, YUL, XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, corY), corConnectsToRoomYUL(XUL, YUL, corY, N1, L) , corConnectsToRoomYUL(XUL, YUL, corY, N2, L), N1 != N2.
-
-% %A corridor must bec connected to at least two rooms
-% :- rectangle(XUL, YUL, XBR, YBR, L, corX), not connectsTwoRooms(XUL, YUL, XBR, YBR, L).
-% :- rectangle(XUL, YUL, XBR, YBR, L, corY), not connectsTwoRooms(XUL, YUL, XBR, YBR, L).
-
-%TODO Possible replace floorType with just floor with a type term. (Would possibly require modifying GUI code)
-%TODO Edge case. A T intersection of a corridor with a room along the other wall, will have no door or wall 
-
-%all walls should corrosopnd to a rectangle
-%:- barricadeX(XW,Y,L), not rectangle(XUL, Y, XBR, YBR, L), not rectangle(XUL, YUL, XBR, (Y - 1), L), floorSizeRange(XUL), floorSizeRange(XBR), floorSizeRange(YUL), floorSizeRange(YBR).
-%:- barricadeY(X,YW,L), not rectangle(X, YUL, XBR, YBR, L), not rectangle(XUL, YUL, (X-1), YBR, L),  YW >= YUL, YW <= YBR, floorSizeRange(XUL), floorSizeRange(XBR), floorSizeRange(YUL), floorSizeRange(YBR).
-
-
-%wallX(XUL,YUL,L) :- room(XUL, YUL, XBR, YBR, L).  %horizontal component of top left cornor
-%wallX(XBR,YUL,L) :- room(XUL, YUL, XBR, YBR, L).  %horizontal component of top right cornor
-%wallX(XUL,(YBR + 1),L) :- room(XUL, YUL, XBR, YBR, L). %horizontal component of bottom left corner
-%wallX(XBR,(YBR + 1),L) :- room(XUL, YUL, XBR, YBR, L). %horizontal component of bottom right corner
-%wallY(XUL,YUL,L) :- room(XUL, YUL, XBR, YBR, L).  %vertical component of top left cornor
-%wallY((XBR + 1),YUL,L) :- room(XUL, YUL, XBR, YBR, L).  %vertical component of top right cornor
-%wallY(XUL,YBR,L) :- room(XUL, YUL, XBR, YBR, L). %vertical component of bottom left cornor
-%wallY((XBR + 1),YBR,L) :- room(XUL, YUL, XBR, YBR, L). %vertical component of bottom right cornor
-
-%There can only be gaps one wide in the walls of the room
-%wallX((XW - 1),YUL,L) :- room(XUL, YUL, XBR, YBR, L), noWallX(XW,YUL,L), XW > XUL, XW <= XBR. %check for walls on top of the room
-%wallX((XW - 1),(YBR + 1),L) :- room(XUL, YUL, XBR, YBR, L), noWallX(XW,(YBR + 1),L), XW > XUL, XW <= XBR. %check for walls on bottom of the room
-%wallY(XUL,(YW - 1),L) :- room(XUL, YUL, XBR, YBR, L), noWallY(XUL,YW,L), YW > YUL, YW <= YBR. %check for walls on left side of the room
-%wallY((XBR + 1),(YW - 1),L) :- room(XUL, YUL, XBR, YBR, L), noWallY((XBR + 1),YW,L), YW > YUL, YW <= YBR. %check for walls on left side of the room
-
-
-%Limit size of rooms
-
-%------------------------------------------------------------------------
-%Outdoor level specific elements
-%------------------------------------------------------------------------
-
-%{ tree(X,Y,L) : floorSizeRange(X) , floorSizeRange(Y) } :- level(L), exterior(L).
-%:-  tree(X,Y,L), not tile(X,Y,L). %trees must be on valid tiles
-
-%-----------------------------------------------
-%Planning With help from Answer set programming and plan generation
-%http://www.sciencedirect.com/science/article/pii/S0004370202001868 
-%kind of
-%-----------------------------------------------
-
-% %----------------------------------------------------------------------------
-% %NPCs
-% %--------------------------------------------------------------------------
-% npcNumRange(1..maxNumberOfNpcs). %each npc will be identified with a number (they will be given names during the conversion to an actual module
-% { npc(NPCN) : npcNumRange(NPCN) }. %each npc has an identifying number
-
-% { friendly(NPCN): npcNumRange(NPCN)}. %states that npc N is friendly
-% { hostile(NPCN): npcNumRange(NPCN)}. %states that npc N is hostile
-% %npc location
-
-% :- friendly(NPCN) , not npc(NPCN). %friendly must corrospond to an actual npc
-% :- hostile(NPCN) , not npc(NPCN). %hostile must corrospond to an actual npc
-% :- npc(NPCN), not friendly(NPCN), not hostile(NPCN). %all npcs are either friendly or hostile
-% :- npc(NPCN), friendly(NPCN), hostile(NPCN). %no npc is both friendly and hostile
-
-% 1 { npcLevel(NPCN, L) : levelNumRange(L) } 1 :- npc(NPCN).
-% :- npcLevel(NPCN,L) , not level(L).
-% 1 { npcLocation(NPCN,X,Y,L) : floorSizeRange(X) , floorSizeRange(Y) } 1 :- npcLevel(NPCN, L).%for every npc there is one location they are located
-% :- npcLocation(NPCN,X,Y,L), not floor(X,Y,L). %NPCS must be located on floor tiles
-
-
-% %---------------------------------------------------------------------------------------------------------------------
-% % Quests
-% %-----------------------------------------------------------------------------------------------------------------------
-
-% questNumRange(1..numQuests). %each quest will be each npc will be identified with a number (they will be given names during the conversion to an actual module)
-% numQuests { quest(QN) : questNumRange(QN) } numQuests. %each npc has an identifying number
-
-% numQuests { questGiver(QN, NPCN) : questNumRange(QN) , npcNumRange(NPCN)} numQuests. %each quest has an npc that gives the quest
-% :- questGiver(QN, NPCN), not quest(QN). %a npc can only give an real quest
-% :- questGiver(QN, NPCN), not npc(NPCN). %
-% :- questGiver(QN, NPCN), hostile(NPCN). %the quest giver cannot be hostile 
-% :- questGiver(QN, NPCN1), questGiver(QN, NPCN2), NPCN1 != NPCN2. %there cannot be two quest givers 
-
-% %Types of quest objectives
-% typeOfObjective(killObjective).
-% %typeOfObjective(fetch).
-
-% 1 { questObjectiveType(QN, OBJTYPE) : questNumRange(QN) , typeOfObjective(OBJTYPE) } 1 :- quest(QN).
-% %:- questObjectiveType(QN, OBJTYPE1), questObjectiveType(QN, OBJTYPE2), OBJTYPE1 != OBJTYPE2.
-
-% targetIndexRange(1..maxTargetIndex). %range of possible indexs for the quest target
-% 1 { questTarget(QN, T) : questNumRange(QN) , targetIndexRange(T) }  1 :- quest(QN). %the target of a quest (a npc/item to fetch/kill)
-% :- questTarget(QN1, T), questTarget(QN2, T), questObjectiveType(QN1, TYPE), questObjectiveType(QN2, TYPE), QN1 != QN2. %Two quests cannot have the same target
-
-% %Kill quest target rules
-% :- questTarget(QN, T), questObjectiveType(QN, killObjective), not npc(T). %The target must be an actual npcs
-% :- questTarget(QN, T), questObjectiveType(QN, killObjective), not hostile(T). %The target must be a hostile npc
-
-% %fetch quest target rules
-% %to come later
-
-% %------------------------------------------------------------------------------------------------------------
-% %Quest Stages rules
-% %--------------------------------------------------------------------------------------------------------------
-% stageRange(1..maxQuestStages). %range of allowable quest stages
-
-% { alive(NPCN,S) : npcNumRange(NPCN) , stageRange(S) }. %npc NPCN is alive during stage S
-% { dead(NPCN,S) : npcNumRange(NPCN) , stageRange(S) }. %npc NPCN is dead during stage S
-
-% :- alive(NPCN, S), dead(NPCN, S). %an npc cannot be both dead and alive at the same time
-% alive(NPCN,1) :- npc(NPCN). %all npcs are alive at stage 1 FOR NOW
-
-% %only bother keeping track of alive/dead status for actual npcs during actual quest stages
-% :- alive(NPCN, SN), not npc(NPCN). 
-% :- dead(NPCN, SN), not npc(NPCN). 
-% :- alive(NPCN, SN), not stage(SN). 
-% :- dead(NPCN, SN), not stage(SN). 
-
-
-% { playerAt(L,S) : levelNumRange(L) , stageRange(S) }. %Level the player is in at Stage S
-% :- playerAt(L,S) , not level(L).
-% playerAt(L,S+1) :- stage(S), stage(S + 1), not stageAction(S,moveAction), playerAt(L,S). %if the player doesn't move during a stage he stays at the same location
-% playerAt(L,S+1) :- stage(S), stage(S + 1), stageAction(S,moveAction), move(L,S). %if the player does move he goes to the level he moved to
-
-
-% %Possible actions
-% action(getQuestAction). %pick up a quest from a quest giver
-% action(moveAction). %move to another level
-% action(killAction). %kill a npc
-
-% { stageAction(SN,A) : stageRange(SN) , action(A) } . %Action A occurs at stage SN (Note no support yet for multiple branches)
-% :- stageAction(SN,A1), stageAction(SN,A2), A1 != A2. %currently only one action can occur per stage
-% stage(SN) :- stageAction(SN,A). %if an action occurs at a stage that stage exists
-% :- stage(SN), not stage((SN - 1)), SN != 1. %Every stage has to have a stage before it or be the first stage
-
-% %we don't want uneccessary stages
-% %#minimize [totalStages(N) = N @ 1].
-% totalStages(N) :- N = #count{SN,A : stageAction(SN,A)}. %count the number of stages
-
-% %Get quest action. Currently this only supports a single quest existing
-% :- stageAction(SN,getQuestAction), SN != 1. %hard code for now that the get quest action can only been done the first stage (later if we want to remove this restriction need to keep track of whether the quest has already been accepted or not so it is not accepted twice)
-% 1 { getQuest(NPCN,SN) : stageRange(SN) , npcNumRange(NPCN) } 1 :- stageAction(SN,getQuestAction). %A getQuest action requires a npc to be specified to get the quest from
-% %:- qetQuest(NPCN,SN), not stageAction(SN,getQuestAction).
-% :- getQuest(NPCN,SN), npcLevel(NPCN,L1), playerAt(L2,SN), L1 != L2. %The player must be in the location of the quest giver to get a quest
-% :- getQuest(NPCN,SN), not npc(NPCN). %the quest giver must actually exist
-% :- getQuest(NPCN,SN), not questGiver(NPCN,QN), questNumRange(QN). %A quest can only be goten from a npc that is a quest giver
-
-% %move action
-% 1 { move(L,SN) : stageRange(SN) , levelNumRange(L) } 1 :- stageAction(SN,moveAction). %A move action requires a level to be specified to move to
-% :- move(L,SN), not level(L).
-% :- move(L,SN), playerAt(L,SN). %A player can't move to a location he already was in
-
-% %kill action
-% 1 { kill(NPCN,SN) : stageRange(SN) , npcNumRange(NPCN) } 1 :- stageAction(SN,killAction). %A getQuest action requires a npc to be specified to kill
-% :- kill(NPCN,SN), friendly(NPCN). %you cannot kill a friendly npc
-% :- kill(NPCN,SN), npcLevel(NPCN,L1), playerAt(L2,SN), L1 != L2. %The player must be in the location of the npc to kill them
-% :- kill(NPCN,SN), dead(NPCN,SN). %the npc cannot already be dead
-
-% %rulees to update alive dead status accounting for kill action
-% alive(NPCN,SN + 1) :- stage(SN), stage(SN + 1), alive(NPCN,SN), not kill(NPCN,SN). %a npc will be alive in subsequent stages if not killed
-% dead(NPCN,SN + 1) :- stage(SN), stage(SN + 1), alive(NPCN,SN),  kill(NPCN,SN). %a living npc will be dead in subsequent stages if killed
-% dead(NPCN,SN + 1) :- stage(SN), stage(SN + 1), dead(NPCN,SN). %if a npc is dead in a stage it will be dead in all subsequent stages
-
-% %questComplete(QN,S) :- dead(NPCN,S), questTarget(QN, NPCN), questObjectiveType(QN, killObjective). %if the target of a quest is dead the quest is complete
-% 1 { questComplete(QN,S) : questNumRange(QN) , stageRange(S) } 1. %the quest must be complete for at least one stage
-% :- questComplete(QN,S), not dead(NPCN,S), not kill(NPCN,S), questTarget(QN, NPCN), questObjectiveType(QN, killObjective). %if the quest objective is to kill the target the quest is only complete if the target is either dead or killed during that stage
+doorYOkay(X,Y1,L) :- doorY(X,Y1,L), doorY(X,Y2,L), wallX(X2,Y3,L), Y1 < Y2, Y3 > Y1, Y3 < Y2, X2 <= X, X2 >= X-1.
+:- doorY(X,Y1,L), doorY(X,Y2,L), Y1 < Y2, not doorYOkay(X,Y1,L).
 
 %-----------------------------------------
 %Hidden elements
