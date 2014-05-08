@@ -49,6 +49,8 @@ namespace PCG_GUI.Facts
                 sortFact(curFact);
             }
 
+            numLevels = 1;
+
             setUpLevels();
 
             buildLevels();
@@ -106,9 +108,9 @@ namespace PCG_GUI.Facts
         {
             switch (fact.getPredicate())
             {
-                case "totalLevels":
+                /*case "totalLevels":
                     numLevels = fact.getNumericValue(0); //get the number of levels from the fact
-                    break;
+                    break;*/
 
                 //level dimension facts
                 case "levelLengthX":
@@ -235,13 +237,13 @@ namespace PCG_GUI.Facts
             if(f.getPredicate() == "levelLengthX")
             {
                 //the levelLenghtX fact has form(length,level)
-                levelDimensions[f.getNumericValue(1), 0] = f.getNumericValue(0);
+                levelDimensions[0, 0] = f.getNumericValue(0);
             }
 
             else if (f.getPredicate() == "levelLengthY")
             {
                 //the levelLenghtY fact has form(length,level)
-                levelDimensions[f.getNumericValue(1), 1] = f.getNumericValue(0);
+                levelDimensions[0, 1] = f.getNumericValue(0);
             }
 
             else
@@ -259,7 +261,7 @@ namespace PCG_GUI.Facts
                 switch (f.getPredicate())
                 {
                     case "floor": //floor format is (X,Y,L)
-                        allLevels[f.getNumericValue(2)].setTileType(f.getNumericValue(0), f.getNumericValue(1), TileType.floor);
+                        allLevels[0].setTileType(f.getNumericValue(0), f.getNumericValue(1), TileType.floor);
                         break;
                     /*case "tree":
                         //levelFacts.Add(fact);
@@ -271,16 +273,16 @@ namespace PCG_GUI.Facts
                         allLevels[f.getNumericValue(0)].typeOfLevel = levelType.exterior;
                         break;*/
                     case "wallX": //wallX(X,Y,L) is a wall from X,Y to X+1,Y in L
-                        allLevels[f.getNumericValue(2)].addWallX(f.getNumericValue(0), f.getNumericValue(1), WallType.wall);
+                        allLevels[0].addWallX(f.getNumericValue(0), f.getNumericValue(1), WallType.wall);
                         break;
                     case "doorX": //doorX(X,Y,L) is a door from X,Y to X+1,Y in L
-                        allLevels[f.getNumericValue(2)].addWallX(f.getNumericValue(0), f.getNumericValue(1), WallType.door);
+                        allLevels[0].addWallX(f.getNumericValue(0), f.getNumericValue(1), WallType.door);
                         break;
                     case "wallY": //wallY(X,Y,L) us a wall from X,Y to X,Y+1
-                        allLevels[f.getNumericValue(2)].addWallY(f.getNumericValue(0), f.getNumericValue(1), WallType.wall);
+                        allLevels[0].addWallY(f.getNumericValue(0), f.getNumericValue(1), WallType.wall);
                         break;
                     case "doorY": //doorY(X,Y,L) us a door from X,Y to X,Y+1
-                        allLevels[f.getNumericValue(2)].addWallY(f.getNumericValue(0), f.getNumericValue(1), WallType.door);
+                        allLevels[0].addWallY(f.getNumericValue(0), f.getNumericValue(1), WallType.door);
                         break;
                     default:
                         System.Console.Error.WriteLine("Error predicate type " + f.getPredicate() + " should not be in levelFact list");

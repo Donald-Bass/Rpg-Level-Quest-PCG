@@ -6,16 +6,13 @@
 %Framework
 %----------------------------------------------------------------------------
 
-#const maxAreaSize=32.  %32. %maximum length of a side in number of tiles in an area 
-#const minAreaSize=32. %minimum length of a side in number of tiles in an area
-#const numLevels=2.
+#const maxAreaSize=16.  %32. %maximum length of a side in number of tiles in an area 
+#const minAreaSize=16. %minimum length of a side in number of tiles in an area
 #const maxNumberOfNpcs=10. %maximum number of npcs that can be generated
 #const maxNumberOfItems=10. %maximum number of itesm that can be generated
 #const maxTargetIndex=10. %should be set to the larger of the two above values
 #const maxQuestStages=100. %maximum number of quest stages that can be generated
 #const maxRects=20.
-#const numQuests=1.
-#const numberOfLevels=1.
 #const maxLength=10.
 #const minLength=3.
 
@@ -28,266 +25,292 @@ roomSizeRange(minLength .. maxLength).
 %----------------------------------------------------------------------------
 %Level Basics
 %----------------------------------------------------------------------------
-levelNumRange(0 .. (numberOfLevels - 1)).
-
-level(L) :- levelNumRange(L).
-
-interior(X) :- level(X).
-
-totalLevels(numberOfLevels).
 
 %determine the size of the area
-1 { levelLengthX(X,L) : areaSizeRange(X) } 1 :- level(L). 
-1 { levelLengthY(Y,L) : areaSizeRange(Y) } 1 :- level(L). 
-
-:- levelLengthX(X1,L), levelLengthX(X2,L), X1 != X2.
-:- levelLengthY(Y1,L), levelLengthY(Y2,L), Y1 != Y2.
+1 { levelLengthX(X) : areaSizeRange(X) } 1. 
+1 { levelLengthY(Y) : areaSizeRange(Y) } 1.
 
 %determine valid tile numbers
-lengthXDim(0..(X - 1), L) :- levelLengthX(X, L).
-lengthYDim(0..(Y - 1), L) :- levelLengthY(Y, L).
+lengthXDim(0..(X - 1)) :- levelLengthX(X).
+lengthYDim(0..(Y - 1)) :- levelLengthY(Y).
 
 %define tiles
-%tile(X,Y,L) :- lengthXDim(X,L), lengthYDim(Y,L), level(L).
+%tile(X,Y) :- lengthXDim(X), lengthYDim(Y), level(L).
 
 %---------------------------------------------------------------------------------
 %Walls and other barricades
 %---------------------------------------------------------------------------------
 
 %walls have to be able to border entire area so valid dimensions range from 0 to X/Y 
-wallXDim(0..X , L) :- levelLengthX(X, L). 
-wallYDim(0..Y , L) :- levelLengthY(Y, L).
+wallXDim(0..X) :- levelLengthX(X). 
+wallYDim(0..Y) :- levelLengthY(Y).
 
-%wallX(X,Y,L) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
-{ wallX(X,Y,L) } :- wallXDim(X,L), wallYDim(Y,L), level(L), interior(L). 
-{ doorX(X,Y,L) } :- wallXDim(X,L), wallYDim(Y,L), level(L), interior(L). 
+%wallX(X,Y) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
+{ wallX(X,Y) } :- wallXDim(X), wallYDim(Y).
+{ doorX(X,Y) } :- wallXDim(X), wallYDim(Y).
 
-%wallY(X,Y,L) from X,Y to X,Y+1. The bottommost y is not a valid y for a wall on the y axis it can only be used for walls on the x Axis
-{ wallY(X,Y,L) } :- wallXDim(X,L), wallYDim(Y,L), level(L), interior(L). 
-{ doorY(X,Y,L) } :- wallXDim(X,L), wallYDim(Y,L), level(L), interior(L). 
+%wallY(X,Y) from X,Y to X,Y+1. The bottommost y is not a valid y for a wall on the y axis it can only be used for walls on the x Axis
+{ wallY(X,Y) } :- wallXDim(X), wallYDim(Y). 
+{ doorY(X,Y) } :- wallXDim(X), wallYDim(Y). 
 
 %There is no barricade that is freestanding
-:- barricadeX(X,Y,L) , not barricadeX(X+1,Y,L), not barricadeX(X-1,Y,L), not barricadeY(X,Y,L), not barricadeY(X,Y-1,L).
-:- barricadeY(X,Y,L) , not barricadeX(X,Y,L), not barricadeX(X-1,Y,L), not barricadeY(X,Y+1,L), not barricadeY(X,Y-1,L).
+:- barricadeX(X,Y) , not barricadeX(X+1,Y), not barricadeX(X-1,Y), not barricadeY(X,Y), not barricadeY(X,Y-1).
+:- barricadeY(X,Y) , not barricadeX(X,Y), not barricadeX(X-1,Y), not barricadeY(X,Y+1), not barricadeY(X,Y-1).
 
 %Barricades are walls and anything else that occupies the same space (doors for example0
-:- not wallX(X,Y,L), not doorX(X,Y,L), barricadeX(X,Y,L).
-:- not wallY(X,Y,L), not doorY(X,Y,L), barricadeY(X,Y,L). 
-:- wallX(X,Y,L), doorX(X,Y,L).
-:- wallY(X,Y,L), doorY(X,Y,L).
+:- not wallX(X,Y), not doorX(X,Y), barricadeX(X,Y).
+:- not wallY(X,Y), not doorY(X,Y), barricadeY(X,Y). 
+:- wallX(X,Y), doorX(X,Y).
+:- wallY(X,Y), doorY(X,Y).
 
 %There should not be two doors side by side
-:- doorX(X,Y,L), doorX((X-1),Y,L).
-:- doorY(X,Y,L), doorY(X,(Y-1),L).
+:- doorX(X,Y), doorX((X-1),Y).
+:- doorY(X,Y), doorY(X,(Y-1)).
 
-barricadeX(X,Y,L) :- wallX(X,Y,L).
-barricadeX(X,Y,L) :- doorX(X,Y,L).
-barricadeY(X,Y,L) :- wallY(X,Y,L).
-barricadeY(X,Y,L) :- doorY(X,Y,L).
+barricadeX(X,Y) :- wallX(X,Y).
+barricadeX(X,Y) :- doorX(X,Y).
+barricadeY(X,Y) :- wallY(X,Y).
+barricadeY(X,Y) :- doorY(X,Y).
 
 
-%:- wallX(X,Y,L), not barricadeX(X,Y,L).
-%:- wallY(X,Y,L), not barricadeY(X,Y,L). 
+%:- wallX(X,Y), not barricadeX(X,Y).
+%:- wallY(X,Y), not barricadeY(X,Y). 
 
 %----------------------------------------------------------------------------------------------------------------------------------------------
 %Floors
 %----------------------------------------------------------------------------------------------------------------------------------------------
 %There must be a wall between any floor and non floor tile when the level is an interior
-wallY(X,Y,L) :- floor(X,Y,L) , not floor((X - 1),Y,L), interior(L).
-wallY((X + 1),Y,L) :- floor(X,Y,L) , not floor((X + 1),Y,L), interior(L).
-wallX(X,Y,L) :- floor(X,Y,L) , not floor(X,(Y - 1),L), interior(L).
-wallX(X,(Y+1),L) :- floor(X,Y,L) , not floor(X,(Y + 1),L), interior(L).
+wallY(X,Y) :- floor(X,Y) , not floor((X - 1),Y).
+wallY((X + 1),Y) :- floor(X,Y) , not floor((X + 1),Y).
+wallX(X,Y) :- floor(X,Y) , not floor(X,(Y - 1)).
+wallX(X,(Y+1)) :- floor(X,Y) , not floor(X,(Y + 1)).
 
 %There must be a floor on at least one side of a wall
-:- barricadeX(X,Y,L), not floor(X,Y,L), not floor(X,(Y-1),L).
-:- barricadeY(X,Y,L), not floor(X,Y,L), not floor((X-1),Y,L).
+:- barricadeX(X,Y), not floor(X,Y), not floor(X,(Y-1)).
+:- barricadeY(X,Y), not floor(X,Y), not floor((X-1),Y).
 
 %Each level should have a starting tile along one of the edges
-1 { levelStart(X,Y,L) : floorSizeRange(X) , floorSizeRange(Y)} 1 :- level(L), interior(L). 
+1 { levelStart(X,Y) : floorSizeRange(X) , floorSizeRange(Y)} 1.
 
-:- levelStart(X,Y,L), not floor(X,Y,L). %the start must be on a floor
+:- levelStart(X,Y), not floor(X,Y). %the start must be on a floor
 
 %The starting tile must be on one of the edges
-nonEdgeXDim(1..(X - 2), L) :- levelLengthX(X, L). %Define non edge tiles
-nonEdgeYDim(1..(Y - 2), L) :- levelLengthY(Y, L). %Define non edge tiles
-:- levelStart(X,Y,L), nonEdgeXDim(X,L), nonEdgeYDim(Y,L). %both dimensions of a level start can't be non edge dimensions
+nonEdgeXDim(1..(X - 2)) :- levelLengthX(X). %Define non edge tiles
+nonEdgeYDim(1..(Y - 2)) :- levelLengthY(Y). %Define non edge tiles
+:- levelStart(X,Y), nonEdgeXDim(X), nonEdgeYDim(Y). %both dimensions of a level start can't be non edge dimensions
 
-%define what tiles are connected to what tiles
-connectedUp(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), X1 == X2, (Y1 - 1) == Y2, not wallX(X1,Y1,L).
-connectedDown(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), X1 == X2, (Y1 + 1) == Y2, not wallX(X2,Y2,L).
-connectedLeft(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1,L).
-connectedRight(X1,Y1,X2,Y2,L) :- floor(X1,Y1,L), floor(X2,Y2,L), Y1 == Y2, (X1 + 1) == X2, not wallY(X2,Y2,L).
-
-%if a connection exists in any direction the two tiles are connected
-connection(X1,Y1,X2,Y2,L) :- connectedUp(X1,Y1,X2,Y2,L).
-connection(X1,Y1,X2,Y2,L) :- connectedDown(X1,Y1,X2,Y2,L).
-connection(X1,Y1,X2,Y2,L) :- connectedLeft(X1,Y1,X2,Y2,L).
-connection(X1,Y1,X2,Y2,L) :- connectedRight(X1,Y1,X2,Y2,L).
 
 %------------------------------------------------------------------------------------------
 %Reachable tiles
 %------------------------------------------------------------------------------------------
 
-step(0,-1 ;; 0,1 ;; 1,0 ;; -1,0). %Set up range of possible ways to move one tile over
+step(0,-1 ;; 0,1 ;; 1,0 ;; -1,0). %Set up range of possible ways to move one tile over%
 
 %The start of the level is automatically reachablea
-reachable(X,Y,L) :- levelStart(X,Y,L).
+%reachable(X,Y) :- levelStart(X,Y).
 
 %A tile is reachable if it is one step from a reachable tile and connected to that tile
-reachable(NX,NY,L) :-
-  reachable(X,Y,L),
-  step(DX,DY),
-  NX = X + DX,
-  NY = Y + DY,
-  floor(NX,NY,L),
-  connection(NX,NY,X,Y,L).
+%reachable(NX,NY) :-
+%  reachable(X,Y),
+%  step(DX,DY),
+% NX = X + DX,
+%  NY = Y + DY,
+% floor(NX,NY),
+%  connection(NX,NY,X,Y).
   
 %Every floor tile should be reachable (This is for the interior only right now because only the interior has a starting position, and there is nothing to block travel between tiles outdoor currently)
-:- floor(X,Y,L), not reachable(X,Y,L), interior(L).
+%:- floor(X,Y), not reachable(X,Y).
 
 %-----------------------------------------------------------------------
 % Indoor level Specific Elements
 %------------------------------------------------------------------------
 
 %A room (defined by the top left (XUL,YUL) and Bottom Right (XBR, YBR) corners
-6 { room(XUL, YUL, LENGTH, HEIGHT, L) : floorSizeRange(XUL) , floorSizeRange(YUL) , roomSizeRange(LENGTH) , roomSizeRange(HEIGHT)} 15 :- level(L), interior(L).
+6 { room(XUL, YUL, LENGTH, HEIGHT) : floorSizeRange(XUL) , floorSizeRange(YUL) , roomSizeRange(LENGTH) , roomSizeRange(HEIGHT)} 15.
 
-1 { corridorX(XL, LENGTH, Y, L) : floorSizeRange(XL) , roomSizeRange(LENGTH)  , floorSizeRange(Y) } 15 :- level(L), interior(L).
+1 { corridorX(XL, LENGTH, Y) : floorSizeRange(XL) , roomSizeRange(LENGTH)  , floorSizeRange(Y) } 15.
 
-1 { corridorY(YU, LENGTH, X, L) : floorSizeRange(YU) , roomSizeRange(LENGTH)  , floorSizeRange(X) } 15 :- level(L), interior(L).
+1 { corridorY(YU, LENGTH, X) : floorSizeRange(YU) , roomSizeRange(LENGTH)  , floorSizeRange(X) } 15.
 
 %Rectangle covers shared rules for corriders and rooms
-rectangle(XUL, YUL, (XUL + LENGTH), (YUL + HEIGHT), L, room) :- room(XUL, YUL, LENGTH, HEIGHT, L).
-rectangle(XL, Y, (XL + LENGTH), Y, L,corX)  :- corridorX(XL, LENGTH, Y, L).
-rectangle(X, YU, X, (YU + LENGTH), L,corY)  :- corridorY(YU, LENGTH, X, L).
+rectangle(XUL, YUL, (XUL + LENGTH), (YUL + HEIGHT), room) :- room(XUL, YUL, LENGTH, HEIGHT).
+rectangle(XL, Y, (XL + LENGTH), Y,corX)  :- corridorX(XL, LENGTH, Y).
+rectangle(X, YU, X, (YU + LENGTH),corY)  :- corridorY(YU, LENGTH, X).
 
-:- rectangle(XUL, YUL, XBR, YBR, L,_), levelLengthX(X,L), XBR > X.
-:- rectangle(XUL, YUL, XBR, YBR, L,_), levelLengthY(Y,L), YBR > Y.
+:- rectangle(XUL, YUL, XBR, YBR,_), levelLengthX(X), XBR > X.
+:- rectangle(XUL, YUL, XBR, YBR,_), levelLengthY(Y), YBR > Y.
 
-floorType(X,Y,L,T) :- rectangle(XUL, YUL, XBR, YBR, L,T),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X,L), lengthYDim(Y,L). %all tiles in the room must be floor
-floor(X,Y,L) :- floorType(X,Y,L,T). %seperate atom for when we need need a floor and the type of room it's from doesn't matter
-corFloor(X,Y,L) :- floorType(X,Y,L,corX). %seperate atom for when we need a floor from a corridor
-corFloor(X,Y,L) :- floorType(X,Y,L,corY). %seperate atom for when we need a floor from a corridor
+floorType(X,Y,T) :- rectangle(XUL, YUL, XBR, YBR, T),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X), lengthYDim(Y). %all tiles in the room must be floor
+floor(X,Y) :- floorType(X,Y,T). %seperate atom for when we need need a floor and the type of room it's from doesn't matter
+corFloor(X,Y) :- floorType(X,Y,corX). %seperate atom for when we need a floor from a corridor
+corFloor(X,Y) :- floorType(X,Y,corY). %seperate atom for when we need a floor from a corridor
 
 %collision detection hack for each tile remember seperatly the 4 corners of the rectangle of the room it's from, if any tile has two of those registered there is a collision
-floorXUL(X,Y,XUL,L,T) :- rectangle(XUL, YUL, XBR, YBR, L,T),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X,L), lengthYDim(Y,L). %all tiles in the room must be floor
-floorXBR(X,Y,XBR,L,T) :- rectangle(XUL, YUL, XBR, YBR, L,T),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X,L), lengthYDim(Y,L). %all tiles in the room must be floor
-floorYUL(X,Y,YUL,L,T) :- rectangle(XUL, YUL, XBR, YBR, L,T),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X,L), lengthYDim(Y,L). %all tiles in the room must be floor
-floorYBR(X,Y,YBR,L,T) :- rectangle(XUL, YUL, XBR, YBR, L,T),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X,L), lengthYDim(Y,L). %all tiles in the room must be floor
+floorXUL(X,Y,XUL,T) :- rectangle(XUL, YUL, XBR, YBR,T),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X), lengthYDim(Y). %all tiles in the room must be floor
+floorYUL(X,Y,YUL,T) :- rectangle(XUL, YUL, XBR, YBR,T),  X >= XUL, X <= XBR, Y >= YUL, Y <= YBR, lengthXDim(X), lengthYDim(Y). %all tiles in the room must be floor
 
-overLap(X,Y,L,T1,T2) :- floorXUL(X,Y,XUL1,L,T1), floorXUL(X,Y,XUL2,L,T2), XUL1 != XUL2.
-overLap(X,Y,L,T1,T2) :- floorXBR(X,Y,XBR1,L,T1), floorXBR(X,Y,XBR2,L,T2), XBR1 != XBR2.
-overLap(X,Y,L,T1,T2) :- floorYUL(X,Y,YUL1,L,T1), floorYUL(X,Y,YUL2,L,T2), YUL1 != YUL2.
-overLap(X,Y,L,T1,T2) :- floorYBR(X,Y,YBR1,L,T1), floorYBR(X,Y,YBR2,L,T2), YBR1 != YBR2.
+:- rectangle(XUL, YUL, XBR1, _,_), rectangle(XUL, YUL, XBR2, _,_), XBR1 != XBR2.
+:- rectangle(XUL, YUL, _, YBR1,_), rectangle(XUL, YUL, _, YBR2, _), YBR1 != YBR2.
+:- rectangle(XUL, YUL, _, _,T1), rectangle(XUL, YUL, _, _, T2), T1 != T2.
 
-%wallX(X,Y,L) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
+overLap(X,Y,T1,T2) :- floorXUL(X,Y,XUL1,T1), floorXUL(X,Y,XUL2,T2), XUL1 != XUL2.
+overLap(X,Y,T1,T2) :- floorYUL(X,Y,YUL1,T1), floorYUL(X,Y,YUL2,T2), YUL1 != YUL2.
+
+%What happens when rooms share the upper corner
+
+%wallX(X,Y) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
 
 %there should be no overlap for rooms, and no overlap between two corridors along the same axis
-:- overLap(X,Y,L,T1,T2), T1 = room. 
-:- overLap(X,Y,L,T1,T2), T2 = room.
-:- overLap(X,Y,L,T1,T2), T1 = T2.
+:- overLap(X,Y,T1,T2), T1 = room. 
+:- overLap(X,Y,T1,T2), T2 = room.
+:- overLap(X,Y,T1,T2), T1 = T2.
 
-:- overLap(X1,Y1,L,corX,corY), overLap(X2,Y2,L,corX,corY), X1 < X2, (X2 - X1) <= 2.
-:- overLap(X1,Y1,L,corX,corY), overLap(X2,Y2,L,corX,corY), Y1 < Y2, (Y2 - Y1) <= 2.
+:- overLap(X1,Y1,corX,corY), overLap(X2,Y2,corX,corY), X1 < X2, (X2 - X1) <= 2.
+:- overLap(X1,Y1,corX,corY), overLap(X2,Y2,corX,corY), Y1 < Y2, (Y2 - Y1) <= 2.
 
-roomBarricadeX(XW,YUL,L) :- rectangle(XUL, YUL, XBR, YBR, L,_), lengthXDim(XW,L), XW >= XUL, XW <= XBR. %add walls on top of the room
-roomBarricadeX(XW,(YBR + 1),L) :- rectangle(XUL, YUL, XBR, YBR, L,_), lengthXDim(XW,L), XW >= XUL, XW <= XBR. %add walls on bottom of the room
-roomBarricadeY(XUL,YW,L) :- rectangle(XUL, YUL, XBR, YBR, L,_), lengthYDim(YW,L), YW >= YUL, YW <= YBR. %add walls on left of the room
-roomBarricadeY((XBR + 1),YW,L) :- rectangle(XUL, YUL, XBR, YBR, L,_), lengthYDim(YW,L), YW >= YUL, YW <= YBR. %add walls on left of the room
+roomBarricadeX(XW,YUL) :- rectangle(XUL, YUL, XBR, YBR,_), lengthXDim(XW), XW >= XUL, XW <= XBR. %add walls on top of the room
+roomBarricadeX(XW,(YBR + 1)) :- rectangle(XUL, YUL, XBR, YBR,_), lengthXDim(XW), XW >= XUL, XW <= XBR. %add walls on bottom of the room
+roomBarricadeY(XUL,YW) :- rectangle(XUL, YUL, XBR, YBR,_), lengthYDim(YW), YW >= YUL, YW <= YBR. %add walls on left of the room
+roomBarricadeY((XBR + 1),YW) :- rectangle(XUL, YUL, XBR, YBR,_), lengthYDim(YW), YW >= YUL, YW <= YBR. %add walls on left of the room
 
 %Add condition that neither side of the wall is an overlap
-barricadeX(X,Y,L) :- roomBarricadeX(X,Y,L), not overLap(X,Y,L,corX,corY), not overLap(X,Y-1,L,corX,corY).
-barricadeY(X,Y,L) :- roomBarricadeY(X,Y,L), not overLap(X,Y,L,corX,corY), not overLap(X-1,Y,L,corX,corY).
+barricadeX(X,Y) :- roomBarricadeX(X,Y), not overLap(X,Y,corX,corY), not overLap(X,Y-1,corX,corY).
+barricadeY(X,Y) :- roomBarricadeY(X,Y), not overLap(X,Y,corX,corY), not overLap(X-1,Y,corX,corY).
 
-%wallX(X,Y,L) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
+%wallX(X,Y) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
 %If there is an overlap and there is a room adjacent to the overlap the room should still have its wall
 
-barricadeX(X,Y,L) :- roomBarricadeX(X,Y,L), overLap(X,Y,L,corX,corY), floorType(X,Y-1,L,room).   %Condition   R  (R = room, O = overlap)
+barricadeX(X,Y) :- roomBarricadeX(X,Y), overLap(X,Y,corX,corY), floorType(X,Y-1,room).   %Condition   R  (R = room, O = overlap)
 																						               %           ---
 																						               %            O
-barricadeX(X,Y,L) :- roomBarricadeX(X,Y,L), overLap(X,Y-1,L,corX,corY), floorType(X,Y,L,room).   %Condition   O  (R = room, O = overlap)
+barricadeX(X,Y) :- roomBarricadeX(X,Y), overLap(X,Y-1,corX,corY), floorType(X,Y,room).   %Condition   O  (R = room, O = overlap)
 																						               %           ---
 																						               %            R
-barricadeY(X,Y,L) :- roomBarricadeY(X,Y,L), overLap(X,Y,L,corX,corY), floorType(X-1,Y,L,room).   %Condition   R|O  (R = room, O = overlap)
+barricadeY(X,Y) :- roomBarricadeY(X,Y), overLap(X,Y,corX,corY), floorType(X-1,Y,room).   %Condition   R|O  (R = room, O = overlap)
 
-barricadeY(X,Y,L) :- roomBarricadeY(X,Y,L), overLap(X-1,Y,L,corX,corY), floorType(X,Y,L,room).   %Condition   O|R  (R = room, O = overlap)					
+barricadeY(X,Y) :- roomBarricadeY(X,Y), overLap(X-1,Y,corX,corY), floorType(X,Y,room).   %Condition   O|R  (R = room, O = overlap)					
 					
-:- barricadeX(X,Y,L), not roomBarricadeX(X,Y,L).
-:- barricadeY(X,Y,L), not roomBarricadeY(X,Y,L).
+:- barricadeX(X,Y), not roomBarricadeX(X,Y).
+:- barricadeY(X,Y), not roomBarricadeY(X,Y).
 
 %if there is an overlap between two corrdiors explictely prevent any barricades from blocking the junction between the associated corridor spaces
-:- barricadeX(X,Y,L), overLap(X,Y-1,L,corX,corY), corFloor(X,Y,L), corFloor(X,Y-1,L). %this is probally a dupe of the second, same with the 3rd being a dupe of the 4th
-:- barricadeX(X,Y,L), overLap(X,Y,L,corX,corY), corFloor(X,Y,L), corFloor(X,Y-1,L).
-:- barricadeY(X,Y,L), overLap(X-1,Y,L,corX,corY), corFloor(X,Y,L), corFloor(X-1,Y,L).
-:- barricadeY(X,Y,L), overLap(X,Y,L,corX,corY), corFloor(X,Y,L), corFloor(X-1,Y,L).
+:- barricadeX(X,Y), overLap(X,Y-1,corX,corY), corFloor(X,Y), corFloor(X,Y-1). %this is probally a dupe of the second, same with the 3rd being a dupe of the 4th
+:- barricadeX(X,Y), overLap(X,Y,corX,corY), corFloor(X,Y), corFloor(X,Y-1).
+:- barricadeY(X,Y), overLap(X-1,Y,corX,corY), corFloor(X,Y), corFloor(X-1,Y).
+:- barricadeY(X,Y), overLap(X,Y,corX,corY), corFloor(X,Y), corFloor(X-1,Y).
 
 %TODO. Finish debugging
 
 %TODO. add constraint, both ends of a corridor must be an overlap/have a door to a adjacent 
 
 %define spaces that are the ends of cooridors
-corEnd(XUL, YUL, L) :- rectangle(XUL, YUL, XBR, YBR, L, corX).
-corEnd(XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, corX).
-corEnd(XUL, YUL, L) :- rectangle(XUL, YUL, XBR, YBR, L, corY).
-corEnd(XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, corY).
+corEnd(XUL, YUL) :- rectangle(XUL, YUL, XBR, YBR, corX).
+corEnd(XBR, YBR) :- rectangle(XUL, YUL, XBR, YBR, corX).
+corEnd(XUL, YUL) :- rectangle(XUL, YUL, XBR, YBR, corY).
+corEnd(XBR, YBR) :- rectangle(XUL, YUL, XBR, YBR, corY).
 
 %check if there is a connection to a room in all 4 directions
-corEndConnectedRoom(XUL,YUL,L) :- corEnd(XUL, YUL, L), connection(XUL,YUL,XUL-1,YUL,L), floorType(XUL-1,YUL,L,room).
-corEndConnectedRoom(XUL,YUL,L) :- corEnd(XUL, YUL, L), connection(XUL,YUL,XUL+1,YUL,L), floorType(XUL+1,YUL,L,room).
-corEndConnectedRoom(XUL,YUL,L) :- corEnd(XUL, YUL, L), connection(XUL,YUL,XUL,YUL-1,L), floorType(XUL,YUL-1,L,room).
-corEndConnectedRoom(XUL,YUL,L) :- corEnd(XUL, YUL, L), connection(XUL,YUL,XUL,YUL+1,L), floorType(XUL,YUL+1,L,room).
+corEndConnectedRoom(XUL,YUL) :- corEnd(XUL, YUL), connection(XUL,YUL,XUL-1,YUL), floorType(XUL-1,YUL,room).
+corEndConnectedRoom(XUL,YUL) :- corEnd(XUL, YUL), connection(XUL,YUL,XUL+1,YUL), floorType(XUL+1,YUL,room).
+corEndConnectedRoom(XUL,YUL) :- corEnd(XUL, YUL), connection(XUL,YUL,XUL,YUL-1), floorType(XUL,YUL-1,room).
+corEndConnectedRoom(XUL,YUL) :- corEnd(XUL, YUL), connection(XUL,YUL,XUL,YUL+1), floorType(XUL,YUL+1,room).
 
 %every end of a corridor must be connected to a room or overlapping another corridor
-:- corEnd(XBR, YBR, L), not corEndConnectedRoom(XBR, YBR, L), not overLap(XBR, YBR, L,_,_).
+:- corEnd(XBR, YBR), not corEndConnectedRoom(XBR, YBR), not overLap(XBR, YBR,_,_).
 
 %corridors shouldn't be parallel and adjacent. (Allow this though if the adjacent spaces are both edges of corridors, could create some intresting shapes)
-:- floorType(X,Y,L,corX), floorType(X,Y-1,L,corX), not corEnd(X,Y,L).
-:- floorType(X,Y,L,corY), floorType(X-1,Y,L,corY), not corEnd(X,Y,L).
-:- floorType(X,Y,L,corX), floorType(X,Y-1,L,corX), not corEnd(X,Y-1,L).
-:- floorType(X,Y,L,corY), floorType(X-1,Y,L,corY), not corEnd(X-1,Y,L).
+:- floorType(X,Y,corX), floorType(X,Y-1,corX), not corEnd(X,Y).
+:- floorType(X,Y,corY), floorType(X-1,Y,corY), not corEnd(X,Y).
+:- floorType(X,Y,corX), floorType(X,Y-1,corX), not corEnd(X,Y-1).
+:- floorType(X,Y,corY), floorType(X-1,Y,corY), not corEnd(X-1,Y).
 
 %corridors should connect two or more rooms, or have 1 end be an overlap. To save memory only check connections at the ends. These is still moderatly memory intensive
 
 %for each end of the corridor corridor, find all connected tiles that are in a room and store the upper left corner of that room (Since rooms can't overlap, that corner will be unique)
-connectToRoomXUL(X,Y,XUL,L) :- corEnd(X,Y,L), connection(X,Y,X2,Y2,L), floorXUL(X2,Y2,XUL,L,room), step(DX,DY), X2 = X + DX, Y2 = Y + DY.
-connectToRoomYUL(X,Y,YUL,L) :- connectToRoomXUL(X,Y,XUL,L), floorXUL(X,Y,XUL,L,room), floorYUL(X,Y,YUL,L,room).
+connectToRoomXUL(X,Y,XUL) :- corEnd(X,Y), connection(X,Y,X2,Y2), floorXUL(X2,Y2,XUL,room), step(DX,DY), X2 = X + DX, Y2 = Y + DY.
+connectToRoomYUL(X,Y,YUL) :- connectToRoomXUL(X,Y,XUL), floorXUL(X,Y,XUL,room), floorYUL(X,Y,YUL,room).
 
 %check both ends of corridor to see if room differs in x coordinate of upper left corner
-connectsTwoRooms(XUL, YUL, XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, T), connectToRoomXUL(XUL, YUL, N1, L) , connectToRoomXUL(XBR, XBR, N2, L) , N1 != N2, T != room.
+connectsTwoRooms(XUL, YUL, XBR, YBR) :- rectangle(XUL, YUL, XBR, YBR, T), connectToRoomXUL(XUL, YUL, N1) , connectToRoomXUL(XBR, XBR, N2) , N1 != N2, T != room.
 
 %check both ends of corridor to see if room differs in y coordinate of upper left corner
-connectsTwoRooms(XUL, YUL, XBR, YBR, L) :- rectangle(XUL, YUL, XBR, YBR, L, T), connectToRoomYUL(XUL, YUL, N1, L) , connectToRoomYUL(XBR, XBR, N2, L) , N1 != N2, T != room.
+connectsTwoRooms(XUL, YUL, XBR, YBR) :- rectangle(XUL, YUL, XBR, YBR, T), connectToRoomYUL(XUL, YUL, N1) , connectToRoomYUL(XBR, XBR, N2) , N1 != N2, T != room.
 
 %A corridor must bec connected to at least two rooms
-:- rectangle(XUL, YUL, XBR, YBR, L, corX), not connectsTwoRooms(XUL, YUL, XBR, YBR, L), not overLap(XUL,YUL,L,corX,corY), not overLap(XBR,YBR,L,corX,corY).
-:- rectangle(XUL, YUL, XBR, YBR, L, corY), not connectsTwoRooms(XUL, YUL, XBR, YBR, L), not overLap(XUL,YUL,L,corX,corY), not overLap(XBR,YBR,L,corX,corY).
+:- rectangle(XUL, YUL, XBR, YBR, corX), not connectsTwoRooms(XUL, YUL, XBR, YBR), not overLap(XUL,YUL,corX,corY), not overLap(XBR,YBR,corX,corY).
+:- rectangle(XUL, YUL, XBR, YBR, corY), not connectsTwoRooms(XUL, YUL, XBR, YBR), not overLap(XUL,YUL,corX,corY), not overLap(XBR,YBR,corX,corY).
 
 %check if there are too many doors. From a door, go in each direction see if there are and perpendicular walls before another door is seen. (A perpendicular wall means the corridor/room on one side has ended
 
-doorXOkay(X1,Y,L) :- doorX(X1,Y,L), doorX(X2,Y,L), wallY(X3,Y2,L), X1 < X2, X3 > X1, X3 < X2, Y2 <= Y, Y2 >= Y-1.
-:- doorX(X1,Y,L), doorX(X2,Y,L), X1 < X2, not doorXOkay(X1,Y,L).
+doorXOkay(X1,Y) :- doorX(X1,Y), doorX(X2,Y), wallY(X3,Y2), X1 < X2, X3 > X1, X3 < X2, Y2 <= Y, Y2 >= Y-1.
+:- doorX(X1,Y), doorX(X2,Y), X1 < X2, not doorXOkay(X1,Y).
 
-doorYOkay(X,Y1,L) :- doorY(X,Y1,L), doorY(X,Y2,L), wallX(X2,Y3,L), Y1 < Y2, Y3 > Y1, Y3 < Y2, X2 <= X, X2 >= X-1.
-:- doorY(X,Y1,L), doorY(X,Y2,L), Y1 < Y2, not doorYOkay(X,Y1,L).
+doorYOkay(X,Y1) :- doorY(X,Y1), doorY(X,Y2), wallX(X2,Y3), Y1 < Y2, Y3 > Y1, Y3 < Y2, X2 <= X, X2 >= X-1.
+:- doorY(X,Y1), doorY(X,Y2), Y1 < Y2, not doorYOkay(X,Y1).
+
+%----------------------------------------------------------------------------------
+
+edgeFloorType(X,Y,T) :- rectangle(X, YUL, _, YBR, T),  Y >= YUL, Y <= YBR, lengthYDim(Y). %all tiles in the room must be floor
+edgeFloorType(X,Y,T) :- rectangle(_, YUL, X , YBR, T),  Y >= YUL, Y <= YBR, lengthYDim(Y). %all tiles in the room must be floor
+edgeFloorType(X,Y,T) :- rectangle(XUL, Y, XBR, _ , T),  X >= XUL, X <= XBR, lengthXDim(X). %all tiles in the room must be floor
+edgeFloorType(X,Y,T) :- rectangle(XUL, _, XBR, Y , T),  X >= XUL, X <= XBR, lengthXDim(X). %all tiles in the room must be floor
+
+%2.0GB to add reachable constraints for 16x16. Better then I've gotten but not good enough
+
+rectRange(0..25).
+
+1 { roomID(XUL,YUL,I) : lengthXDim(XUL), lengthYDim(YUL), rectRange(I) } 1 :- rectangle(XUL,YUL,_,_,_).
+:- roomID(XUL1,_,I), roomID(XUL2,_,I), XUL1 != XUL2.
+:- roomID(_,YUL1,I), roomID(_,YUL2,I), YUL1 != YUL2.
+
+edgeFloorID(XUL,Y,ID) :- rectangle(XUL, YUL, _, YBR, _),  Y >= YUL, Y <= YBR, lengthYDim(Y), roomID(XUL,YUL,ID). %all tiles in the room must be floor
+edgeFloorID(X,Y,ID) :- rectangle(XUL, YUL, X , YBR, _),  Y >= YUL, Y <= YBR, lengthYDim(Y), roomID(XUL,YUL,ID). %all tiles in the room must be floor
+edgeFloorID(X,YUL,ID) :- rectangle(XUL, YUL, XBR, _ , _),  X >= XUL, X <= XBR, lengthXDim(X), roomID(XUL,YUL,ID). %all tiles in the room must be floor
+edgeFloorID(X,Y,ID) :- rectangle(XUL, YUL, XBR, Y , _),  X >= XUL, X <= XBR, lengthXDim(X), roomID(XUL,YUL,ID). %all tiles in the room must be floor
+
+edgeFloor(X,Y) :- edgeFloorID(X,Y,_).
+
+
+connectedRooms(ID1,ID2) :- edgeFloorID(X1,Y1,ID1), edgeFloorID(X2,Y2,ID2),  connection(X1,Y1,X2,Y2), step(DX,DY), X2 = X1 + DX, Y2 = Y1 + DY.
+
+connectedRooms(ID2,ID1) :- connectedRooms(ID1,ID2).
+
+% %define what tiles are connected to what tiles
+connection(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), X1 == X2, (Y1 - 1) == Y2, not wallX(X1,Y1).
+% %connection(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), X1 == X2, (Y1 + 1) == Y2, not wallX(X2,Y2).
+connection(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1).
+% %connection(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), Y1 == Y2, (X1 + 1) == X2, not wallY(X2,Y2).
+
+connection(X2,Y2,X1,Y1) :- connection(X1,Y1,X2,Y2).
+
+reachable(ID) :- levelStart(X,Y), edgeFloorID(X,Y,ID). %The start has to be on the edge of the level so it has to been on the edge of a room
+reachable(ID2) :- reachable(ID1), connectedRooms(ID1,ID2).
+:- rectangle(XUL,YUL,_,_,_), roomID(XUL,YUL,ID), not reachable(ID).
+
+#show connection/4.
+#show edgeFloor/2.
+#show levelStart/2. 
+#show edgeFloorID/3.
+#show roomID/3.
+#show connectedRooms/2.
+#show reachable/1.
 
 %-----------------------------------------
 %Hidden elements
 %------------------------------------
-#show level/1.
-#show floor/3.
-#show wallX/3.
-#show wallY/3.
-#show doorX/3.
-#show doorY/3.
-#show totalLevels/1.
-#show levelLengthX/2.
-#show levelLengthY/2.
-#show rectangle/6.
-#show overLap/5.
-#show roomBarricadeX/3.
-#show roomBarricadeY/3.
-#show barricadeX/3.
-#show barricadeY/3.
+#show floor/2.
+#show wallX/2.
+#show wallY/2.
+#show doorX/2.
+#show doorY/2.
+#show levelLengthX/1.
+#show levelLengthY/1.
+#show rectangle/5.
+#show overLap/4.
+#show roomBarricadeX/2.
+#show roomBarricadeY/2.
+#show barricadeX/2.
+#show barricadeY/2.
 %#show connectsTwoRooms/5.
 %#show corConnectsToRoomXUL/7.
 %#show corConnectsToRoomYUL/7.
