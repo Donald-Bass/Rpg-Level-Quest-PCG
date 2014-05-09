@@ -256,6 +256,7 @@ edgeFloorType(X,Y,T) :- rectangle(XUL, Y, XBR, _ , T),  X >= XUL, X <= XBR, leng
 edgeFloorType(X,Y,T) :- rectangle(XUL, _, XBR, Y , T),  X >= XUL, X <= XBR, lengthXDim(X). %all tiles in the room must be floor
 
 %2.0GB to add reachable constraints for 16x16. Better then I've gotten but not good enough
+%Adding Key to 2.3 GB
 
 rectRange(0..25).
 
@@ -272,6 +273,8 @@ edgeFloor(X,Y) :- edgeFloorID(X,Y,_).
 
 
 connectedRooms(ID1,ID2) :- edgeFloorID(X1,Y1,ID1), edgeFloorID(X2,Y2,ID2),  connection(X1,Y1,X2,Y2), step(DX,DY), X2 = X1 + DX, Y2 = Y1 + DY.
+connectedRoomsNoKey(ID1,ID2) :- edgeFloorID(X1,Y1,ID1), edgeFloorID(X2,Y2,ID2),  connectionNoKey(X1,Y1,X2,Y2), step(DX,DY), X2 = X1 + DX, Y2 = Y1 + DY.
+
 
 connectedRooms(ID2,ID1) :- connectedRooms(ID1,ID2).
 
@@ -281,11 +284,27 @@ connection(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), X1 == X2, (Y1 - 1
 connection(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1).
 % %connection(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), Y1 == Y2, (X1 + 1) == X2, not wallY(X2,Y2).
 
+connectionNoKey(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), X1 == X2, (Y1 - 1) == Y2, not wallX(X1,Y1), not lockedDoorX(X1,Y1).
+connectionNoKey(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1).
+
+
 connection(X2,Y2,X1,Y1) :- connection(X1,Y1,X2,Y2).
+connectionNoKey(X2,Y2,X1,Y1) :- connectionNoKey(X1,Y1,X2,Y2).
+
+
 
 reachable(ID) :- levelStart(X,Y), edgeFloorID(X,Y,ID). %The start has to be on the edge of the level so it has to been on the edge of a room
+reachableNoKey(ID) :- levelStart(X,Y), edgeFloorID(X,Y,ID). %The start has to be on the edge of the level so it has to been on the edge of a room
+
 reachable(ID2) :- reachable(ID1), connectedRooms(ID1,ID2).
-:- rectangle(XUL,YUL,_,_,_), roomID(XUL,YUL,ID), not reachable(ID).
+reachableNoKey(ID2) :- reachable(ID1), connectedRoomsNoKey(ID1,ID2).
+:- roomID(_,_,ID), not reachable(ID).
+
+1 { lockedDoorX(X,Y) : doorX(X,Y) } 1.
+1 { keyRoom(ID) : roomID(_,_,ID) } 1.
+
+:- keyRoom(ID), not reachableNoKey(ID).
+:- 0 { roomID(_,_,ID) : not reachableNoKey(ID) } 0.
 
 #show connection/4.
 #show edgeFloor/2.
@@ -293,8 +312,11 @@ reachable(ID2) :- reachable(ID1), connectedRooms(ID1,ID2).
 #show edgeFloorID/3.
 #show roomID/3.
 #show connectedRooms/2.
+#show connectedRoomsNoKey/2.
 #show reachable/1.
-
+#show reachableNoKey/1.
+#show lockedDoorX/2.
+#show keyRoom/1.
 %-----------------------------------------
 %Hidden elements
 %------------------------------------
