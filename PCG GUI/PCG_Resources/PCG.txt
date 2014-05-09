@@ -264,10 +264,10 @@ rectRange(0..25).
 :- roomID(XUL1,_,I), roomID(XUL2,_,I), XUL1 != XUL2.
 :- roomID(_,YUL1,I), roomID(_,YUL2,I), YUL1 != YUL2.
 
-edgeFloorID(XUL,Y,ID) :- rectangle(XUL, YUL, _, YBR, _),  Y >= YUL, Y <= YBR, lengthYDim(Y), roomID(XUL,YUL,ID). %all tiles in the room must be floor
-edgeFloorID(X,Y,ID) :- rectangle(XUL, YUL, X , YBR, _),  Y >= YUL, Y <= YBR, lengthYDim(Y), roomID(XUL,YUL,ID). %all tiles in the room must be floor
-edgeFloorID(X,YUL,ID) :- rectangle(XUL, YUL, XBR, _ , _),  X >= XUL, X <= XBR, lengthXDim(X), roomID(XUL,YUL,ID). %all tiles in the room must be floor
-edgeFloorID(X,Y,ID) :- rectangle(XUL, YUL, XBR, Y , _),  X >= XUL, X <= XBR, lengthXDim(X), roomID(XUL,YUL,ID). %all tiles in the room must be floor
+edgeFloorID(XUL,YUL .. YBR,ID) :- rectangle(XUL, YUL, _, YBR, _),  roomID(XUL,YUL,ID). %all tiles in the room must be floor
+edgeFloorID(X,YUL .. YBR,ID) :- rectangle(XUL, YUL, X , YBR, _),  roomID(XUL,YUL,ID). %all tiles in the room must be floor
+edgeFloorID(XUL .. XBR,YUL,ID) :- rectangle(XUL, YUL, XBR, _ , _),  roomID(XUL,YUL,ID). %all tiles in the room must be floor
+edgeFloorID(XUL .. XBR,Y,ID) :- rectangle(XUL, YUL, XBR, Y , _),  roomID(XUL,YUL,ID). %all tiles in the room must be floor
 
 edgeFloor(X,Y) :- edgeFloorID(X,Y,_).
 
@@ -276,12 +276,12 @@ connectedRooms(ID1,ID2) :- edgeFloorID(X1,Y1,ID1), edgeFloorID(X2,Y2,ID2),  conn
 connectedRoomsNoKey(ID1,ID2) :- edgeFloorID(X1,Y1,ID1), edgeFloorID(X2,Y2,ID2),  connectionNoKey(X1,Y1,X2,Y2), step(DX,DY), X2 = X1 + DX, Y2 = Y1 + DY.
 
 
-connectedRooms(ID2,ID1) :- connectedRooms(ID1,ID2).
+%connectedRooms(ID2,ID1) :- connectedRooms(ID1,ID2).
 
 % %define what tiles are connected to what tiles
-connection(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), X1 == X2, (Y1 - 1) == Y2, not wallX(X1,Y1).
+connection(X1,Y1,X2,Y2) :- floor(X1,Y1), floor(X2,Y2), X1 == X2, (Y1 - 1) == Y2, not wallX(X1,Y1).
 % %connection(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), X1 == X2, (Y1 + 1) == Y2, not wallX(X2,Y2).
-connection(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1).
+connection(X1,Y1,X2,Y2) :- floor(X1,Y1), floor(X2,Y2), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1).
 % %connection(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), Y1 == Y2, (X1 + 1) == X2, not wallY(X2,Y2).
 
 connectionNoKey(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), X1 == X2, (Y1 - 1) == Y2, not wallX(X1,Y1), not lockedDoorX(X1,Y1).
@@ -291,20 +291,22 @@ connectionNoKey(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), Y1 == Y2, (X
 connection(X2,Y2,X1,Y1) :- connection(X1,Y1,X2,Y2).
 connectionNoKey(X2,Y2,X1,Y1) :- connectionNoKey(X1,Y1,X2,Y2).
 
-
+levelStartRoom(ID) :- levelStart(X,Y), edgeFloorID(X,Y,ID).
 
 reachable(ID) :- levelStart(X,Y), edgeFloorID(X,Y,ID). %The start has to be on the edge of the level so it has to been on the edge of a room
 reachableNoKey(ID) :- levelStart(X,Y), edgeFloorID(X,Y,ID). %The start has to be on the edge of the level so it has to been on the edge of a room
 
 reachable(ID2) :- reachable(ID1), connectedRooms(ID1,ID2).
-reachableNoKey(ID2) :- reachable(ID1), connectedRoomsNoKey(ID1,ID2).
+reachableNoKey(ID2) :- reachableNoKey(ID1), connectedRoomsNoKey(ID1,ID2).
 :- roomID(_,_,ID), not reachable(ID).
 
 1 { lockedDoorX(X,Y) : doorX(X,Y) } 1.
 1 { keyRoom(ID) : roomID(_,_,ID) } 1.
 
+:- keyRoom(ID1), levelStartRoom(ID2), ID1 == ID2. %make sure key isn't in the starting room.
+
 :- keyRoom(ID), not reachableNoKey(ID).
-:- 0 { roomID(_,_,ID) : not reachableNoKey(ID) } 0.
+:- 0 { roomID(_,_,ID) : not reachableNoKey(ID) } 1.
 
 #show connection/4.
 #show edgeFloor/2.
