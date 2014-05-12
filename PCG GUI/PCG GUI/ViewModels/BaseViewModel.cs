@@ -154,7 +154,10 @@ namespace PCG_GUI.ViewModels
                     fillBrush.Color = Color.FromArgb(0xFF, 0, 0, 0); //black
                     break;
                 case TileType.undefined:
-                    fillBrush.Color = Color.FromArgb(0xFF, 0xD3, 0xD3, 0xD3); //white
+                    fillBrush.Color = Color.FromArgb(0xFF, 0xD3, 0xD3, 0xD3); //grey
+                    break;
+                case TileType.levelStart:
+                    fillBrush.Color = Color.FromArgb(0xFF, 0xFF, 0xFF, 0x00); //yellow
                     break;
             }
 

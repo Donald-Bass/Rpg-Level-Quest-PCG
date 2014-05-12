@@ -273,7 +273,6 @@ edgeFloor(X,Y) :- edgeFloorID(X,Y,_).
 
 
 connectedRooms(ID1,ID2) :- edgeFloorID(X1,Y1,ID1), edgeFloorID(X2,Y2,ID2),  connection(X1,Y1,X2,Y2), step(DX,DY), X2 = X1 + DX, Y2 = Y1 + DY.
-connectedRoomsNoKey(ID1,ID2) :- edgeFloorID(X1,Y1,ID1), edgeFloorID(X2,Y2,ID2),  connectionNoKey(X1,Y1,X2,Y2), step(DX,DY), X2 = X1 + DX, Y2 = Y1 + DY.
 
 
 %connectedRooms(ID2,ID1) :- connectedRooms(ID1,ID2).
@@ -284,29 +283,52 @@ connection(X1,Y1,X2,Y2) :- floor(X1,Y1), floor(X2,Y2), X1 == X2, (Y1 - 1) == Y2,
 connection(X1,Y1,X2,Y2) :- floor(X1,Y1), floor(X2,Y2), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1).
 % %connection(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), Y1 == Y2, (X1 + 1) == X2, not wallY(X2,Y2).
 
-connectionNoKey(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), X1 == X2, (Y1 - 1) == Y2, not wallX(X1,Y1), not lockedDoorX(X1,Y1).
-connectionNoKey(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1).
 
 
 connection(X2,Y2,X1,Y1) :- connection(X1,Y1,X2,Y2).
-connectionNoKey(X2,Y2,X1,Y1) :- connectionNoKey(X1,Y1,X2,Y2).
 
 levelStartRoom(ID) :- levelStart(X,Y), edgeFloorID(X,Y,ID).
 
-reachable(ID) :- levelStart(X,Y), edgeFloorID(X,Y,ID). %The start has to be on the edge of the level so it has to been on the edge of a room
+reachable(ID) :- levelStartRoom(ID). %The start has to be on the edge of the level so it has to been on the edge of a room
 reachableNoKey(ID) :- levelStart(X,Y), edgeFloorID(X,Y,ID). %The start has to be on the edge of the level so it has to been on the edge of a room
 
 reachable(ID2) :- reachable(ID1), connectedRooms(ID1,ID2).
-reachableNoKey(ID2) :- reachableNoKey(ID1), connectedRoomsNoKey(ID1,ID2).
 :- roomID(_,_,ID), not reachable(ID).
 
-1 { lockedDoorX(X,Y) : doorX(X,Y) } 1.
-1 { keyRoom(ID) : roomID(_,_,ID) } 1.
+reachableWithoutX(START,X) :- levelStartRoom(START), roomID(_,_,X).
+reachableWithoutX(ID2,X) :- reachableWithoutX(ID1,X), connectedRooms(ID1,ID2), ID2 != X.
 
-:- keyRoom(ID1), levelStartRoom(ID2), ID1 == ID2. %make sure key isn't in the starting room.
+#show reachableWithoutX/2.
 
-:- keyRoom(ID), not reachableNoKey(ID).
-:- 0 { roomID(_,_,ID) : not reachableNoKey(ID) } 1.
+%Define a room as being  the end of the level
+1 { finalRoom(ID) : roomID(_,_,ID) } 1.
+
+:- 1 { roomID(_,_,ID) : not reachableWithoutX(FID,ID) , finalRoom(FID) } 3.
+
+#show finalRoom/1.
+
+% connectionNoKey(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), X1 == X2, (Y1 - 1) == Y2, not wallX(X1,Y1), not lockedDoorX(X1,Y1).
+% connectionNoKey(X1,Y1,X2,Y2) :- edgeFloor(X1,Y1), edgeFloor(X2,Y2), Y1 == Y2, (X1 - 1) == X2, not wallY(X1,Y1).
+
+% connectionNoKey(X2,Y2,X1,Y1) :- connectionNoKey(X1,Y1,X2,Y2).
+
+% connectedRoomsNoKey(ID1,ID2) :- edgeFloorID(X1,Y1,ID1), edgeFloorID(X2,Y2,ID2),  connectionNoKey(X1,Y1,X2,Y2), step(DX,DY), X2 = X1 + DX, Y2 = Y1 + DY.
+
+% reachableNoKey(ID2) :- reachableNoKey(ID1), connectedRoomsNoKey(ID1,ID2).
+
+% 1 { lockedDoorX(X,Y) : doorX(X,Y) } 1.
+% 1 { keyRoom(ID) : roomID(_,_,ID) } 1.
+
+% :- keyRoom(ID1), levelStartRoom(ID2), ID1 == ID2. %make sure key isn't in the starting room.
+
+% :- keyRoom(ID), not reachableNoKey(ID).
+% :- 0 { roomID(_,_,ID) : not reachableNoKey(ID) } 1.
+
+% #show connectedRoomsNoKey/2.
+% #show reachable/1.
+% #show reachableNoKey/1.
+% #show lockedDoorX/2.
+% #show keyRoom/1.
 
 #show connection/4.
 #show edgeFloor/2.
@@ -314,11 +336,7 @@ reachableNoKey(ID2) :- reachableNoKey(ID1), connectedRoomsNoKey(ID1,ID2).
 #show edgeFloorID/3.
 #show roomID/3.
 #show connectedRooms/2.
-#show connectedRoomsNoKey/2.
 #show reachable/1.
-#show reachableNoKey/1.
-#show lockedDoorX/2.
-#show keyRoom/1.
 %-----------------------------------------
 %Hidden elements
 %------------------------------------

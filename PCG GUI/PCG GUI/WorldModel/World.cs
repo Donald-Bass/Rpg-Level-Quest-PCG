@@ -144,6 +144,10 @@ namespace PCG_GUI.Facts
                 case "doorY":
                     levelFacts.Add(fact);
                     break;
+                case "levelStart":
+                    levelFacts.Add(fact);
+                    break;
+
                 //npc facts
                 /*case "npc":
                     npcFacts.Add(fact);
@@ -255,6 +259,10 @@ namespace PCG_GUI.Facts
         //go through the level facts to build all the levels
         private void buildLevels()
         {
+            //we need to specify the start of the level last or that can be overwritten so these variables hold that position until the end
+            int levelStartX = 0;
+            int levelStartY = 0;
+
             //process all the level dimensions TO DO POSSIBLY CHECK FOR MISSING DIMESNIONS
             foreach (Fact f in levelFacts)
             {
@@ -262,6 +270,10 @@ namespace PCG_GUI.Facts
                 {
                     case "floor": //floor format is (X,Y,L)
                         allLevels[0].setTileType(f.getNumericValue(0), f.getNumericValue(1), TileType.floor);
+                        break;
+                    case "levelStart": //floor format is (X,Y,L)
+                        levelStartX = f.getNumericValue(0);
+                        levelStartY = f.getNumericValue(1);
                         break;
                     /*case "tree":
                         //levelFacts.Add(fact);
@@ -294,6 +306,8 @@ namespace PCG_GUI.Facts
             {
                 l.finalizeLevel();
             }
+
+            allLevels[0].setTileType(levelStartX, levelStartY, TileType.levelStart);
         }
 
         //setters and getters

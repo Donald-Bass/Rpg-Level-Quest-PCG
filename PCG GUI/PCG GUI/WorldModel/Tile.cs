@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PCG_GUI.Facts
 {
-    public enum TileType{floor, blocked, undefined}; //a tile can either be passable floor, impassible, or not yet defined.
+    public enum TileType{floor, blocked, undefined, levelStart}; //a tile can either be passable floor, impassible, or not yet defined.
     public enum WallType { none, wall, door};
 
     public class Tile
