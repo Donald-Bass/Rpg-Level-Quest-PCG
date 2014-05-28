@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PCG_GUI.Facts
 {
-    public enum TileType{floor, blocked, undefined, levelStart}; //a tile can either be passable floor, impassible, or not yet defined.
+    public enum TileType{floor, blocked, undefined, treasureRoom}; //a tile can either be passable floor, impassible, or not yet defined.
     public enum WallType { none, wall, door};
 
     public class Tile
@@ -17,6 +17,9 @@ namespace PCG_GUI.Facts
         public WallType southWall { get; set; }
         public WallType eastWall { get; set; }
         public WallType westWall { get; set; }
+
+        public int RoomNumber { get; set; } //what room does this belong to
+        
         public Tile()
         {
             tType = TileType.undefined;
@@ -24,6 +27,7 @@ namespace PCG_GUI.Facts
             southWall = WallType.none;
             westWall = WallType.none;
             eastWall = WallType.none;
+            RoomNumber = -1;
 
         }
 

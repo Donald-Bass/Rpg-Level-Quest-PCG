@@ -1,5 +1,6 @@
 ﻿//holds the state of the entire world.
 
+using PCG_GUI.WorldModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,10 +12,12 @@ namespace PCG_GUI.Facts
 {
     public class World
     {
-        private List<Fact> npcFacts; //facts necessary to build the level
-        private List<Fact> questFacts; //facts necessary to build the level
         private List<Fact> levelFacts; //facts necessary to build the level
         private List<Fact> levelDimensionFacts; //facts storying dimensions of levels
+        private List<Fact> rectFacts; //facts storing rectangles
+        private List<Fact> roomIDFacts; //facts storing room ID's
+        private List<Fact> roomTypeFacts; //facts storing room types
+
         public int numLevels { get; private set; } //how many different levels are there
         int[,] levelDimensions; //dimensions of each level. First index is level number second is x/y (0 is x dimension 1 is y dimension)
         private List<Level> allLevels; //all levels
@@ -22,11 +25,13 @@ namespace PCG_GUI.Facts
         public World()
         {
             numLevels = 0;
-            npcFacts = new List<Fact>();
+            rectFacts = new List<Fact>();
+            roomIDFacts = new List<Fact>();
             levelFacts = new List<Fact>();
             levelDimensionFacts = new List<Fact>();
-            questFacts = new List<Fact>();
+            roomTypeFacts = new List<Fact>(); 
             allLevels = new List<Level>();
+
         }
 
         public void parseClingoFile(System.IO.StreamReader file)
@@ -147,6 +152,15 @@ namespace PCG_GUI.Facts
                 case "levelStart":
                     levelFacts.Add(fact);
                     break;
+                case "rectangle":
+                    rectFacts.Add(fact);
+                    break;
+                case "roomID":
+                    roomIDFacts.Add(fact);
+                    break;
+                case "typeOfRoom":
+                    roomTypeFacts.Add(fact);
+                    break;              
 
                 //npc facts
                 /*case "npc":
@@ -211,7 +225,7 @@ namespace PCG_GUI.Facts
                 case "npcLevel":
                     break;*/
                 default:
-                    System.Console.Error.WriteLine("Unknown predicate type " + fact.getPredicate());
+                    //System.Console.Error.WriteLine("Unknown predicate type " + fact.getPredicate());
                     break;
             }
         }
@@ -271,19 +285,6 @@ namespace PCG_GUI.Facts
                     case "floor": //floor format is (X,Y,L)
                         allLevels[0].setTileType(f.getNumericValue(0), f.getNumericValue(1), TileType.floor);
                         break;
-                    case "levelStart": //floor format is (X,Y,L)
-                        levelStartX = f.getNumericValue(0);
-                        levelStartY = f.getNumericValue(1);
-                        break;
-                    /*case "tree":
-                        //levelFacts.Add(fact);
-                        break;
-                    case "interior": //interior format is (L)
-                        allLevels[f.getNumericValue(0)].typeOfLevel = levelType.interior;
-                        break;
-                    case "exterior": //exterior format is (L)
-                        allLevels[f.getNumericValue(0)].typeOfLevel = levelType.exterior;
-                        break;*/
                     case "wallX": //wallX(X,Y,L) is a wall from X,Y to X+1,Y in L
                         allLevels[0].addWallX(f.getNumericValue(0), f.getNumericValue(1), WallType.wall);
                         break;
@@ -302,12 +303,57 @@ namespace PCG_GUI.Facts
                 }
             }
 
+            determineRooms();
+
             foreach(Level l in allLevels)
             {
                 l.finalizeLevel();
             }
+        }
 
-            allLevels[0].setTileType(levelStartX, levelStartY, TileType.levelStart);
+        //function that goes through all the rectangle and room ID facts to determine what room belongs where
+        public void determineRooms()
+        {
+            Room[] tempRooms = new Room[26]; //create an array to store the rectangles temporaily until we can determine their room numbers
+
+            int i = 0; //where do we store the current rectangle
+            
+            foreach (Fact f in rectFacts) //go through all rectangles
+            {
+                tempRooms[i] = new Room();
+
+                tempRooms[i].XUL = f.getNumericValue(0);
+                tempRooms[i].YUL = f.getNumericValue(1);
+                tempRooms[i].XBR = f.getNumericValue(2);
+                tempRooms[i].YBR = f.getNumericValue(3);
+                tempRooms[i].roomType = f.getValue(4);
+
+                i++;
+            }
+
+            foreach (Fact f in roomIDFacts) //go through all room id's
+            {
+                i = 0;
+
+                //go through all rooms until you find the room which upper left corner matches the corner of the roomID predicate
+                while(i < 26 && (tempRooms[i].XUL != f.getNumericValue(0) || tempRooms[i].YUL != f.getNumericValue(1)))
+                {
+                    i++;
+                }
+
+                if(i != 26)
+                {
+                    tempRooms[i].roomNumber = f.getNumericValue(2);
+                    allLevels[0].addRoom(tempRooms[i]);
+                }
+            }
+
+            foreach (Fact f in roomTypeFacts) //go through all room types
+            {
+                allLevels[0].setRoomType(f.getValue(1), f.getNumericValue(0));
+            }
+
+
         }
 
         //setters and getters

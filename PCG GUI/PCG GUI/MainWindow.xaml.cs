@@ -1,4 +1,5 @@
 ﻿using PCG_GUI.Facts;
+using PCG_GUI.FlowModel;
 using PCG_GUI.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -40,7 +41,13 @@ namespace PCG_GUI
 
         private void Menu_New(object sender, RoutedEventArgs e)
         {
-            viewModel.newWorld();
+            //viewModel.newWorld();
+
+            System.IO.StreamWriter file = new System.IO.StreamWriter("WorldDef.txt");
+            FlowGraph testGraph = new FlowGraph();
+            testGraph.writeFlow(file);
+
+            file.Close();
         }
 
         private void Menu_Open(object sender, RoutedEventArgs e)
@@ -88,6 +95,8 @@ namespace PCG_GUI
 
         private void Menu_Run(object sender, RoutedEventArgs e)
         {
+
+
             RunPCGWindow runWin = new RunPCGWindow(viewModel);
             runWin.Show();
         }

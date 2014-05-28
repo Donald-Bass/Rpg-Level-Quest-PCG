@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PCG_GUI.WorldModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,8 @@ namespace PCG_GUI.Facts
         public Tile[,] levelMap { get; private set; } //all the tiles making up the level[x,y]. 0,0 is upper left
         //public levelType typeOfLevel { get; set; }
 
+        public Room[] allRooms {get; set; }
+
         public string levelName { get; set; } //TODO FIGURE OUT NAME GEN
 
         public Level(int xDim, int yDim)
@@ -32,11 +35,15 @@ namespace PCG_GUI.Facts
                 }
             }
 
+            allRooms = new Room[26]; 
+
             levelName = "";
 
             //typeOfLevel = levelType.interior; //default to interior for now
 
         }
+
+
 
         public void setTileType(int x, int y, TileType type)
         {
@@ -119,6 +126,20 @@ namespace PCG_GUI.Facts
                     {
                         levelMap[i, j].tType = TileType.blocked;
                     }
+                }
+            }
+        }
+
+        //adds a room to the array of rooms and update tiles appropiately
+        public void addRoom(Room toAdd)
+        {
+            allRooms[toAdd.roomNumber] = toAdd;
+
+            for(int i = toAdd.XUL; i <= toAdd.XBR; i++)
+            {
+                for(int j = toAdd.YUL; j <= toAdd.YBR; j++)
+                {
+                    levelMap[i, j].RoomNumber = toAdd.roomNumber;
                 }
             }
         }
@@ -236,5 +257,22 @@ namespace PCG_GUI.Facts
             }
         }
 
+        //set the type of a room
+        public void setRoomType(string type, int roomNum)
+        {
+            allRooms[roomNum].roomType = type;
+
+            if(type.Equals("treasure"))
+            {
+                for (int i = allRooms[roomNum].XUL; i <= allRooms[roomNum].XBR; i++)
+                {
+                    for (int j = allRooms[roomNum].YUL; j <= allRooms[roomNum].YBR; j++)
+                    {
+                        levelMap[i, j].tType = TileType.treasureRoom;
+                    }
+                }
+            }
+        }
     }
+
 }

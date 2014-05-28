@@ -18,8 +18,7 @@ namespace PCG_GUI.ViewModels
         public const int GRID_SIZE = 20;
         public const int WALL_PIXEL_RANGE = 3; //Range from wall at which a click registers
 
-        public SmartObservableCollection<Shape> levelGraphic { get;  private set; }
-        public SmartObservableCollection<Shape> npcGraphic { get; private set; }
+        public SmartObservableCollection<System.Windows.FrameworkElement> levelGraphic { get;  private set; }
 
         public Boolean worldAttached { get; set; } //is there a world attached to the view model
         public World world;
@@ -29,8 +28,7 @@ namespace PCG_GUI.ViewModels
         public BaseViewModel()
         {
             world = null;
-            levelGraphic = new SmartObservableCollection<Shape>();
-            npcGraphic = new SmartObservableCollection<Shape>();
+            levelGraphic = new SmartObservableCollection<System.Windows.FrameworkElement>();
             worldAttached = false;
         }
 
@@ -110,17 +108,16 @@ namespace PCG_GUI.ViewModels
         public void drawLevel(int levelNum)
         {
             drawLevelBody(levelNum, levelGraphic);
-            drawLevelBody(levelNum, npcGraphic);
-
         }
 
-        public void drawLevelBody(int levelNum, SmartObservableCollection<Shape> graphic)
+        public void drawLevelBody(int levelNum, SmartObservableCollection<System.Windows.FrameworkElement> graphic)
         {
             if (world != null) //sanity check
             {
                 graphic.Clear();
 
                 List<Shape> toDraw = new List<Shape>();
+                List<TextBlock> allRoomNums = new List<TextBlock>();
 
                 Level levelToDraw = world.getLevel(levelNum);
 
@@ -128,17 +125,18 @@ namespace PCG_GUI.ViewModels
                 {
                     for (int j = 0; j < levelToDraw.yDimension; j++)
                     {
-                        drawTile(levelToDraw.levelMap[i, j], i, j, toDraw);
+                        drawTile(levelToDraw.levelMap[i, j], i, j, toDraw, allRoomNums);
                     }
                 }
 
                 drawWallGrid(levelToDraw, toDraw);
 
                 graphic.AddRange(toDraw);
+                graphic.AddRange(allRoomNums);
 
             }
         }
-        private void drawTile(Tile t, int x, int y, List<Shape> toDraw)
+        private void drawTile(Tile t, int x, int y, List<Shape> toDraw, List<TextBlock> allRoomNums)
         {
             Rectangle drawnTile = new Rectangle();
             SolidColorBrush fillBrush = new SolidColorBrush();
@@ -156,7 +154,7 @@ namespace PCG_GUI.ViewModels
                 case TileType.undefined:
                     fillBrush.Color = Color.FromArgb(0xFF, 0xD3, 0xD3, 0xD3); //grey
                     break;
-                case TileType.levelStart:
+                case TileType.treasureRoom:
                     fillBrush.Color = Color.FromArgb(0xFF, 0xFF, 0xFF, 0x00); //yellow
                     break;
             }
@@ -165,6 +163,14 @@ namespace PCG_GUI.ViewModels
             Canvas.SetLeft(drawnTile, x * GRID_SIZE);
             Canvas.SetTop(drawnTile, y * GRID_SIZE);            
             toDraw.Add(drawnTile);
+
+            //temp code to display room numbers of each tile for debugging purposes
+            TextBlock roomNumber = new TextBlock();
+            roomNumber.Text = t.RoomNumber.ToString();
+
+            Canvas.SetLeft(roomNumber, x * GRID_SIZE + 2);
+            Canvas.SetTop(roomNumber, y * GRID_SIZE + 2);
+            allRoomNums.Add(roomNumber);
         }
 
         private void drawWallGrid(Level levelToDraw, List<Shape> toDraw)
