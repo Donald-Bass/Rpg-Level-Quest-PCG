@@ -25,9 +25,10 @@ namespace PCG_GUI.FlowModel
         //constructor
         public FlowGraph()
         {
-            minRoomLength = 3;
-            maxRoomLength = 4;
-            areaSize = 12;
+            //until a bug in the pcg is fixed this code will break if minRoomLength = maxRoomLength
+            minRoomLength = 4;
+            maxRoomLength = 5;
+            areaSize = 16;
 
             nextRoomNumber = 1;
             allRooms = new List<FlowRoom>();
@@ -131,6 +132,8 @@ namespace PCG_GUI.FlowModel
             //anyways we can get a considerable speed boost by preplacing a single room.
             //we will generate a completely random room for the momement (This will change a bit with testing), under the theory
             //that if the room is randomly generarated every time Clingo is run there should be no appreciable difference in the range of possible results that could be produced
+            //ADDENDUM: this will cause problems on really cramped levels. 
+            //TODO: See why rooms sized 3x3 seem to break stuff on small? maps
 
             Random rand = new Random();
 
@@ -143,7 +146,7 @@ namespace PCG_GUI.FlowModel
             int YUL = rand.Next(0, (areaSize - height + 1));
 
             file.WriteLine("room(" + XUL.ToString() + "," + YUL.ToString() + "," + length.ToString() + "," + height.ToString() + ").");
-            file.WriteLine("roomID(" + XUL.ToString() + "," + YUL.ToString() + "1).");
+            file.WriteLine("roomID(" + XUL.ToString() + "," + YUL.ToString() + ",1).");
         }
 
         private int addDirectLink()

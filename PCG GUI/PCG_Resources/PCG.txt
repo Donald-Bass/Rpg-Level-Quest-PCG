@@ -128,12 +128,12 @@ minCor { corridor(X,Y,LENGTH, T) : floorSizeRange(X), roomSizeRange(LENGTH), flo
 
 corridorX(X, LENGTH, Y) :- corridor(X,Y,LENGTH,corX).
 
-corridorY(X, LENGTH, Y) :- corridor(X,Y,LENGTH,corY).
+corridorY(Y, LENGTH, X) :- corridor(X,Y,LENGTH,corY).
 
 %Rectangle covers shared rules for corriders and rooms
 rectangle(XUL, YUL, (XUL + LENGTH - 1), (YUL + HEIGHT - 1), room) :- room(XUL, YUL, LENGTH, HEIGHT).
-rectangle(XL, Y, (XL + LENGTH), Y,corX)  :- corridorX(XL, LENGTH, Y).
-rectangle(X, YU, X, (YU + LENGTH),corY)  :- corridorY(YU, LENGTH, X).
+rectangle(XL, Y, (XL + LENGTH - 1), Y,corX)  :- corridorX(XL, LENGTH, Y).
+rectangle(X, YU, X, (YU + LENGTH - 1),corY)  :- corridorY(YU, LENGTH, X).
 
 :- rectangle(XUL, YUL, XBR, YBR,_), levelLengthX(X), XBR > X.
 :- rectangle(XUL, YUL, XBR, YBR,_), levelLengthY(Y), YBR > Y.
