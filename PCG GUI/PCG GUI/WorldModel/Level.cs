@@ -262,16 +262,26 @@ namespace PCG_GUI.Facts
         {
             allRooms[roomNum].roomType = type;
 
+            TileType tileToSet = TileType.floor;
+
             if(type.Equals("treasure"))
             {
-                for (int i = allRooms[roomNum].XUL; i <= allRooms[roomNum].XBR; i++)
+                tileToSet = TileType.treasureRoom;
+            }
+
+            else if (type.Equals("arena"))
+            {
+                tileToSet = TileType.arena;
+            }
+
+            for (int i = allRooms[roomNum].XUL; i <= allRooms[roomNum].XBR; i++)
+            {
+                for (int j = allRooms[roomNum].YUL; j <= allRooms[roomNum].YBR; j++)
                 {
-                    for (int j = allRooms[roomNum].YUL; j <= allRooms[roomNum].YBR; j++)
-                    {
-                        levelMap[i, j].tType = TileType.treasureRoom;
-                    }
+                    levelMap[i, j].tType = tileToSet;
                 }
             }
+            
         }
     }
 

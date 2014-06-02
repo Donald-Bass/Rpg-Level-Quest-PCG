@@ -157,6 +157,10 @@ namespace PCG_GUI.ViewModels
                 case TileType.treasureRoom:
                     fillBrush.Color = Color.FromArgb(0xFF, 0xFF, 0xFF, 0x00); //yellow
                     break;
+                case TileType.arena:
+                    fillBrush.Color = Color.FromArgb(0xFF, 0xFF, 0, 0); //yellow
+                    break;
+
             }
 
             drawnTile.Fill = fillBrush;

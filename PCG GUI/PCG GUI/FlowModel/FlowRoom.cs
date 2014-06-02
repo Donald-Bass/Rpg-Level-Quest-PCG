@@ -11,17 +11,21 @@ namespace PCG_GUI.FlowModel
         public int roomNumber { get; set; }
         public Boolean soft { get; set; } //is the room soft (i.e are links outside the specifieds ones allowed)
 
+        public List<int> allLinks { get; set; }
+
         private int numConnections;
 
         public FlowRoom(int num)
         {
+            allLinks = new List<int>();
             roomNumber = num;
             numConnections = 1; //for technical reasons a room always counts as being connected to itself
         }
 
-        public void addLink()
+        public void addLink(int linkNum)
         {
             numConnections++;
+            allLinks.Add(linkNum);
         }
 
         public void writeRoom(System.IO.StreamWriter file)
@@ -35,6 +39,7 @@ namespace PCG_GUI.FlowModel
             //if this isn't a soft room add a connection number constraint
             if(!soft)
             {
+                file.WriteLine(":- {connectedRooms(" + roomNumber.ToString() + ",ID2) : rectRange(ID2) } " + (numConnections - 1) +  ".");
                 file.WriteLine(":- " + (numConnections + 1) + " {connectedRooms(" + roomNumber.ToString() + ",ID2) : rectRange(ID2) }.");
             }
         }

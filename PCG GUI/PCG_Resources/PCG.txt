@@ -299,10 +299,10 @@ reachable(ID) :- levelStartRoom(ID). %The start has to be on the edge of the lev
 reachable(ID2) :- reachable(ID1), connectedRooms(ID1,ID2), finalRoom(IDF), ID1 != IDF.
 :- roomID(_,_,ID), not reachable(ID).
 
-reachableWithoutX(START,X) :- levelStartRoom(START), roomID(_,_,X).
-reachableWithoutX(ID2,X) :- reachableWithoutX(ID1,X), connectedRooms(ID1,ID2), ID1 != X, finalRoom(IDF), ID1 != IDF.
+%reachableWithoutX(START,X) :- levelStartRoom(START), roomID(_,_,X).
+%reachableWithoutX(ID2,X) :- reachableWithoutX(ID1,X), connectedRooms(ID1,ID2), ID1 != X, finalRoom(IDF), ID1 != IDF.
 
-#show reachableWithoutX/2.
+%#show reachableWithoutX/2.
 
 %Define a room as being  the end of the level
 1 { finalRoom(ID) : roomID(_,_,ID) } 1.
@@ -372,9 +372,22 @@ roomType(arena).
 
 %1 { chest(X,Y) : edgeFloorID(X,Y,ID) } 4 :- typeOfRoom(ID,treasure), rectangle(XUL,YUL,XBR,YBR,room), roomID(XUL,YUL,ID).
 
-
 #show typeOfRoom/2.
 %#show chest/2.
+
+
+%Distance rules
+roomCenter(ID,XC,YC) :- roomID(XUL,YUL,ID), rectangle(XUL,YUL,XBR,YBR,_), XC = (XUL + ((XBR - XUL) / 2)), YC = (YUL + ((YBR - YUL) / 2)).
+%clingo 4 seems to have no absolute value so I need to improvise here
+manDist(ID1,ID2,DIST) :- findDist(ID1,ID2), roomCenter(ID1,X1,Y1), roomCenter(ID2,X2,Y2), DIST = (X1 - X2) + (Y1 - Y2), X1 >= X2, Y1 >= Y2.
+manDist(ID1,ID2,DIST) :- findDist(ID1,ID2), roomCenter(ID1,X1,Y1), roomCenter(ID2,X2,Y2), DIST = (X2 - X1) + (Y1 - Y2), X2 > X1, Y1 >= Y2.
+manDist(ID1,ID2,DIST) :- findDist(ID1,ID2), roomCenter(ID1,X1,Y1), roomCenter(ID2,X2,Y2), DIST = (X1 - X2) + (Y2 - Y1), X1 >= X2, Y2 > Y1.
+manDist(ID1,ID2,DIST) :- findDist(ID1,ID2), roomCenter(ID1,X1,Y1), roomCenter(ID2,X2,Y2), DIST = (X2 - X1) + (Y2 - Y1), X2 > X1, Y2 > Y1.
+
+findDist(1,2).
+
+#show roomCenter/3.
+#show manDist/3.
 
 %-----------------------------------------
 %Hidden elements

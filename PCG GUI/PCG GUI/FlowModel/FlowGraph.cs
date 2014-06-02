@@ -27,8 +27,8 @@ namespace PCG_GUI.FlowModel
         {
             //until a bug in the pcg is fixed this code will break if minRoomLength = maxRoomLength
             minRoomLength = 4;
-            maxRoomLength = 5;
-            areaSize = 16;
+            maxRoomLength = 6;
+            areaSize = 20;
 
             nextRoomNumber = 1;
             allRooms = new List<FlowRoom>();
@@ -44,23 +44,73 @@ namespace PCG_GUI.FlowModel
             i = addRoom();
             allRooms[i].soft = false;
 
-
+            i = addHardLink();
+            addRoomToLink(i, 0);
+            addRoomToLink(i, 1);
 
             i = addHardLink();
-            addRoomToLink(i,0);
-            addRoomToLink(i,1);
-
-            i = addHardLink();
-            addRoomToLink(i,0);
-            addRoomToLink(i,2);
-
-            i = addHardLink();
-            addRoomToLink(i,1);
-            addRoomToLink(i,3);
+            addRoomToLink(i, 1);
+            addRoomToLink(i, 2);
 
             i = addHardLink();
             addRoomToLink(i, 2);
             addRoomToLink(i, 3);
+
+            i = addHardLink();
+            addRoomToLink(i, 3);
+            addRoomToLink(i, 0);
+
+
+            /*int i = addRoom();
+            allRooms[i].soft = false;
+            i = addRoom();
+            allRooms[i].soft = false;
+
+            i = addRoom();
+            allRooms[i].soft = false;
+            i = addRoom();
+            allRooms[i].soft = false;
+
+            i = addRoom();
+            allRooms[i].soft = false;
+            i = addRoom();
+            allRooms[i].soft = false;
+
+
+            i = addRoom();
+            allRooms[i].soft = false;
+            i = addRoom();
+            allRooms[i].soft = false;
+
+
+            i = addHardLink();
+            addRoomToLink(i, 0);
+            addRoomToLink(i, 1);
+
+            i = addHardLink();
+            addRoomToLink(i, 0);
+            addRoomToLink(i, 2);
+
+            i = addHardLink();
+            addRoomToLink(i, 1);
+            addRoomToLink(i, 3);
+
+            i = addHardLink();
+            addRoomToLink(i, 2);
+            addRoomToLink(i, 4);
+
+            i = addHardLink();
+            addRoomToLink(i, 3);
+            addRoomToLink(i, 5);
+
+            i = addHardLink();
+            addRoomToLink(i, 5);
+            addRoomToLink(i, 6);
+
+            i = addHardLink();
+            addRoomToLink(i, 6);
+            addRoomToLink(i, 7);
+            */
 
         }
 
@@ -68,7 +118,7 @@ namespace PCG_GUI.FlowModel
         public void writeFlow(System.IO.StreamWriter file)
         {
             //write the necessary constants. Hardcoded for the moment won't be for long
-            
+
             int minRoomsNeeded = 0; //how many rooms are needed
             int minCorNeeded = 0; //number of corridors needed
             int maxRoomsNeeded = 0;
@@ -80,11 +130,13 @@ namespace PCG_GUI.FlowModel
                 minRoomsNeeded++;
                 r.writeRoom(file);
 
-                if(r.soft)
+                if (r.soft)
                 {
                     soft = true;
                 }
             }
+
+            List<int> reachableWithoutRoomsToSetup = new List<int>();
 
             foreach (FlowLink l in allLinks)
             {
@@ -93,34 +145,71 @@ namespace PCG_GUI.FlowModel
                     minCorNeeded++;
                 }
 
-                l.writeLink(file, allRooms);
+                //when I better define the starting room update this
+                //List<int> closerRoom = getCloserRoom(0, l.roomsConnected[0], l.roomsConnected[1], allRooms, allLinks);
 
-                if(l.type == LinkType.soft)
+                //Console.WriteLine(l.roomsConnected[0] + " " + l.roomsConnected[1]);
+
+                //for(int i = 0; i < closerRoom.Count; i++)
+                //{
+                //    Console.WriteLine(closerRoom[i]);
+                //}
+
+                int numRoomsUsed = l.writeLink(file, allRooms, allLinks);
+
+                if(numRoomsUsed != -1 && !reachableWithoutRoomsToSetup.Contains(numRoomsUsed))
+                {
+                    reachableWithoutRoomsToSetup.Add(numRoomsUsed);
+                }
+
+                if (l.type == LinkType.soft)
                 {
                     soft = true;
                 }
             }
 
+            foreach (int i in reachableWithoutRoomsToSetup)
+            {
+                string forbiddenVariables = "";
+                for(int j = 1; j <= i; j++)
+                {
+                    forbiddenVariables += ",FB" + j;
+                }
+
+                string Setup = "reachableWithoutRooms(ID2" + forbiddenVariables + " ) :- reachableWithoutRooms(ID1 " + forbiddenVariables + "), connectedRooms(ID1,ID2)";
+                
+                for(int j = 1; j <= i; j++)
+                {
+                    Setup += ", ID1 != FB" + j;
+                }
+
+                Setup += ".";
+                //Setup += "finalRoom(IDF), ID1 != IDF.
+
+                file.WriteLine(Setup);
+            }
+
             //replace this when the flow graph actually knows which room is the start
             file.WriteLine("levelStartRoom(1).");
+            file.WriteLine("finalRoom(" + allRooms.Count + ").");
 
-            if(soft)
+            if (soft)
             {
                 //if there are soft rooms/links allow a few extra rooms and corridors to be created
                 maxRoomsNeeded = minRoomsNeeded + 3;
-                maxCorNeeded = minCorNeeded + 3;
+                maxCorNeeded = minCorNeeded * 2 + 6;
             }
 
             else
             {
                 maxRoomsNeeded = minRoomsNeeded;
-                maxCorNeeded = minCorNeeded;
+                maxCorNeeded = minCorNeeded * 2;
             }
 
             //write the constants
             file.WriteLine("#const maxAreaSize=" + areaSize.ToString() + ".");
             file.WriteLine("#const minAreaSize=" + areaSize.ToString() + ".");
-            file.WriteLine("#const maxRects=" + (maxRoomsNeeded+ maxCorNeeded).ToString() + ".");
+            file.WriteLine("#const maxRects=" + (maxRoomsNeeded + maxCorNeeded).ToString() + ".");
             file.WriteLine("#const maxLength=" + maxRoomLength.ToString() + ".");
             file.WriteLine("#const minLength=" + minRoomLength.ToString() + ".");
             file.WriteLine("#const minRooms=" + minRoomsNeeded.ToString() + ".");
@@ -188,7 +277,9 @@ namespace PCG_GUI.FlowModel
         private void addRoomToLink(int linkIndex, int roomIndex)
         {
             allLinks[linkIndex].addRoomToLink(roomIndex);
-            allRooms[roomIndex].addLink();
+            allRooms[roomIndex].addLink(linkIndex);
         }
+
     }
+
 }
