@@ -82,6 +82,7 @@ namespace PCG_GUI.FlowModel
             {
                 //add constraint there must be a connection between the two rooms
                 file.WriteLine(":- not connectedRooms(" + allRooms[roomsConnected[0]].roomNumber + "," + allRooms[roomsConnected[1]].roomNumber + ").");
+                file.WriteLine("link(" + allRooms[roomsConnected[0]].roomNumber + "," + allRooms[roomsConnected[1]].roomNumber + ").");
             }
         }
 
@@ -89,6 +90,8 @@ namespace PCG_GUI.FlowModel
         {
             if (roomsConnected.Count == 2) //a soft link should support more then 2 rooms but keep it at 2 for now
             {
+                file.WriteLine("link(" + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + ").");
+
                 //for the moment forbid direct connections
                 //file.WriteLine(":- connectedRooms(" + allRooms[roomsConnected[0]].roomNumber + "," + allRooms[roomsConnected[1]].roomNumber + ").");
                 //things are ok if the two rooms are connected by a single other room
@@ -142,8 +145,8 @@ namespace PCG_GUI.FlowModel
                 file.WriteLine(reachableWithoutRoomsSetup3);
 
                 //attempt at optimization. Limit how far apart two linked rooms can be
-                file.WriteLine("findDist(" + closerRoom + "," + fartherRoom + ").");
-                file.WriteLine(":- manDist(" + closerRoom + "," + fartherRoom + ", DIST), DIST > 12."); //I may need to tweak this limit
+                file.WriteLine("findDist(" + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + ").");
+                file.WriteLine(":- manDist(" + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + ", DIST), DIST > 12."); //I may need to tweak this limit
 
                 //file.WriteLine(":- {roomID(_,_,ID) : reachableWithoutX(ID," + allRooms[roomsConnected[1]].roomNumber + "),   not reachableWithoutX(" + allRooms[roomsConnected[1]].roomNumber + ",ID) } 0.");
                 //file.WriteLine(":- roomID(XUL,YUL,ID) , not reachableWithoutX(ID," + allRooms[roomsConnected[0]].roomNumber + "), reachableWithoutX(ID," + allRooms[roomsConnected[1]].roomNumber + "), not reachableWithoutX(" + allRooms[roomsConnected[1]].roomNumber + ",ID), rectangle(XUL,YUL,_,_,room).");

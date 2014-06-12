@@ -384,7 +384,16 @@ manDist(ID1,ID2,DIST) :- findDist(ID1,ID2), roomCenter(ID1,X1,Y1), roomCenter(ID
 manDist(ID1,ID2,DIST) :- findDist(ID1,ID2), roomCenter(ID1,X1,Y1), roomCenter(ID2,X2,Y2), DIST = (X1 - X2) + (Y2 - Y1), X1 >= X2, Y2 > Y1.
 manDist(ID1,ID2,DIST) :- findDist(ID1,ID2), roomCenter(ID1,X1,Y1), roomCenter(ID2,X2,Y2), DIST = (X2 - X1) + (Y2 - Y1), X2 > X1, Y2 > Y1.
 
-findDist(1,2).
+%findDist(ID1,ID2) :- roomID(_,_,ID1), roomID(_,_,ID2), ID1 != ID2.
+
+%link(ID2,ID1) :- link(ID1,ID2).
+
+%TEST!
+% findDist(ID1,ID2) :- noLink(ID1,ID2).
+% noLink(1,3).
+% noLink(2,4).
+
+% :- noLink(ID1,ID2), manDist(ID1,ID2) < 6.
 
 #show roomCenter/3.
 #show manDist/3.

@@ -22,6 +22,8 @@ namespace PCG_GUI.FlowModel
         public int maxRoomLength; //maxRoom
         public int areaSize; //size of the area (assumes area is a square for now)
 
+        private int lastRoomNum;
+
         //constructor
         public FlowGraph()
         {
@@ -34,6 +36,31 @@ namespace PCG_GUI.FlowModel
             allRooms = new List<FlowRoom>();
             allLinks = new List<FlowLink>();
 
+            lastRoomNum = -1;
+
+            /*
+            int i = addRoom();
+            allRooms[i].soft = false;
+
+            for (int j = 1; j <= 20; j++)
+            {
+                i = addRoom();
+                allRooms[i].soft = false;
+
+                i = addHardLink();
+                addRoomToLink(i, j - 1);
+                addRoomToLink(i, j);
+
+                System.IO.StreamWriter file = new System.IO.StreamWriter("WorldDef" + (j + 1) + ".txt");
+                
+                this.writeFlow(file);
+
+                file.Close();
+
+            }*/
+
+            /*
+            //simple loop
             int i = addRoom();
             allRooms[i].soft = false;
             i = addRoom();
@@ -60,57 +87,63 @@ namespace PCG_GUI.FlowModel
             addRoomToLink(i, 3);
             addRoomToLink(i, 0);
 
-
-            /*int i = addRoom();
+            lastRoomNum = 3;
+            */
+            
+            int i = addRoom();
             allRooms[i].soft = false;
             i = addRoom();
             allRooms[i].soft = false;
-
-            i = addRoom();
-            allRooms[i].soft = false;
-            i = addRoom();
-            allRooms[i].soft = false;
-
+            
             i = addRoom();
             allRooms[i].soft = false;
             i = addRoom();
             allRooms[i].soft = false;
+            
+            i = addRoom();
+            allRooms[i].soft = false;
+            
+            
+            i = addRoom();
+            allRooms[i].soft = false;
 
-
+            /*
             i = addRoom();
             allRooms[i].soft = false;
             i = addRoom();
             allRooms[i].soft = false;
-
-
+            */
+            
             i = addHardLink();
             addRoomToLink(i, 0);
             addRoomToLink(i, 1);
-
+            
             i = addHardLink();
             addRoomToLink(i, 0);
             addRoomToLink(i, 2);
-
+            
             i = addHardLink();
             addRoomToLink(i, 1);
             addRoomToLink(i, 3);
-
+            
             i = addHardLink();
             addRoomToLink(i, 2);
             addRoomToLink(i, 4);
-
+            
             i = addHardLink();
             addRoomToLink(i, 3);
             addRoomToLink(i, 5);
 
-            i = addHardLink();
-            addRoomToLink(i, 5);
-            addRoomToLink(i, 6);
-
-            i = addHardLink();
-            addRoomToLink(i, 6);
-            addRoomToLink(i, 7);
-            */
+            /*
+             i = addHardLink();
+             addRoomToLink(i, 5);
+             addRoomToLink(i, 6);
+            
+            
+             i = addHardLink();
+             addRoomToLink(i, 6);
+             addRoomToLink(i, 7);
+             */
 
         }
 
@@ -225,7 +258,7 @@ namespace PCG_GUI.FlowModel
             //TODO: See why rooms sized 3x3 seem to break stuff on small? maps
 
             Random rand = new Random();
-
+            /*
             //determine the width and length of the room
             int length = rand.Next(minRoomLength, maxRoomLength + 1);
             int height = rand.Next(minRoomLength, maxRoomLength + 1);
@@ -234,8 +267,46 @@ namespace PCG_GUI.FlowModel
             int XUL = rand.Next(0, (areaSize - length + 1));
             int YUL = rand.Next(0, (areaSize - height + 1));
 
+            //TEMP
+            length = 4;
+            height = 4;
+            XUL = 0;
+            YUL = 0;
+
+            file.WriteLine("room(" + XUL.ToString() + "," + YUL.ToString() + "," + length.ToString() + "," + height.ToString() + ").");
+            file.WriteLine("roomID(" + XUL.ToString() + "," + YUL.ToString() + ",1).");*/
+
+            //quick code to put the starting and ending rooms on opposite sides of the map. This should be replaced soonish with code that adds some randomness where on each edge the two rooms are
+            //(provided it doesn't impact performance too much)
+
+            //determine the width and length of the room
+            int length = rand.Next(minRoomLength, maxRoomLength + 1);
+            int height = rand.Next(minRoomLength, maxRoomLength + 1);
+
+            //determine where the upper left corner is
+            int XUL = 0; //for now the starting room is always on the left
+            int YUL = (areaSize / 2) - (int)(height / 2) - 1; //put the room roughly half way down. (remember the top row is row 0, not 1)
+
             file.WriteLine("room(" + XUL.ToString() + "," + YUL.ToString() + "," + length.ToString() + "," + height.ToString() + ").");
             file.WriteLine("roomID(" + XUL.ToString() + "," + YUL.ToString() + ",1).");
+
+            //repeat for the final room
+            if(lastRoomNum == -1)
+            {
+                //if no last room is defined say the last room added is the last room
+                lastRoomNum = allRooms[allRooms.Count - 1].roomNumber;
+            }
+
+            //determine the width and length of the room
+            length = rand.Next(minRoomLength, maxRoomLength + 1);
+            height = rand.Next(minRoomLength, maxRoomLength + 1);
+
+            //determine where the upper left corner is
+            XUL = areaSize - length; //for now the starting room is always on the left
+            YUL = (areaSize / 2) - (int)(height / 2) - 1; //put the room roughly half way down. (remember the top row is row 0, not 1)
+
+            file.WriteLine("room(" + XUL.ToString() + "," + YUL.ToString() + "," + length.ToString() + "," + height.ToString() + ").");
+            file.WriteLine("roomID(" + XUL.ToString() + "," + YUL.ToString() + "," + lastRoomNum + ").");
         }
 
         private int addDirectLink()
