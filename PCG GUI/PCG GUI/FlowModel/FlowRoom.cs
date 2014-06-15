@@ -39,6 +39,7 @@ namespace PCG_GUI.FlowModel
             //write that this is a predefined room
             file.WriteLine("predefined(" + roomNumber.ToString() + ").");
 
+            file.WriteLine("numberOfLinks(" + roomNumber + "," + (numConnections - 1) + ").");
 
             //if this isn't a soft room add a connection number constraint
             if(!soft)

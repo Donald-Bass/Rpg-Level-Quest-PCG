@@ -122,6 +122,8 @@ minRooms { room(XUL, YUL, LENGTH, HEIGHT) : floorSizeRange(XUL) , floorSizeRange
 corType(corX).
 corType(corY).
 
+%corridorSizeRange(3..10).
+
 minCor { corridor(X,Y,LENGTH, T) : floorSizeRange(X), roomSizeRange(LENGTH), floorSizeRange(Y), corType(T) } maxCor.
 
 #show corridor/4.
@@ -397,6 +399,23 @@ manDist(ID1,ID2,DIST) :- findDist(ID1,ID2), roomCenter(ID1,X1,Y1), roomCenter(ID
 
 #show roomCenter/3.
 #show manDist/3.
+
+corDirection(up).
+corDirection(down).
+corDirection(right).
+corDirection(left).
+
+%NUM { corOffRoom(X, ID) : corDirection(X) }  NUM :- numberOfLinks(ID,NUM).
+
+%minCor { corridor(X,Y,LENGTH, T) : floorSizeRange(X), roomSizeRange(LENGTH), floorSizeRange(Y), corType(T) } maxCor.
+
+%1 { corridor(X,Y,LENGTH,corY) : floorSizeRange(X), floorSizeRange(Y), roomSizeRange(LENGTH), X >= XUL, X <= XBR, Y = (YUL - LENGTH), Y > 0 } 1 :- corOffRoom(up, ID), roomID(XUL,YUL,ID), rectangle(XUL,YUL,XBR,YBR,room).
+%1 { corridor(X,Y,LENGTH,corY) : floorSizeRange(X), floorSizeRange(Y), roomSizeRange(LENGTH), X >= XUL, X <= XBR, Y = YBR + 1 } 1 :- corOffRoom(down, ID), roomID(XUL,YUL,ID), rectangle(XUL,YUL,XBR,YBR,room).
+%1 { corridor(X,Y,LENGTH,corX) : floorSizeRange(X), floorSizeRange(Y), roomSizeRange(LENGTH), Y >= YUL, Y <= YBR, X = (XUL - LENGTH) } 1 :- corOffRoom(left, ID), roomID(XUL,YUL,ID), rectangle(XUL,YUL,XBR,YBR,room).
+%1 { corridor(X,Y,LENGTH,corX) : floorSizeRange(X), floorSizeRange(Y), roomSizeRange(LENGTH), Y >= YUL, Y <= YBR, X = XBR + 1, Y > 0 } 1 :- corOffRoom(right, ID), roomID(XUL,YUL,ID), rectangle(XUL,YUL,XBR,YBR,room).
+
+%#show corOffRoom/2.
+#show corridor/4.
 
 %-----------------------------------------
 %Hidden elements

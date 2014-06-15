@@ -88,6 +88,7 @@ namespace PCG_GUI.FlowModel
             addRoomToLink(i, 0);
 
             lastRoomNum = 3;
+            
             */
             
             int i = addRoom();
@@ -99,6 +100,7 @@ namespace PCG_GUI.FlowModel
             allRooms[i].soft = false;
             i = addRoom();
             allRooms[i].soft = false;
+            
             
             i = addRoom();
             allRooms[i].soft = false;
@@ -125,6 +127,7 @@ namespace PCG_GUI.FlowModel
             i = addHardLink();
             addRoomToLink(i, 1);
             addRoomToLink(i, 3);
+            
             
             i = addHardLink();
             addRoomToLink(i, 2);
@@ -283,6 +286,9 @@ namespace PCG_GUI.FlowModel
             int length = rand.Next(minRoomLength, maxRoomLength + 1);
             int height = rand.Next(minRoomLength, maxRoomLength + 1);
 
+            length = 4;
+            height = 4;
+
             //determine where the upper left corner is
             int XUL = 0; //for now the starting room is always on the left
             int YUL = (areaSize / 2) - (int)(height / 2) - 1; //put the room roughly half way down. (remember the top row is row 0, not 1)
@@ -300,6 +306,9 @@ namespace PCG_GUI.FlowModel
             //determine the width and length of the room
             length = rand.Next(minRoomLength, maxRoomLength + 1);
             height = rand.Next(minRoomLength, maxRoomLength + 1);
+
+            length = 4;
+            height = 4;
 
             //determine where the upper left corner is
             XUL = areaSize - length; //for now the starting room is always on the left
