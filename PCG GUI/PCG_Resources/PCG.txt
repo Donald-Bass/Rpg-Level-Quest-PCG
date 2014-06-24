@@ -1,3 +1,4 @@
+
 %counts syntax changed
 %Changes. Hide doesn't work. Need to instead use show I believe
 %Can't have multiple :'s inside {} replace all but the first with ,
@@ -63,10 +64,6 @@ barricadeX(X,Y) :- doorX(X,Y).
 barricadeY(X,Y) :- wallY(X,Y).
 barricadeY(X,Y) :- doorY(X,Y).
 
-
-%:- wallX(X,Y), not barricadeX(X,Y).
-%:- wallY(X,Y), not barricadeY(X,Y). 
-
 %----------------------------------------------------------------------------------------------------------------------------------------------
 %Floors
 %----------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,37 +77,11 @@ wallX(X,(Y+1)) :- floor(X,Y) , not floor(X,(Y + 1)).
 :- barricadeX(X,Y), not floor(X,Y), not floor(X,(Y-1)).
 :- barricadeY(X,Y), not floor(X,Y), not floor((X-1),Y).
 
-%Each level should have a starting tile along one of the edges
-%1 { levelStart(X,Y) : floorSizeRange(X) , floorSizeRange(Y)} 1.
-
-%:- levelStart(X,Y), not floor(X,Y). %the start must be on a floor
-
-%The starting tile must be on one of the edges
-%nonEdgeXDim(1..(X - 2)) :- levelLengthX(X). %Define non edge tiles
-%nonEdgeYDim(1..(Y - 2)) :- levelLengthY(Y). %Define non edge tiles
-%:- levelStart(X,Y), nonEdgeXDim(X), nonEdgeYDim(Y). %both dimensions of a level start can't be non edge dimensions
-
-
 %------------------------------------------------------------------------------------------
 %Reachable tiles
 %------------------------------------------------------------------------------------------
 
-step(0,-1 ;; 0,1 ;; 1,0 ;; -1,0). %Set up range of possible ways to move one tile over%
-
-%The start of the level is automatically reachablea
-%reachable(X,Y) :- levelStart(X,Y).
-
-%A tile is reachable if it is one step from a reachable tile and connected to that tile
-%reachable(NX,NY) :-
-%  reachable(X,Y),
-%  step(DX,DY),
-% NX = X + DX,
-%  NY = Y + DY,
-% floor(NX,NY),
-%  connection(NX,NY,X,Y).
-  
-%Every floor tile should be reachable (This is for the interior only right now because only the interior has a starting position, and there is nothing to block travel between tiles outdoor currently)
-%:- floor(X,Y), not reachable(X,Y).
+step(0,-1 ;; 0,1 ;; 1,0 ;; -1,0). 
 
 %-----------------------------------------------------------------------
 % Indoor level Specific Elements
@@ -121,8 +92,6 @@ minRooms { room(XUL, YUL, LENGTH, HEIGHT) : floorSizeRange(XUL) , floorSizeRange
 
 corType(corX).
 corType(corY).
-
-%corridorSizeRange(3..10).
 
 minCor { corridor(X,Y,LENGTH, T) : floorSizeRange(X), roomSizeRange(LENGTH), floorSizeRange(Y), corType(T) } maxCor.
 
@@ -176,9 +145,6 @@ roomBarricadeY((XBR + 1),YW) :- rectangle(XUL, YUL, XBR, YBR,_), lengthYDim(YW),
 %Add condition that neither side of the wall is an overlap
 barricadeX(X,Y) :- roomBarricadeX(X,Y), not overLap(X,Y,corX,corY), not overLap(X,Y-1,corX,corY).
 barricadeY(X,Y) :- roomBarricadeY(X,Y), not overLap(X,Y,corX,corY), not overLap(X-1,Y,corX,corY).
-
-%wallX(X,Y) from X,Y to X+1,Y. The rightmost x is not a valid x for a wall on the x axis it can only be used for walls on the y Axis
-%If there is an overlap and there is a room adjacent to the overlap the room should still have its wall
 
 barricadeX(X,Y) :- roomBarricadeX(X,Y), overLap(X,Y,corX,corY), floorType(X,Y-1,room).   %Condition   R  (R = room, O = overlap)
 																						               %           ---
@@ -294,7 +260,7 @@ connection(X1,Y1,X2,Y2) :- floor(X1,Y1), floor(X2,Y2), Y1 == Y2, (X1 - 1) == X2,
 
 connection(X2,Y2,X1,Y1) :- connection(X1,Y1,X2,Y2).
 
-%1 { levelStartRoom(ID) : roomID(_,_,ID) } 1.
+1 { levelStartRoom(ID) : roomID(_,_,ID) } 1.
 
 reachable(ID) :- levelStartRoom(ID). %The start has to be on the edge of the level so it has to been on the edge of a room
 
@@ -377,45 +343,8 @@ roomType(arena).
 #show typeOfRoom/2.
 %#show chest/2.
 
-
-%Distance rules
-roomCenter(ID,XC,YC) :- roomID(XUL,YUL,ID), rectangle(XUL,YUL,XBR,YBR,_), XC = (XUL + ((XBR - XUL) / 2)), YC = (YUL + ((YBR - YUL) / 2)).
-%clingo 4 seems to have no absolute value so I need to improvise here
-manDist(ID1,ID2,DIST) :- findDist(ID1,ID2), roomCenter(ID1,X1,Y1), roomCenter(ID2,X2,Y2), DIST = (X1 - X2) + (Y1 - Y2), X1 >= X2, Y1 >= Y2.
-manDist(ID1,ID2,DIST) :- findDist(ID1,ID2), roomCenter(ID1,X1,Y1), roomCenter(ID2,X2,Y2), DIST = (X2 - X1) + (Y1 - Y2), X2 > X1, Y1 >= Y2.
-manDist(ID1,ID2,DIST) :- findDist(ID1,ID2), roomCenter(ID1,X1,Y1), roomCenter(ID2,X2,Y2), DIST = (X1 - X2) + (Y2 - Y1), X1 >= X2, Y2 > Y1.
-manDist(ID1,ID2,DIST) :- findDist(ID1,ID2), roomCenter(ID1,X1,Y1), roomCenter(ID2,X2,Y2), DIST = (X2 - X1) + (Y2 - Y1), X2 > X1, Y2 > Y1.
-
-%findDist(ID1,ID2) :- roomID(_,_,ID1), roomID(_,_,ID2), ID1 != ID2.
-
-%link(ID2,ID1) :- link(ID1,ID2).
-
-%TEST!
-% findDist(ID1,ID2) :- noLink(ID1,ID2).
-% noLink(1,3).
-% noLink(2,4).
-
-% :- noLink(ID1,ID2), manDist(ID1,ID2) < 6.
-
-#show roomCenter/3.
-#show manDist/3.
-
-corDirection(up).
-corDirection(down).
-corDirection(right).
-corDirection(left).
-
-%NUM { corOffRoom(X, ID) : corDirection(X) }  NUM :- numberOfLinks(ID,NUM).
-
-%minCor { corridor(X,Y,LENGTH, T) : floorSizeRange(X), roomSizeRange(LENGTH), floorSizeRange(Y), corType(T) } maxCor.
-
-%1 { corridor(X,Y,LENGTH,corY) : floorSizeRange(X), floorSizeRange(Y), roomSizeRange(LENGTH), X >= XUL, X <= XBR, Y = (YUL - LENGTH), Y > 0 } 1 :- corOffRoom(up, ID), roomID(XUL,YUL,ID), rectangle(XUL,YUL,XBR,YBR,room).
-%1 { corridor(X,Y,LENGTH,corY) : floorSizeRange(X), floorSizeRange(Y), roomSizeRange(LENGTH), X >= XUL, X <= XBR, Y = YBR + 1 } 1 :- corOffRoom(down, ID), roomID(XUL,YUL,ID), rectangle(XUL,YUL,XBR,YBR,room).
-%1 { corridor(X,Y,LENGTH,corX) : floorSizeRange(X), floorSizeRange(Y), roomSizeRange(LENGTH), Y >= YUL, Y <= YBR, X = (XUL - LENGTH) } 1 :- corOffRoom(left, ID), roomID(XUL,YUL,ID), rectangle(XUL,YUL,XBR,YBR,room).
-%1 { corridor(X,Y,LENGTH,corX) : floorSizeRange(X), floorSizeRange(Y), roomSizeRange(LENGTH), Y >= YUL, Y <= YBR, X = XBR + 1, Y > 0 } 1 :- corOffRoom(right, ID), roomID(XUL,YUL,ID), rectangle(XUL,YUL,XBR,YBR,room).
-
 %#show corOffRoom/2.
-#show corridor/4.
+%#show corridor/4.
 
 %-----------------------------------------
 %Hidden elements
