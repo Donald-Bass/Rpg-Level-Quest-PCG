@@ -151,8 +151,15 @@ namespace PCG_GUI.ViewModels
                 case TileType.blocked:
                     fillBrush.Color = Color.FromArgb(0xFF, 0, 0, 0); //black
                     break;
-                case TileType.undefined:
-                    fillBrush.Color = Color.FromArgb(0xFF, 0xD3, 0xD3, 0xD3); //grey
+                case TileType.wall:
+                    fillBrush.Color = Color.FromArgb(0xFF, 0, 0, 0); //black
+                    //fillBrush.Color = Color.FromArgb(0xFF, 0xD3, 0xD3, 0xD3); //grey
+                    break;
+                case TileType.undefined: 
+                    fillBrush.Color = Color.FromArgb(0xFF, 0xFF, 0x69, 0xB4); //hot pink. Nothing should be undefined so make that case stand out
+                    break;
+                case TileType.door:
+                    fillBrush.Color = Color.FromArgb(0xFF, 0xA5, 0x2A, 0x2A); //brown
                     break;
                 case TileType.treasureRoom:
                     fillBrush.Color = Color.FromArgb(0xFF, 0xFF, 0xFF, 0x00); //yellow
@@ -169,12 +176,15 @@ namespace PCG_GUI.ViewModels
             toDraw.Add(drawnTile);
 
             //temp code to display room numbers of each tile for debugging purposes
-            TextBlock roomNumber = new TextBlock();
-            roomNumber.Text = t.RoomNumber.ToString();
+            if (t.RoomNumber != -1)
+            {
+                TextBlock roomNumber = new TextBlock();
+                roomNumber.Text = t.RoomNumber.ToString();
+                Canvas.SetLeft(roomNumber, x * GRID_SIZE + 2);
+                Canvas.SetTop(roomNumber, y * GRID_SIZE + 2);
+                allRoomNums.Add(roomNumber);
+            }
 
-            Canvas.SetLeft(roomNumber, x * GRID_SIZE + 2);
-            Canvas.SetTop(roomNumber, y * GRID_SIZE + 2);
-            allRoomNums.Add(roomNumber);
         }
 
         private void drawWallGrid(Level levelToDraw, List<Shape> toDraw)

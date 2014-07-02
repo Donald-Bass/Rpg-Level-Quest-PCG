@@ -35,7 +35,7 @@ namespace PCG_GUI.Facts
                 }
             }
 
-            allRooms = new Room[26]; 
+            allRooms = new Room[100]; 
 
             levelName = "";
 

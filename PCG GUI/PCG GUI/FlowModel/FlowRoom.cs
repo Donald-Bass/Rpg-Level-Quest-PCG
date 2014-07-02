@@ -22,6 +22,11 @@ namespace PCG_GUI.FlowModel
             numConnections = 1; //for technical reasons a room always counts as being connected to itself
         }
 
+        public void addDirectConnection()
+        {
+            numConnections++;
+        }
+
         public void addLink(int linkNum)
         {
             numConnections++;
@@ -39,7 +44,7 @@ namespace PCG_GUI.FlowModel
             //write that this is a predefined room
             file.WriteLine("predefined(" + roomNumber.ToString() + ").");
 
-            file.WriteLine("numberOfLinks(" + roomNumber + "," + (numConnections - 1) + ").");
+            file.WriteLine("numberOfLinks(" + roomNumber + "," + allLinks.Count + ").");
 
             //if this isn't a soft room add a connection number constraint
             if(!soft)

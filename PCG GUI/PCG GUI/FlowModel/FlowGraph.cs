@@ -64,32 +64,32 @@ namespace PCG_GUI.FlowModel
             int i = addRoom();
             allRooms[i].soft = false;
             i = addRoom();
-            allRooms[i].soft = false;
-
+            allRooms[i].soft = true;
+            /*
             i = addRoom();
             allRooms[i].soft = false;
             i = addRoom();
             allRooms[i].soft = false;
-
-            i = addHardLink();
-            addRoomToLink(i, 0);
-            addRoomToLink(i, 1);
-
-            i = addHardLink();
-            addRoomToLink(i, 1);
-            addRoomToLink(i, 2);
-
-            i = addHardLink();
-            addRoomToLink(i, 2);
-            addRoomToLink(i, 3);
-
-            i = addHardLink();
-            addRoomToLink(i, 3);
-            addRoomToLink(i, 0);
-
-            lastRoomNum = 3;
             
+            i = addHardLink();
+            addRoomToLink(i, 0);
+            addRoomToLink(i, 1);
+            
+            i = addHardLink();
+            addRoomToLink(i, 1);
+            addRoomToLink(i, 2);
+
+            i = addDirectLink();
+            addRoomToLink(i, 2);
+            addRoomToLink(i, 3);
+            
+            i = addHardLink();
+            addRoomToLink(i, 3);
+            addRoomToLink(i, 0);
+            
+            lastRoomNum = 3;
             */
+            
             
             int i = addRoom();
             allRooms[i].soft = false;
@@ -121,20 +121,20 @@ namespace PCG_GUI.FlowModel
             addRoomToLink(i, 1);
             
             i = addHardLink();
-            addRoomToLink(i, 0);
+            addRoomToLink(i, 1);
             addRoomToLink(i, 2);
             
             i = addHardLink();
-            addRoomToLink(i, 1);
+            addRoomToLink(i, 2);
             addRoomToLink(i, 3);
             
             
             i = addHardLink();
-            addRoomToLink(i, 2);
+            addRoomToLink(i, 3);
             addRoomToLink(i, 4);
             
             i = addHardLink();
-            addRoomToLink(i, 3);
+            addRoomToLink(i, 4);
             addRoomToLink(i, 5);
 
             /*
@@ -250,9 +250,16 @@ namespace PCG_GUI.FlowModel
             file.WriteLine("#const minLength=" + minRoomLength.ToString() + ".");
             file.WriteLine("#const minRooms=" + minRoomsNeeded.ToString() + ".");
             file.WriteLine("#const maxRooms=" + maxRoomsNeeded.ToString() + ".");
-            file.WriteLine("#const minCor=" + minCorNeeded.ToString() + ".");
-            file.WriteLine("#const maxCor=" + maxCorNeeded.ToString() + ".");
+            file.WriteLine("#const minCor=" + 0 + ".");
+            if (soft)
+            {
+                file.WriteLine("#const maxCor=" + 6 + ".");
+            }
 
+            else
+            {
+                file.WriteLine("#const maxCor=" + 0 + ".");
+            }
 
             //anyways we can get a considerable speed boost by preplacing a single room.
             //we will generate a completely random room for the momement (This will change a bit with testing), under the theory
@@ -357,7 +364,14 @@ namespace PCG_GUI.FlowModel
         private void addRoomToLink(int linkIndex, int roomIndex)
         {
             allLinks[linkIndex].addRoomToLink(roomIndex);
-            allRooms[roomIndex].addLink(linkIndex);
+            if (allLinks[linkIndex].type != LinkType.direct)
+            {
+                allRooms[roomIndex].addLink(linkIndex);
+            }
+            else
+            {
+                allRooms[roomIndex].addDirectConnection();
+            }
         }
 
     }

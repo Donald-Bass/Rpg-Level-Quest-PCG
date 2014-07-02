@@ -128,25 +128,10 @@ namespace PCG_GUI.Facts
                 case "floor":
                     levelFacts.Add(fact);
                     break;
-                /*case "tree":
+                case "wall":
                     levelFacts.Add(fact);
                     break;
-                case "interior":
-                    levelFacts.Add(fact);
-                    break;
-                case "exterior":
-                    levelFacts.Add(fact);
-                    break;*/
-                case "wallX":
-                    levelFacts.Add(fact);
-                    break;
-                case "wallY":
-                    levelFacts.Add(fact);
-                    break;
-                case "doorX":
-                    levelFacts.Add(fact);
-                    break;
-                case "doorY":
+                case "door":
                     levelFacts.Add(fact);
                     break;
                 case "levelStart":
@@ -285,17 +270,11 @@ namespace PCG_GUI.Facts
                     case "floor": //floor format is (X,Y,L)
                         allLevels[0].setTileType(f.getNumericValue(0), f.getNumericValue(1), TileType.floor);
                         break;
-                    case "wallX": //wallX(X,Y,L) is a wall from X,Y to X+1,Y in L
-                        allLevels[0].addWallX(f.getNumericValue(0), f.getNumericValue(1), WallType.wall);
+                    case "door": //floor format is (X,Y,L)
+                        allLevels[0].setTileType(f.getNumericValue(0), f.getNumericValue(1), TileType.door);
                         break;
-                    case "doorX": //doorX(X,Y,L) is a door from X,Y to X+1,Y in L
-                        allLevels[0].addWallX(f.getNumericValue(0), f.getNumericValue(1), WallType.door);
-                        break;
-                    case "wallY": //wallY(X,Y,L) us a wall from X,Y to X,Y+1
-                        allLevels[0].addWallY(f.getNumericValue(0), f.getNumericValue(1), WallType.wall);
-                        break;
-                    case "doorY": //doorY(X,Y,L) us a door from X,Y to X,Y+1
-                        allLevels[0].addWallY(f.getNumericValue(0), f.getNumericValue(1), WallType.door);
+                    case "wall": //floor format is (X,Y,L)
+                        allLevels[0].setTileType(f.getNumericValue(0), f.getNumericValue(1), TileType.wall);
                         break;
                     default:
                         System.Console.Error.WriteLine("Error predicate type " + f.getPredicate() + " should not be in levelFact list");
@@ -314,7 +293,8 @@ namespace PCG_GUI.Facts
         //function that goes through all the rectangle and room ID facts to determine what room belongs where
         public void determineRooms()
         {
-            Room[] tempRooms = new Room[26]; //create an array to store the rectangles temporaily until we can determine their room numbers
+            //NEED TO FIX THIS TO DETERMINE PROPER NUMBER OF ROOMS NEEDED
+            Room[] tempRooms = new Room[100]; //create an array to store the rectangles temporaily until we can determine their room numbers
 
             int i = 0; //where do we store the current rectangle
             
