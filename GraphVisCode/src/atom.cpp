@@ -43,3 +43,22 @@ void atom::parseString(string toParse)
     allPreds.push_back(toParse.substr(0,toParse.length() - 1));
 
 }
+
+string atom::toString()
+{
+    string output = atomName + "(";
+
+    for(int i = 0; i < allPreds.size(); i++)
+    {
+        output += allPreds[i];
+
+        if(i < allPreds.size() - 1)
+        {
+            output += ",";
+        }
+    }
+
+    output += ")";
+
+    return output;
+}

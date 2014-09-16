@@ -19,6 +19,7 @@ class atom
         vector<string> allPreds;
 
         void parseString(string toParse);
+        string toString();
 
     protected:
     private:

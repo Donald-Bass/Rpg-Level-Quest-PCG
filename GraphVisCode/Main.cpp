@@ -5,6 +5,18 @@
 #include <ogdf/planarity/FastPlanarSubgraph.h>
 #include <ogdf/orthogonal/OrthoLayout.h>
 #include <ogdf/planarity/EmbedderMinDepthMaxFaceLayers.h>
+#include <ogdf/basic/extended_graph_alg.h>
+
+
+#include <ogdf/energybased/StressMajorizationSimple.h>
+#include <ogdf/energybased/CoinTutteLayout.h>
+
+#include <ogdf/energybased/DavidsonHarelLayout.h>
+#include <ogdf/energybased/SpringEmbedderKK.h>
+#include <ogdf/energybased/SpringEmbedderFR.h>
+#include <ogdf/energybased/FMMMLayout.h>
+#include <ogdf/energybased/GEMLayout.h>
+
 #include<vector>
 #include "atom.h"
 
@@ -85,7 +97,7 @@ void parseInputFile()
 void createGraph()
 {
     Graph G;
-    GraphAttributes GA(G, GraphAttributes::nodeGraphics | GraphAttributes::edgeGraphics);
+    GraphAttributes GA(G, GraphAttributes::nodeGraphics | GraphAttributes::edgeGraphics | GraphAttributes::nodeLabel);
 
     node* allNodes = new node[numRooms];
 
@@ -102,9 +114,12 @@ void createGraph()
 
         GA.x(CurNode) = -5*(i+1);
 		GA.y(CurNode) = -20*i;
-		GA.width(CurNode) = 10*(i+1);
-		GA.height(CurNode) = 15;
+		GA.width(CurNode) = 30;
+		GA.height(CurNode) = 30;
 
+        const ogdf::String roomLabel(curAtom.allPreds[0].c_str());
+
+		GA.labelNode(CurNode) = roomLabel; //curAtom.allPreds[0];
     }
 
     //create the edges
@@ -124,6 +139,16 @@ void createGraph()
     }
 
 
+    if(isPlanar(G))
+    {
+        cout << "Planar" << endl;
+    }
+
+    else
+    {
+        cout << "Non Planar" << endl;
+    }
+
     PlanarizationLayout pl;
 
     FastPlanarSubgraph *ps = new FastPlanarSubgraph;
@@ -138,7 +163,7 @@ void createGraph()
     pl.setEmbedder(emb);
 
     OrthoLayout *ol = new OrthoLayout;
-    ol->separation(20.0);
+    ol->separation(40.0);
     ol->cOverhang(0.4);
     ol->setOptions(2+4);
     pl.setPlanarLayouter(ol);
@@ -146,10 +171,38 @@ void createGraph()
     pl.call(GA);
 
 
-    GA.writeSVG("er-diagram-layout.svg");
+    GA.writeSVG("dungeonLayout.svg");
+    GA.writeGML("dungeonLayout.gml");
+
+    GA.writeDungeon("er-diagram-layout.pcg");
+
+    /*for(int i = 0; i < numRooms; i++)
+    {
+        //cout << GA.x(allNodes[i]) << endl;
+    }
+
+
+    GEMLayout fmmm;
+    fmmm.minDistCC(150);
+    //fmmm.setPlanarityWeight(20.0);
+    //fmmm.setRepulsionWeight(10.0);
+    //fmmm.setPreferredEdgeLength(100);
+
+	//fmmm.useHighLevelOptions(true);
+	//fmmm.unitEdgeLength(150.0);
+	//fmmm.newInitialPlacement(true);
+	//fmmm.qualityVersusSpeed(FMMMLayout::qvsGorgeousAndEfficient);
+
+	fmmm.call(GA);
+	GA.writeSVG("LayoutTest.svg"); */
 
     delete(allNodes);
+
+
 }
+
+
+
 int main()
 {
     parseInputFile();

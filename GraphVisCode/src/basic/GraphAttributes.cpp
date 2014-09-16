@@ -48,6 +48,7 @@
 #include <ogdf/fileformats/GmlParser.h>
 #include <ogdf/fileformats/XmlParser.h>
 #include "atom.h"
+#include "DungeonLayout.h"
 #include <sstream>
 
 namespace ogdf {
@@ -1381,50 +1382,7 @@ void writeCorridor(ostream &os, int x1, int x2, int y1, int y2, bool **layout)
     }
 
     //add doors as necessary. This may break down if bends are added
-/*
-    if(layout[rectMinX][rectMinY]) //if the first tile is already floor
-    {
-        for(int i = rectMinX; i <= rectMaxX; i++)
-        {
-            for(int j = rectMinY; j <= rectMaxY; j++)
-            {
 
-                if(!layout[i][j])
-                {
-
-                layout[i][j] = true;
-                atomToWrite.allPreds.clear();
-                atomToWrite.atomName = "door";
-                atomToWrite.allPreds.push_back(intToString(i + 2));
-                atomToWrite.allPreds.push_back(intToString(j + 2));
-                os << atomToWrite.toString() << " ";
-                break;
-                }
-            }
-        }
-    }
-
-    if(layout[rectMaxX][rectMaxY]) //if the last tile is already floor
-    {
-        for(int i = rectMaxX; i >= rectMinX; i--)
-        {
-            for(int j = rectMaxY; j >= rectMinY; j--)
-            {
-
-                if(!layout[i][j])
-                {
-
-                layout[i][j] = true;
-                atomToWrite.allPreds.clear();
-                atomToWrite.atomName = "door";
-                atomToWrite.allPreds.push_back(intToString(i + 2));
-                atomToWrite.allPreds.push_back(intToString(j + 2));
-                os << atomToWrite.toString() << " ";
-                break;
-                }
-            }
-        }
-    }*/
     atomToWrite.atomName = "floor";
 
     for(int i = rectMinX; i <= rectMaxX; i++)
@@ -1446,7 +1404,6 @@ void writeCorridor(ostream &os, int x1, int x2, int y1, int y2, bool **layout)
     //cout << "Done\n";
 }
 
-
 void GraphAttributes::writeDungeon(ostream &os) const
 {
 	os.setf(ios::showpoint);
@@ -1454,17 +1411,50 @@ void GraphAttributes::writeDungeon(ostream &os) const
 
 	os << "\n \n \n \n"; //add four blank lines since the first 4 lines are skipped
 
-	// determine bounding box of svg
+    DungeonLayout layout;
+    node v;
+
+    //go through each room twice. Once to set up the grid the rooms are on, and once to actually place them
+
+	forall_nodes(v,*m_pGraph) {
+		if (m_attributes & nodeGraphics) {
+
+            int x = m_x[v];
+			int y = m_y[v];
+            layout.addColumn(x);
+            layout.addRow(y);
+		}
+	}
+
+    layout.outputCoord();
+
+    layout.setUpGrid();
+
+	forall_nodes(v,*m_pGraph) {
+		if (m_attributes & nodeGraphics) {
+
+            int x = m_x[v];
+			int y = m_y[v];
+            int id = atoi(labelNode(v).cstr());
+
+            layout.addRoom(x,y,id);
+		}
+	}
+
+
 	OGDF_ASSERT((*m_pGraph).numberOfNodes() > 0);
 	double maxX = x((*m_pGraph).firstNode());
 	double maxY = y((*m_pGraph).firstNode());
 	double minX = x((*m_pGraph).firstNode());
 	double minY = y((*m_pGraph).firstNode());
-	double nodeStrokeWidth = 1;
+	double nodeStrokeWidth;
 
-	node v;
 	forall_nodes(v, *m_pGraph) {
-
+		if (m_attributes & nodeStyle) {
+			nodeStrokeWidth = lineWidthNode(v);
+		} else {
+			nodeStrokeWidth = 1.0;
+		}
 		maxX = max(maxX, x(v) + m_width[v]/2 + nodeStrokeWidth);
 		maxY = max(maxY, y(v) + m_height[v]/2 + nodeStrokeWidth);
 		minX = min(minX, x(v) - m_width[v]/2 - nodeStrokeWidth);
@@ -1473,153 +1463,64 @@ void GraphAttributes::writeDungeon(ostream &os) const
 
 	edge e;
 	ListConstIterator<DPoint> it;
-	double edgeStrokeWidth = 1;
-	forall_edges(e, *m_pGraph) {
-		if (m_attributes & edgeGraphics) {
+	double edgeStrokeWidth;
 
-			const DPolyline &dpl = m_bends[e];
-			if (!dpl.empty()) {
-				for(it = dpl.begin(); it.valid(); ++it) {
-					maxX = max(maxX, (*it).m_x + edgeStrokeWidth);
-					maxY = max(maxY, (*it).m_y + edgeStrokeWidth);
-					minX = min(minX, (*it).m_x - edgeStrokeWidth);
-					minY = min(minY, (*it).m_y - edgeStrokeWidth);
-				}
-			}
-		}
-	}
+    //go through all the edges
+    forall_edges(e, *m_pGraph) {
 
-    int CONVERSION_FACTOR = 10;
-
-    int xLength = (maxX - minX) / CONVERSION_FACTOR;
-    int yLength = (maxY - minY) / CONVERSION_FACTOR;;
-
-    atom atomToWrite;
-    atomToWrite.atomName = "levelLengthX";
-    atomToWrite.allPreds.push_back(string(intToString(xLength + 5)));
-    os << atomToWrite.toString() << " ";
-
-    atomToWrite.allPreds.clear();
-
-    atomToWrite.atomName = "levelLengthY";
-    atomToWrite.allPreds.push_back(string(intToString(yLength + 5)));
-    os << atomToWrite.toString() << " ";
-
-    os << "levelStartRoom(1) ";
-
-
-    cout << xLength << " " << yLength << endl;
-
-
-
-    bool **layout;
-
-    layout = new bool*[xLength+1];
-
-    for(int i = 0; i <= xLength; i++)
-    {
-        layout[i] = new bool[yLength+1];
-        for(int j = 0; j <= yLength; j++)
-        {
-            layout[i][j] = false;
-        }
-    }
-
-    cout << "No crash yet" << endl;
-
-	forall_nodes(v,*m_pGraph) {
-		if (m_attributes & nodeGraphics) {
-
-            int x1 = (m_x[v] - minX)  / CONVERSION_FACTOR;
-			int y1 = (m_y[v] - minY) / CONVERSION_FACTOR;
-			int x2 = x1 + 1;
-			int y2 = y1 + 1;
-
-            x1 = x1 - (rand() % 3);
-
-            if(x1 < 0)
-            {
-                x1 = 0;
-            }
-
-
-
-            y1 = y1 - (rand() % 3);
-
-            if(y1 < 0)
-            {
-                y1 = 0;
-            }
-
-
-            x2 = x2 + (rand() % 3);
-
-            if(x2 > ((maxX - minX) / CONVERSION_FACTOR))
-            {
-                x2 = ((maxX - minX) / CONVERSION_FACTOR);
-            }
-
-            y2 = y2 + (rand() % 3);
-
-            if(y2 > ((maxY - minY) / CONVERSION_FACTOR))
-            {
-                y2 = ((maxY - minY) / CONVERSION_FACTOR);
-            }
-
-
-            writeRoom(os, x1, x2, y1, y2, layout,v);
-
-		}
-	}
-
-	forall_edges(e, *m_pGraph) {
+        cout << "Loop Start" << endl;
+        int lineStartX = -1;
+        int lineStartY = -1;
+        int lineEndX = -1;
+        int lineEndY = -1;
 
 		const DPolyline &dpl = m_bends[e];
 		if (m_attributes & edgeGraphics) {
 			if (!dpl.empty()) { //polyline
 
-                int x1, x2, y1, y2;
-
+				//os << "points=\"";
 				node v = e->source();
-				//if(dpl.front().m_x < m_x[v] - m_width[v]/2 ||
-				//		dpl.front().m_x > m_x[v] + m_width[v]/2 ||
-				//		dpl.front().m_y < m_y[v] - m_height[v]/2 ||
-				//		dpl.front().m_y > m_y[v] + m_height[v]/2)
-				//{
-					x1 =  (int)((m_x[e->source()] - minX) / CONVERSION_FACTOR);
-					y1 =  (int)(m_y[e->source()] - minY) / CONVERSION_FACTOR;
-				//}
-
-                cout << minX << " " << minY << endl;
-                cout << (int)((m_x[e->source()] - minX) / CONVERSION_FACTOR) << " " << (int)((m_y[e->source()] - minY) / CONVERSION_FACTOR) << endl;
-                cout << x1 << " " << y1 << endl;
-
+				if(dpl.front().m_x < m_x[v] - m_width[v]/2 ||
+						dpl.front().m_x > m_x[v] + m_width[v]/2 ||
+						dpl.front().m_y < m_y[v] - m_height[v]/2 ||
+						dpl.front().m_y > m_y[v] + m_height[v]/2)
+				{
+				    cout << "First If Statement" << endl;
+					lineStartX = (m_x[e->source()] - minX);
+					lineStartY = (m_y[e->source()] - minY);
+					//os << (m_x[e->source()] - minX) << "," << (m_y[e->source()] - minY) << " ";
+				}
 
 				for(it = dpl.begin(); it.valid(); ++it)
                 {
-                    x2 = ((*it).m_x - minX) / CONVERSION_FACTOR;
-                    y2 = ((*it).m_y - minY) / CONVERSION_FACTOR;
-
-                    cout << x2 << " " << y2 << endl;
-
-                    if(x1 != x2 && y1 != y2)
+                    if(lineStartX == -1) //if the start point has not been found
                     {
-                        if(abs(x1 - x2) < (abs(y1 - y2)))
-                        {
-                            x2 = x1;
-                        }
-
-                        else
-                        {
-                            y2 = y1;
-                        }
+                        lineStartX = ((*it).m_x);;
+                        lineStartY = ((*it).m_y);;
                     }
 
-                    writeCorridor(os,x1,x2,y1,y2,layout);
-                    x1 = x2;
-                    y1 = y2;
-                }
+                    else if(lineEndX == -1) //else if the end point has not been found
+                    {
+                        lineEndX = ((*it).m_x);
+                        lineEndY = ((*it).m_y);
+                    }
 
+                    else //else we have a bend (I think)
+                    {
+                        cout << "Bend Detected" << endl;;
+
+                        layout.addCorridor(lineStartX, lineStartY, lineEndX, lineEndY); //save the current corridor
+
+                        //consider the current end the start of a new corridor after the bend
+                        lineStartX = lineEndX;
+                        lineStartY = lineEndY;
+
+                        lineEndX = ((*it).m_x);
+                        lineEndY = ((*it).m_y);
+                    }
+                    cout << "For Loop: " << lineStartX << " " << lineStartY << " " << lineEndX << " " << lineEndY << endl;
+                    //os << ((*it).m_x - minX) << "," << ((*it).m_y - minY) << " ";
+                }
 
 				v = e->target();
 				if(dpl.back().m_x < m_x[v] - m_width[v]/2 ||
@@ -1627,39 +1528,41 @@ void GraphAttributes::writeDungeon(ostream &os) const
 						dpl.back().m_y < m_y[v] - m_height[v]/2 ||
 						dpl.back().m_y > m_y[v] + m_height[v]/2)
 				{
-					x2 =  (m_x[e->target()] - minX) / CONVERSION_FACTOR;
-					y2 =  (m_y[e->target()] - minY) / CONVERSION_FACTOR;
+                    lineEndX =  (m_x[e->target()] - minX);
+                    lineEndY =  (m_y[e->target()] - minY);
 
-                    if(x1 != x2 && y1 != y2)
-                    {
-                        if(abs(x1 - x2) < (abs(y1 - y2)))
-                        {
-                            x2 = x1;
-                        }
-
-                        else
-                        {
-                            y2 = y1;
-                        }
-                    }
-
-                    writeCorridor(os,x1,x2,y1,y2,layout);
+                    cout << "If Statement: " << lineStartX << " " << lineStartY << " " << lineEndX << " " << lineEndY << endl;
 				}
 
-
+				//os << "\"/>\n";
 			} else { // single line
-			    cout << "single" << endl;
+			    cout << "Else Block" << endl;
+				/*os << "<line ";
+				os << "x1=\"" << x(e->source()) - minX << "\" ";
+				os << "y1=\"" << y(e->source()) - minY << "\" ";
+				os << "x2=\"" << x(e->target()) - minX << "\" ";
+				os << "y2=\"" << y(e->target()) - minY<< "\" ";
 
-				int x1 = (x(e->source()) - minX) / CONVERSION_FACTOR;
-				int y1 = (y(e->source()) - minY) / CONVERSION_FACTOR;
-				int x2 = (x(e->target()) - minX) / CONVERSION_FACTOR;
-				int y2 = (y(e->target()) - minY) / CONVERSION_FACTOR;
+				if ((m_attributes & edgeColor) && (m_edgeColor[e].length() != 0)) {
+					os << "stroke=\"" << m_edgeColor[e] << "\" ";
+				} else {
+					os << "stroke=\"#000000\" ";
+				}
 
-                writeCorridor(os, x1, x2, y1, y2,layout);
+				if (attributes() & GraphAttributes::edgeStyle) {
+					os << "stroke-width=\"" << edgeWidth(e) << "px\" ";
+				}
+
+				os << "/>\n";*/
+
 			}
+
+            cout << "End Loop: " << lineStartX << " " << lineStartY << " " << lineEndX << " " << lineEndY << endl;
+            layout.addCorridor(lineStartX, lineStartY, lineEndX, lineEndY);
 		}
 	}
 
+    layout.asciiMap();
 
 	os << endl << "SATISFIABLE" << endl;
 }
