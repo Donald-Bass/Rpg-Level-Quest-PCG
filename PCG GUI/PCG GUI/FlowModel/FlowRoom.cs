@@ -36,22 +36,25 @@ namespace PCG_GUI.FlowModel
         public void writeRoom(System.IO.StreamWriter file)
         {
             //add constraint that this room exists
-            file.WriteLine(":- not roomIDExists(" + roomNumber.ToString() + ").");
+            //file.WriteLine(":- not roomIDExists(" + roomNumber.ToString() + ").");
 
             //for now force these to be room rooms.
-            file.WriteLine(":- roomID(XUL,YUL," + roomNumber.ToString() + "), rectangle(XUL,YUL,_,_,T), T != room.");
+            //file.WriteLine(":- roomID(XUL,YUL," + roomNumber.ToString() + "), rectangle(XUL,YUL,_,_,T), T != room.");
 
             //write that this is a predefined room
-            file.WriteLine("predefined(" + roomNumber.ToString() + ").");
+            //file.WriteLine("predefined(" + roomNumber.ToString() + ").");
 
-            file.WriteLine("numberOfLinks(" + roomNumber + "," + allLinks.Count + ").");
+            if (!soft) //if the room is not soft (can have additional edges added) constrict the number of edges
+            {
+                file.WriteLine("numberOfEdges(" + roomNumber + "," + allLinks.Count + ").");
+            }
 
             //if this isn't a soft room add a connection number constraint
-            if(!soft)
+            /*if(!soft)
             {
                 file.WriteLine(":- {connectedRooms(" + roomNumber.ToString() + ",ID2) : rectRange(ID2) } " + (numConnections - 1) +  ".");
                 file.WriteLine(":- " + (numConnections + 1) + " {connectedRooms(" + roomNumber.ToString() + ",ID2) : rectRange(ID2) }.");
-            }
+            }*/
         }
     }
 }

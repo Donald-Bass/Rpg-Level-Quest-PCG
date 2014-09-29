@@ -174,7 +174,7 @@ void createGraph()
     GA.writeSVG("dungeonLayout.svg");
     GA.writeGML("dungeonLayout.gml");
 
-    GA.writeDungeon("er-diagram-layout.pcg");
+    //GA.writeDungeon("er-diagram-layout.pcg");
 
     /*for(int i = 0; i < numRooms; i++)
     {

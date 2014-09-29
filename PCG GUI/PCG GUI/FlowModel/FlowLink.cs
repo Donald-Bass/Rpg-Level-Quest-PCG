@@ -81,8 +81,10 @@ namespace PCG_GUI.FlowModel
             if (roomsConnected.Count == 2) //a direct link can only connect 2 rooms
             {
                 //add constraint there must be a connection between the two rooms
-                file.WriteLine(":- not connectedRooms(" + allRooms[roomsConnected[0]].roomNumber + "," + allRooms[roomsConnected[1]].roomNumber + ").");
-                file.WriteLine("link(" + allRooms[roomsConnected[0]].roomNumber + "," + allRooms[roomsConnected[1]].roomNumber + ").");
+                file.WriteLine("edge(" + allRooms[roomsConnected[0]].roomNumber + "," + allRooms[roomsConnected[1]].roomNumber + ")");
+
+                //file.WriteLine(":- not connectedRooms(" + allRooms[roomsConnected[0]].roomNumber + "," + allRooms[roomsConnected[1]].roomNumber + ").");
+                //file.WriteLine("link(" + allRooms[roomsConnected[0]].roomNumber + "," + allRooms[roomsConnected[1]].roomNumber + ").");
             }
         }
 
@@ -90,17 +92,7 @@ namespace PCG_GUI.FlowModel
         {
             if (roomsConnected.Count == 2) //a soft link should support more then 2 rooms but keep it at 2 for now
             {
-                file.WriteLine("link(" + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + ").");
-
-                //for the moment forbid direct connections
-                //file.WriteLine(":- connectedRooms(" + allRooms[roomsConnected[0]].roomNumber + "," + allRooms[roomsConnected[1]].roomNumber + ").");
-                //things are ok if the two rooms are connected by a single other room
-                //file.WriteLine("connectionOk(" + allRooms[roomsConnected[0]].roomNumber + "," + allRooms[roomsConnected[1]].roomNumber + ", ID) :- connectedRooms(" + allRooms[roomsConnected[0]].roomNumber + ", ID), connectedRooms(ID," + allRooms[roomsConnected[1]].roomNumber + ").");
-                //add a constraint that such a connection must occur
-                //file.WriteLine(":- not connectionOk(" + allRooms[roomsConnected[0]].roomNumber + "," + allRooms[roomsConnected[1]].roomNumber + ", _).");
-                //for now that additional "room" must be a hallway not a room
-                //file.WriteLine(":- connectionOk(" + allRooms[roomsConnected[0]].roomNumber + "," + allRooms[roomsConnected[1]].roomNumber + ", ID), roomID(XUL,YUL,ID), rectangle(XUL,YUL,_,_,T), T == room.");
-
+                //file.WriteLine("edge(" + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + ").");
 
                 //Ok basic rundown of the issue. We don't want to define specifically what needs to be between the two rooms just give a general definition of what needs to be connecting them
                 //To do so we need to know a set of nodes of rooms such that if you don't pass through any of said rooms, the only way to get to the farthest room is after going through the closer room.
@@ -122,34 +114,56 @@ namespace PCG_GUI.FlowModel
                     forbiddenRoomsString += "," + allRooms[f].roomNumber;
                 }
 
-                //build the first constraint that at least one hall must exist between the two rooms in the list
-                string roomsExistsConstraints = ":- {roomID(_,_,ID) : reachableWithoutRooms(ID," + allRooms[fartherRoom].roomNumber + forbiddenRoomsString + ")";
-                roomsExistsConstraints += ", not reachableWithoutRooms(ID," + allRooms[closerRoom].roomNumber + forbiddenRoomsString + ")";
-                roomsExistsConstraints += ", not reachableWithoutRooms(" + allRooms[fartherRoom].roomNumber + ",ID" + forbiddenRoomsString + ") } 0.";
-
-                string typeOfRoomsConstraint = ":- roomID(XUL,YUL,ID) , reachableWithoutRooms(ID," + allRooms[fartherRoom].roomNumber + forbiddenRoomsString + ")";
-                typeOfRoomsConstraint += ", not reachableWithoutRooms(ID," + allRooms[closerRoom].roomNumber + forbiddenRoomsString + ")";
-                typeOfRoomsConstraint += ", not reachableWithoutRooms(" + allRooms[fartherRoom].roomNumber + ",ID" + forbiddenRoomsString + ") , rectangle(XUL,YUL,_,_,room).";
 
                 //we need to setupu the reachableWithoutRooms predicate for the specific combinations of rooms we need
-                string reachableWithoutRoomsSetup1 = "reachableWithoutRooms(START," + allRooms[closerRoom].roomNumber + forbiddenRoomsString + ") :- levelStartRoom(START).";
-                string reachableWithoutRoomsSetup2 = "reachableWithoutRooms(START," + allRooms[fartherRoom].roomNumber + forbiddenRoomsString + ") :- levelStartRoom(START).";
-                string reachableWithoutRoomsSetup3 = "reachableWithoutRooms(START, ID" + forbiddenRoomsString + ") :- levelStartRoom(START) ";
-                reachableWithoutRoomsSetup3 += ", reachableWithoutRooms(ID," + allRooms[fartherRoom].roomNumber + forbiddenRoomsString + ")";
-                reachableWithoutRoomsSetup3 += ", not reachableWithoutRooms(ID," + allRooms[closerRoom].roomNumber + forbiddenRoomsString + "), roomID(_,_,ID).";
 
-                file.WriteLine(roomsExistsConstraints);
-                file.WriteLine(typeOfRoomsConstraint);
+                //we always care about what rooms are reachable without going through the farther room
+                string reachableWithoutRoomsSetup1 = "reachableWithoutRooms(START," + allRooms[fartherRoom].roomNumber + ") :- levelStartRoom(START).";
+
+                //we also care about the set of rooms reachable without going through the closer room, and the set of room sufficent to block all other paths to the farther room
+                string reachableWithoutRoomsSetup2 = "reachableWithoutRooms(START," + allRooms[closerRoom].roomNumber + forbiddenRoomsString + ") :- levelStartRoom(START).";
+                
+
+                //assert that there must be a way to reach the closer room without going through the farther room
+                string closeBeforeFar = "xBeforeY(" + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + ").";
+
+                //the farther room must not be reachable without going through the closer room or one of the other determined routes.
+                string farAfter = ":- reachableWithoutRooms(" + allRooms[fartherRoom].roomNumber + "," + allRooms[closerRoom].roomNumber + forbiddenRoomsString + ").";
+                                
                 file.WriteLine(reachableWithoutRoomsSetup1);
                 file.WriteLine(reachableWithoutRoomsSetup2);
-                file.WriteLine(reachableWithoutRoomsSetup3);
+                file.WriteLine(closeBeforeFar);
+                file.WriteLine(farAfter);
 
-                //attempt at optimization. Limit how far apart two linked rooms can be
-                file.WriteLine("findDist(" + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + ").");
-                file.WriteLine(":- manDist(" + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + ", DIST), DIST > 12."); //I may need to tweak this limit
+                if (forbiddenRooms.Count > 0) //if there are forbidden rooms we have more work to do
+                {
+                    //we want to know which rooms are reachable without going through the forbidden rooms
+                    string reachableWithoutRoomsSetupForbid1 = "reachableWithoutRooms(START" + forbiddenRoomsString + ") :- levelStartRoom(START).";
 
-                //file.WriteLine(":- {roomID(_,_,ID) : reachableWithoutX(ID," + allRooms[roomsConnected[1]].roomNumber + "),   not reachableWithoutX(" + allRooms[roomsConnected[1]].roomNumber + ",ID) } 0.");
-                //file.WriteLine(":- roomID(XUL,YUL,ID) , not reachableWithoutX(ID," + allRooms[roomsConnected[0]].roomNumber + "), reachableWithoutX(ID," + allRooms[roomsConnected[1]].roomNumber + "), not reachableWithoutX(" + allRooms[roomsConnected[1]].roomNumber + ",ID), rectangle(XUL,YUL,_,_,room).");
+                    //and which rooms are reachable without going through the closer or farther rooms
+                    string reachableWithoutRoomsSetupForbid2 = "reachableWithoutRooms(START," + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + ") :- levelStartRoom(START).";
+                    
+                    //or without going through the farther or forbidden rooms
+                    string reachableWithoutRoomsSetupForbid3 = "reachableWithoutRooms(START," + allRooms[fartherRoom].roomNumber + forbiddenRoomsString + ") :- levelStartRoom(START).";
+
+                    //the farther room must not be reachable without going through the closer room or one of the other determined routes but should be reachable going through the closer room and none of those other routes
+                    string farBeforeForbid = ":- not reachableWithoutRooms(" + allRooms[fartherRoom].roomNumber + forbiddenRoomsString + ").";
+
+                    file.WriteLine(reachableWithoutRoomsSetupForbid1);
+                    file.WriteLine(reachableWithoutRoomsSetupForbid2);
+                    file.WriteLine(reachableWithoutRoomsSetupForbid3);
+
+
+                    file.WriteLine(farBeforeForbid);
+
+                    //to prevent different branches from crossing over there can be no room, that you have to either pass through the closer room or the forbidden rooms to get to, but not through the farther room
+                    //and you can reach while not crossing the closer room or not crossing the forbidden rooms
+                    string noCrossOver = ":- room(ID), reachableWithoutRooms(ID," + allRooms[fartherRoom].roomNumber + "), not reachableWithoutRooms(ID," + allRooms[closerRoom].roomNumber + forbiddenRoomsString + "), reachableWithoutRooms(ID, " + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + "), reachableWithoutRooms(ID," + allRooms[fartherRoom].roomNumber + forbiddenRoomsString + "), ID !="  + allRooms[fartherRoom].roomNumber + ".";
+                    file.WriteLine(noCrossOver); 
+   
+                     //+ allRooms[fartherRoom].roomNumber + forbiddenRoomsString + ").";
+
+                }
 
                 return forbiddenRooms.Count + 1;
             }
@@ -160,24 +174,11 @@ namespace PCG_GUI.FlowModel
         public int writeHardLink(System.IO.StreamWriter file, List<int> shortestPath, int closerRoom, int fartherRoom, List<int> forbiddenRooms, List<FlowRoom> allRooms, List<FlowLink> allLinks)
         {
             int forbidCount = writeSoftLink(file, shortestPath, closerRoom, fartherRoom, forbiddenRooms, allRooms, allLinks); //a hard link has the same basic setup as a soft link just with additional constraints so reuse code for initial setup
-            //the room of a hard link may only have 3 connections (to both ends of the link and to itself)
-            //file.WriteLine(":- connectionOk(" + allRooms[roomsConnected[0]].roomNumber + "," + allRooms[roomsConnected[1]].roomNumber + ", ID), 4 {connectedRooms(ID,ID2) : rectRange(ID2) }.");
 
-            //create a string with all the forbidden room numbers
-            string forbiddenRoomsString = "";
+            //directly create an edge between the rooms
+            file.WriteLine("edge(" + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + ").");
 
-            //add the forbidden rooms
-            foreach (int f in forbiddenRooms)
-            {
-                forbiddenRoomsString += "," + allRooms[f].roomNumber;
-            }
-
-            //every room in between the two rooms should have 3 connections (to itself, and to two rooms it connects between)
-            string typeOfRoomsConstraint = ":- roomID(XUL,YUL,ID) , reachableWithoutRooms(ID," + allRooms[fartherRoom].roomNumber + forbiddenRoomsString + ")";
-            typeOfRoomsConstraint += ", not reachableWithoutRooms(ID," + allRooms[closerRoom].roomNumber + forbiddenRoomsString + ")";
-            typeOfRoomsConstraint += ", not reachableWithoutRooms(" + allRooms[fartherRoom].roomNumber + ",ID" + forbiddenRoomsString + ") , 4 {connectedRooms(ID,ID2) : rectRange(ID2) }.";
-
-            file.WriteLine(typeOfRoomsConstraint);
+            //file.WriteLine(typeOfRoomsConstraint);
 
             return forbidCount;
         }

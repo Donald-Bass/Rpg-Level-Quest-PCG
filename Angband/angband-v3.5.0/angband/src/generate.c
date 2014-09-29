@@ -2886,7 +2886,10 @@ static bool default_gen(struct cave *c, struct player *p) {
 			}
 						
 		}
-		
+
+		ROOM_LOG("loop");
+
+			
 		fscanf(levelDef, "%s", curAtomString);				
 		
 	}

@@ -3,95 +3,59 @@
 %----------------------------------------------------------------------------
 
 %Determine the number of rooms 
-numRoomRange(10 .. 10). %set a minimum and maximum number of rooms
+numRoomRange(minRooms .. maxRooms). %set a minimum and maximum number of rooms
 1 { numRooms(X) : numRoomRange(X) } 1.
 
 %Each room number corrosponds to a room
 room(1 .. X) :- numRooms(X). 
 
-1 { edge(X,Y) : room(Y), X != Y } 5 :- room(X).
+0 { edge(X,Y) : room(Y), X != Y } 4 :- room(X).
 
 %all edges must be two ways. This is an intergrity constraint and not an implication, as just making each edge two ways could violate the max number of edges out of a room
 :- edge(X,Y), not edge(Y,X). 
-
-%edgeNumber(N) :- N = #count{ X,Y : edge(X,Y) }.
-
-%in a planar graph e < 3v-6 (also remember edgeNumber is 2e)
-%:- edgeNumber(E), numRooms(V), (E / 2) >= ((3 * V) - 6).
-
-%if there isn't a 3 cycle then e < 2v-4
-%threeCycle(1) :- room(A), room(B), room(C), edge(A,B), edge(B,C), edge(C,A).
-%:- not threeCycle(1), edgeNumber(E), numRooms(V), (E / 2) >= ((2 * V) - 4).
-
-%1 { levelStartRoom(ID) : room(ID) } 1.
-levelStartRoom(1).
 
 reachable(ID) :- levelStartRoom(ID). %The start has to be on the edge of the level so it has to been on the edge of a room
 reachable(ID2) :- reachable(ID1), edge(ID1,ID2). %, finalRoom(IDF), ID1 != IDF.
 :- room(ID), not reachable(ID).
 
-%reachableWithoutXY(START,X,Y) :- levelStartRoom(START), room(X), room(Y).
-%reachableWithoutXY(ID2,X,Y) :- reachableWithoutXY(ID1,X,Y), edge(ID1,ID2), ID1 != X, ID1 != Y, finalRoom(IDF), ID1 != IDF.
+%define number of connections
+numConnections(ID,N) :- N = #count{ V : edge(ID,V) } , room(ID).
+:- numberOfEdges(ID,C), numConnections(ID,N), C != N. %if a room has a set number of connections enforce that number
 
-% % Define a room as being  the end of the level
-%1 { finalRoom(ID) : room(ID) } 1.
-finalRoom(5).
+%define what it means for a room to come before
+:- xBeforeY(X,Y), not reachableWithoutRooms(X,Y). %a room doesn't come before another one unless you can access the first without going through the second.
 
-% the start and end rooms must be unique
-:- finalRoom(ID1), finalRoom(ID2), ID1 != ID2.
-:- levelStartRoom(ID1), levelStartRoom(ID2), ID1 != ID2.
-:- finalRoom(ID), levelStartRoom(ID).
+% % branches - %branch(W,X,Y,Z) a branch starting at w, where you can go through either X or Y to reach Z
 
-
-%Defining ordering of rooms 
-reachableWithoutX(START,X) :- levelStartRoom(START), room(X).
-reachableWithoutX(ID2,X) :- reachableWithoutX(ID1,X), edge(ID1,ID2), ID1 != X. % finalRoom(IDF), ID1 != IDF.  Final room is not useful for now
-
-:- reachableWithoutX(Y,X), xBeforeY(X,Y).
-xBeforeY(1,2).
-
-
-%branches - %branch(W,X,Y,Z) a branch starting at w, where you can go through either X or Y to reach Z
-
- %since the split is at W W has to be before everything
-xBeforeY(W,X) :- branch(W,X,Y,Z).
-xBeforeY(W,Y) :- branch(W,X,Y,Z).
-xBeforeY(W,Z) :- branch(W,X,Y,Z).
-
-%you should be able to go to either branch without going through the other
-:- branch(W,X,Y,Z), not reachableWithoutX(Y,X). 
-:- branch(W,X,Y,Z), not reachableWithoutX(X,Y).
-
-%the end should be reachable without going down A specific branch
-:- branch(W,X,Y,Z), not reachableWithoutX(Z,X). 
-:- branch(W,X,Y,Z), not reachableWithoutX(Z,Y).
-
-
-%find what is reachable without going down either branch
-reachableWithout(ID2,X,Y) :- reachableWithout(ID1,X,Y), edge(ID1,ID2), ID1 != X, ID1 != Y. % finalRoom(IDF), ID1 != IDF.  Final room is not useful for now
-reachableWithout(START,X,Y) :- branch(W,X,Y,Z), levelStartRoom(START).
-
-:- branch(W,X,Y,Z), reachableWithout(Z,X,Y).
-
-branch(2,3,4,5).
-
-%world def
-xBeforeY(5,6).
-branch(6,7,8,9).
-xBeforeY(9,10).
 
 %#show edgeNumber/1.
-#show numRooms/1.
-#show edge/2.
-#show room/1.
-#show levelStartRoom/1.
-#show finalRoom/1.
-#show reachableWithoutX/2.
-#show xBeforeY/2.
+%#show numRooms/1.
+%#show edge/2.
+%#show room/1.
+%#show levelStartRoom/1.
+%#show finalRoom/1.
+%#show reachableWithoutRooms/2.
+%#show xBeforeY/2.
 
 %#show threeCycle/1.
 
 % #show finalRoom/1.
+
+%Ok now to figure out multiple keys
+%A locked door is passable if you can get to the key without passing through the door. 
+%Problem A is having multiple doors. 
+%Problem B is having a room you need to pass through to get the key count as coming before any room you need the key to reach
+%Solution ? Reachable without key atom.
+%. For problem A we have check. If key A is not reachable without key B, then key B must be reachable without Key A.
+%	Question ? Does this work for any number of keys. No.
+%   Need to do this check in multiple steps. Find all keys reachable without passing any locks. Then find any keys reachable by passing through those locks. Repeat until no more keys found or all keys reached.
+%   Try to determine what keys every room needs to be reached as well.
+%  Then for problem B we have a variant. If room X is not reachable without key Y, then room A comes before room X if room A needs to be passed through to get key Y.
+
+%Key(ID,N) - Key N is in room ID
+%Lock(X,Y,N) - the edge (X,Y) has a lock that requires Key N
+
+%
 
 
 % % Key code

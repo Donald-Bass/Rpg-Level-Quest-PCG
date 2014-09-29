@@ -59,94 +59,61 @@ namespace PCG_GUI.FlowModel
 
             }*/
 
-            /*
-            //simple loop
-            int i = addRoom();
-            allRooms[i].soft = false;
-            i = addRoom();
-            allRooms[i].soft = true;
-            /*
-            i = addRoom();
-            allRooms[i].soft = false;
-            i = addRoom();
-            allRooms[i].soft = false;
             
-            i = addHardLink();
-            addRoomToLink(i, 0);
-            addRoomToLink(i, 1);
-            
-            i = addHardLink();
-            addRoomToLink(i, 1);
-            addRoomToLink(i, 2);
-
-            i = addDirectLink();
-            addRoomToLink(i, 2);
-            addRoomToLink(i, 3);
-            
-            i = addHardLink();
-            addRoomToLink(i, 3);
-            addRoomToLink(i, 0);
-            
-            lastRoomNum = 3;
+            /*Almost 8 shape  
+             *         1---2
+                       |   |
+                       3---4
+                       |\  |
+                       5 \ |
+                           6
             */
-            
-            
+
             int i = addRoom();
             allRooms[i].soft = false;
             i = addRoom();
             allRooms[i].soft = false;
-            
+            i = addRoom();
+            allRooms[i].soft = false;
+            i = addRoom();
+            allRooms[i].soft = false;
             i = addRoom();
             allRooms[i].soft = false;
             i = addRoom();
             allRooms[i].soft = false;
             
-            
-            i = addRoom();
-            allRooms[i].soft = false;
-            
-            
-            i = addRoom();
-            allRooms[i].soft = false;
-
-            /*
-            i = addRoom();
-            allRooms[i].soft = false;
-            i = addRoom();
-            allRooms[i].soft = false;
-            */
             
             i = addHardLink();
             addRoomToLink(i, 0);
             addRoomToLink(i, 1);
-            
+
+            i = addHardLink();
+            addRoomToLink(i, 0);
+            addRoomToLink(i, 2);
+
             i = addHardLink();
             addRoomToLink(i, 1);
-            addRoomToLink(i, 2);
-            
+            addRoomToLink(i, 3);
+
             i = addHardLink();
             addRoomToLink(i, 2);
             addRoomToLink(i, 3);
-            
-            
+
+            i = addHardLink();
+            addRoomToLink(i, 2);
+            addRoomToLink(i, 4);
+
             i = addHardLink();
             addRoomToLink(i, 3);
-            addRoomToLink(i, 4);
-            
-            i = addHardLink();
-            addRoomToLink(i, 4);
             addRoomToLink(i, 5);
 
-            /*
-             i = addHardLink();
-             addRoomToLink(i, 5);
-             addRoomToLink(i, 6);
-            
-            
-             i = addHardLink();
-             addRoomToLink(i, 6);
-             addRoomToLink(i, 7);
-             */
+            i = addHardLink();
+            addRoomToLink(i, 2);
+            addRoomToLink(i, 5);
+
+
+            lastRoomNum = 3;
+
 
         }
 
@@ -196,6 +163,11 @@ namespace PCG_GUI.FlowModel
                 if(numRoomsUsed != -1 && !reachableWithoutRoomsToSetup.Contains(numRoomsUsed))
                 {
                     reachableWithoutRoomsToSetup.Add(numRoomsUsed);
+
+                    if(numRoomsUsed != 1 && !reachableWithoutRoomsToSetup.Contains(numRoomsUsed - 1))
+                    {
+                        reachableWithoutRoomsToSetup.Add(numRoomsUsed - 1);
+                    }
                 }
 
                 if (l.type == LinkType.soft)
@@ -204,6 +176,15 @@ namespace PCG_GUI.FlowModel
                 }
             }
 
+            if(! reachableWithoutRoomsToSetup.Contains(1))
+            {
+                reachableWithoutRoomsToSetup.Add(1);
+            }
+
+            if (!reachableWithoutRoomsToSetup.Contains(2))
+            {
+                reachableWithoutRoomsToSetup.Add(2);
+            }
             foreach (int i in reachableWithoutRoomsToSetup)
             {
                 string forbiddenVariables = "";
@@ -212,17 +193,17 @@ namespace PCG_GUI.FlowModel
                     forbiddenVariables += ",FB" + j;
                 }
 
-                string Setup = "reachableWithoutRooms(ID2" + forbiddenVariables + " ) :- reachableWithoutRooms(ID1 " + forbiddenVariables + "), connectedRooms(ID1,ID2)";
-                
+                string SetupReachable = "reachableWithoutRooms(ID2" + forbiddenVariables + ") :- reachableWithoutRooms(ID1" + forbiddenVariables + "), edge(ID1,ID2)";
+
                 for(int j = 1; j <= i; j++)
                 {
-                    Setup += ", ID1 != FB" + j;
+                    SetupReachable += ", ID1 != FB" + j;
                 }
 
-                Setup += ".";
+                SetupReachable += ".";
                 //Setup += "finalRoom(IDF), ID1 != IDF.
 
-                file.WriteLine(Setup);
+                file.WriteLine(SetupReachable);
             }
 
             //replace this when the flow graph actually knows which room is the start
@@ -243,86 +224,10 @@ namespace PCG_GUI.FlowModel
             }
 
             //write the constants
-            file.WriteLine("#const maxAreaSize=" + areaSize.ToString() + ".");
-            file.WriteLine("#const minAreaSize=" + areaSize.ToString() + ".");
-            file.WriteLine("#const maxRects=" + (maxRoomsNeeded + maxCorNeeded).ToString() + ".");
-            file.WriteLine("#const maxLength=" + maxRoomLength.ToString() + ".");
-            file.WriteLine("#const minLength=" + minRoomLength.ToString() + ".");
             file.WriteLine("#const minRooms=" + minRoomsNeeded.ToString() + ".");
             file.WriteLine("#const maxRooms=" + maxRoomsNeeded.ToString() + ".");
-            file.WriteLine("#const minCor=" + 0 + ".");
-            if (soft)
-            {
-                file.WriteLine("#const maxCor=" + 6 + ".");
-            }
 
-            else
-            {
-                file.WriteLine("#const maxCor=" + 0 + ".");
-            }
 
-            //anyways we can get a considerable speed boost by preplacing a single room.
-            //we will generate a completely random room for the momement (This will change a bit with testing), under the theory
-            //that if the room is randomly generarated every time Clingo is run there should be no appreciable difference in the range of possible results that could be produced
-            //ADDENDUM: this will cause problems on really cramped levels. 
-            //TODO: See why rooms sized 3x3 seem to break stuff on small? maps
-
-            Random rand = new Random();
-            /*
-            //determine the width and length of the room
-            int length = rand.Next(minRoomLength, maxRoomLength + 1);
-            int height = rand.Next(minRoomLength, maxRoomLength + 1);
-
-            //determine where the upper left corner is, ignoring possibilites that would push the bottom right corner of the room out of bounds
-            int XUL = rand.Next(0, (areaSize - length + 1));
-            int YUL = rand.Next(0, (areaSize - height + 1));
-
-            //TEMP
-            length = 4;
-            height = 4;
-            XUL = 0;
-            YUL = 0;
-
-            file.WriteLine("room(" + XUL.ToString() + "," + YUL.ToString() + "," + length.ToString() + "," + height.ToString() + ").");
-            file.WriteLine("roomID(" + XUL.ToString() + "," + YUL.ToString() + ",1).");*/
-
-            //quick code to put the starting and ending rooms on opposite sides of the map. This should be replaced soonish with code that adds some randomness where on each edge the two rooms are
-            //(provided it doesn't impact performance too much)
-
-            //determine the width and length of the room
-            int length = rand.Next(minRoomLength, maxRoomLength + 1);
-            int height = rand.Next(minRoomLength, maxRoomLength + 1);
-
-            length = 4;
-            height = 4;
-
-            //determine where the upper left corner is
-            int XUL = 0; //for now the starting room is always on the left
-            int YUL = (areaSize / 2) - (int)(height / 2) - 1; //put the room roughly half way down. (remember the top row is row 0, not 1)
-
-            file.WriteLine("room(" + XUL.ToString() + "," + YUL.ToString() + "," + length.ToString() + "," + height.ToString() + ").");
-            file.WriteLine("roomID(" + XUL.ToString() + "," + YUL.ToString() + ",1).");
-
-            //repeat for the final room
-            if(lastRoomNum == -1)
-            {
-                //if no last room is defined say the last room added is the last room
-                lastRoomNum = allRooms[allRooms.Count - 1].roomNumber;
-            }
-
-            //determine the width and length of the room
-            length = rand.Next(minRoomLength, maxRoomLength + 1);
-            height = rand.Next(minRoomLength, maxRoomLength + 1);
-
-            length = 4;
-            height = 4;
-
-            //determine where the upper left corner is
-            XUL = areaSize - length; //for now the starting room is always on the left
-            YUL = (areaSize / 2) - (int)(height / 2) - 1; //put the room roughly half way down. (remember the top row is row 0, not 1)
-
-            file.WriteLine("room(" + XUL.ToString() + "," + YUL.ToString() + "," + length.ToString() + "," + height.ToString() + ").");
-            file.WriteLine("roomID(" + XUL.ToString() + "," + YUL.ToString() + "," + lastRoomNum + ").");
         }
 
         private int addDirectLink()
