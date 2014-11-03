@@ -258,12 +258,11 @@ namespace PCG_GUI.ViewModels
 
         //the body of the runClingo code
         //numberOfLevels - number of levels to generate. If -1 generate as many as clingo feels is necessary
-        public void runClingo(int numberOfLevels)
+        public void runClingo(PCG_GUI.PlanModel.PlanLevel plan)
         {
             System.IO.StreamWriter file = new System.IO.StreamWriter("TempWorldDef.txt");
 
-            world.writeClingoInputFile(file, numberOfLevels);
-
+            plan.writePlan(file);
             file.Close();
 
             //get the unix time to use as a seed

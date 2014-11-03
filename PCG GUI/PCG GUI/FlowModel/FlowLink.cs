@@ -158,7 +158,7 @@ namespace PCG_GUI.FlowModel
 
                     //to prevent different branches from crossing over there can be no room, that you have to either pass through the closer room or the forbidden rooms to get to, but not through the farther room
                     //and you can reach while not crossing the closer room or not crossing the forbidden rooms
-                    string noCrossOver = ":- room(ID), reachableWithoutRooms(ID," + allRooms[fartherRoom].roomNumber + "), not reachableWithoutRooms(ID," + allRooms[closerRoom].roomNumber + forbiddenRoomsString + "), reachableWithoutRooms(ID, " + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + "), reachableWithoutRooms(ID," + allRooms[fartherRoom].roomNumber + forbiddenRoomsString + "), ID !="  + allRooms[fartherRoom].roomNumber + ".";
+                    string noCrossOver = ":- room(ID,_,_), reachableWithoutRooms(ID," + allRooms[fartherRoom].roomNumber + "), not reachableWithoutRooms(ID," + allRooms[closerRoom].roomNumber + forbiddenRoomsString + "), reachableWithoutRooms(ID, " + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + "), reachableWithoutRooms(ID," + allRooms[fartherRoom].roomNumber + forbiddenRoomsString + "), ID !="  + allRooms[fartherRoom].roomNumber + ".";
                     file.WriteLine(noCrossOver); 
    
                      //+ allRooms[fartherRoom].roomNumber + forbiddenRoomsString + ").";
@@ -176,7 +176,7 @@ namespace PCG_GUI.FlowModel
             int forbidCount = writeSoftLink(file, shortestPath, closerRoom, fartherRoom, forbiddenRooms, allRooms, allLinks); //a hard link has the same basic setup as a soft link just with additional constraints so reuse code for initial setup
 
             //directly create an edge between the rooms
-            file.WriteLine("edge(" + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + ").");
+            file.WriteLine("basicEdge(" + allRooms[closerRoom].roomNumber + "," + allRooms[fartherRoom].roomNumber + ").");
 
             //file.WriteLine(typeOfRoomsConstraint);
 

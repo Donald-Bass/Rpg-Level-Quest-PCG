@@ -49,3 +49,7 @@ PCG GUI/PCG GUI/bin/Release/TempWorldDef.txt
 PCG GUI/PCG GUI/CopyResources.bat
 /clingo.exe
 Timing Test/
+PCG GUI/PCG GUI/bin/
+Timing/
+GraphVisCode
+timing*

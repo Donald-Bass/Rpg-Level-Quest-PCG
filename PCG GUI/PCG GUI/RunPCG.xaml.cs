@@ -42,7 +42,7 @@ namespace PCG_GUI
             {
                 System.Console.WriteLine(exception.ToString());
             }
-            viewModel.runClingo(numLevels);
+            //viewModel.runClingo(numLevels);
             this.Close();
         }
 

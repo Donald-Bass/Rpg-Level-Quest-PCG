@@ -19,7 +19,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemContainerStyle>
                     <Style>
-                        
+
                     </Style>
                 </ItemsControl.ItemContainerStyle>
 
@@ -33,46 +33,80 @@
                 <ColumnDefinition Width="16*"/>
                 <ColumnDefinition Width="61*"/>
             </Grid.ColumnDefinitions>
-            <Label Content="X Length:" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.45,-0.038" Grid.ColumnSpan="2"/>
-            <TextBox HorizontalAlignment="Left" Height="23" Margin="8,3,0,0" TextWrapping="Wrap" Text="{Binding LevelView.X_Dimension}" VerticalAlignment="Top" Width="57" Focusable="False" IsEnabled="False" Grid.Column="1" Grid.ColumnSpan="2"/>
+            <Label Content="X Length:" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.45,-0.038" Margin="-246,-7,0,0"/>
+            <TextBox HorizontalAlignment="Left" Height="23" Margin="-190,-4,0,0" TextWrapping="Wrap" Text="{Binding LevelView.X_Dimension}" VerticalAlignment="Top" Width="67" Focusable="False" IsEnabled="False"/>
+            <ListView x:Name="LevelPlan" Grid.Column="2" HorizontalAlignment="Left" Height="488" Margin="202,-217,-468,-132" VerticalAlignment="Top" Width="317" ItemsSource="{Binding LevelView.plan.stepList}" SelectionChanged="LevelPlan_SelectionChanged" SelectionMode="Single">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Step" DisplayMemberBinding="{Binding stepNum}"  />
+                        <GridViewColumn Header="Step Contents" DisplayMemberBinding="{Binding stepContents}"  />
+                    </GridView>
+                </ListView.View>
+            </ListView>
         </Grid>
-        <Grid Margin="407,242,351,513">
-            <Label Content="Y Length:" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.45,-0.038"/>
-            <TextBox HorizontalAlignment="Left" Height="23" Margin="64,3,0,0" TextWrapping="Wrap" Text="{Binding LevelView.Y_Dimension}" VerticalAlignment="Top" Width="57" Focusable="False" IsEnabled="False"/>
+        <Grid Margin="407,242,331,620">
+            <Label Content="Y Length:" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.45,-0.038" Margin="-246,-7,0,0"/>
+            <TextBox HorizontalAlignment="Left" Height="23" Margin="-182,-4,0,0" TextWrapping="Wrap" Text="{Binding LevelView.Y_Dimension}" VerticalAlignment="Top" Width="57" Focusable="False" IsEnabled="False"/>
         </Grid>
-        <ListView ItemsSource="{Binding LevelView.levelList}" Margin="20,15,693,718" SelectedIndex="{Binding LevelView.selectedLevel}">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Width="40" Header="Level" 
-						DisplayMemberBinding="{Binding levelNumber}"  />
-                    <GridViewColumn Width="140" Header="Name"  
-						DisplayMemberBinding="{Binding levelName}" />
-                </GridView>
-            </ListView.View>
-        </ListView>
-        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="130" Margin="256,46,0,0" VerticalAlignment="Top" Width="199">
-            <Grid>
-                <Label Content="X Size" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-                <TextBox x:Name="NewLevelSizeX" HorizontalAlignment="Left" Height="23" Margin="68,13,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
-                <Label Content="Y Size" HorizontalAlignment="Left" Margin="10,49,0,0" VerticalAlignment="Top"/>
-                <TextBox x:Name="NewLevelSizeY" HorizontalAlignment="Left" Height="23" Margin="68,52,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
-                <Button x:Name="CreateLevel" Content="Create New Level" HorizontalAlignment="Left" VerticalAlignment="Top" Width="105" Margin="10,93,0,0" Click="CreateLevel_Click" IsEnabled="{Binding BaseView.worldAttached}"/>
-            </Grid>
-        </Border>
-        <Label Content="Add Level" HorizontalAlignment="Left" Margin="256,15,0,0" VerticalAlignment="Top" Height="26" Width="62"/>
-        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="91" Margin="562,356,0,0" VerticalAlignment="Top" Width="244">
-            <Grid>
-                <RadioButton x:Name="Floor_Mode" Content="Floors" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" GroupName="EditType" IsChecked="{Binding LevelView.editFloor}" IsEnabled="{Binding BaseView.worldAttached}"/>
-                <RadioButton x:Name="Add_Walls_Mode" Content="Add Walls" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top" GroupName="EditType" IsEnabled="{Binding BaseView.worldAttached}" IsChecked="{Binding LevelView.addWalls}"/>
-                <RadioButton x:Name="Remove_Walls_Mode" Content="Remove Walls" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top" GroupName="EditType" IsEnabled="{Binding BaseView.worldAttached}" IsChecked="{Binding LevelView.removeWalls}"/>
-            </Grid>
-        </Border>
-        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="91" Margin="562,497,0,0" VerticalAlignment="Top" Width="244">
-            <Grid>
-                <RadioButton x:Name="Floor_Mode2" Content="Floor" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" GroupName="Floor Type" IsChecked="{Binding LevelView.floorTiles}" IsEnabled="{Binding LevelView.editFloor}"/>
-                <RadioButton x:Name="Blocked_Mode" Content="Blocked" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top" GroupName="Floor Type" IsChecked="{Binding LevelView.blockedTiles}" IsEnabled="{Binding LevelView.editFloor}"/>
-                <RadioButton x:Name="Undefined_Mode" Content="Undefined" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top" GroupName="Floor Type" IsEnabled="{Binding LevelView.editFloor}" IsChecked="{Binding LevelView.undefinedTiles}"/>
-            </Grid>
-        </Border>
+        <Button x:Name="AddStep" Content="Add New Step" HorizontalAlignment="Left" Margin="533,525,0,0" VerticalAlignment="Top" Width="102" RenderTransformOrigin="0.5,0.5" Click="AddStep_Click">
+            <Button.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="-0.349"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Button.RenderTransform>
+        </Button>
+        <Button x:Name="ClearStep" Content="Clear Step" HorizontalAlignment="Left" Margin="645,524,0,0" VerticalAlignment="Top" Width="110" RenderTransformOrigin="0.5,0.5" Click="ClearStep_Click">
+            <Button.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="-0.349"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Button.RenderTransform>
+        </Button>
+        <Button x:Name="DeleteStep" Content="Delete Step" HorizontalAlignment="Left" Margin="761,524,0,0" VerticalAlignment="Top" Width="102" RenderTransformOrigin="0.5,0.5" Click="DeleteStep_Click">
+            <Button.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="-0.349"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Button.RenderTransform>
+        </Button>
+        <Button x:Name="BossRoom" Content="Add Boss Room" HorizontalAlignment="Left" Margin="533,563,0,0" VerticalAlignment="Top" Width="102" RenderTransformOrigin="0.5,0.5" Click="BossRoom_Click">
+            <Button.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="-0.349"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Button.RenderTransform>
+        </Button>
+        <Button x:Name="TreasureRoom" Content="Add Treasure Room" HorizontalAlignment="Left" Margin="644,561,0,0" VerticalAlignment="Top" Width="111" RenderTransformOrigin="0.5,0.5" Height="24" Click="TreasureRoom_Click">
+            <Button.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="-0.349"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Button.RenderTransform>
+        </Button>
+        <Button x:Name="Gauntlet" Content="Add Gauntlet" HorizontalAlignment="Left" Margin="761,562,0,0" VerticalAlignment="Top" Width="102" RenderTransformOrigin="0.5,0.5" Click="Gauntlet_Click">
+            <Button.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="-0.349"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Button.RenderTransform>
+        </Button>
     </Grid>
 </UserControl>

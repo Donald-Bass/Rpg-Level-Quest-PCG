@@ -60,13 +60,12 @@ namespace PCG_GUI.FlowModel
             }*/
 
             
-            /*Almost 8 shape  
-             *         1---2
-                       |   |
-                       3---4
-                       |\  |
-                       5 \ |
-                           6
+            /*
+             *          7
+             *          |
+             *        4 5 6
+             *        | | |
+                      2-1-3             
             */
 
             int i = addRoom();
@@ -81,7 +80,8 @@ namespace PCG_GUI.FlowModel
             allRooms[i].soft = false;
             i = addRoom();
             allRooms[i].soft = false;
-            
+            i = addRoom();
+            allRooms[i].soft = false;
             
             i = addHardLink();
             addRoomToLink(i, 0);
@@ -92,27 +92,23 @@ namespace PCG_GUI.FlowModel
             addRoomToLink(i, 2);
 
             i = addHardLink();
-            addRoomToLink(i, 1);
-            addRoomToLink(i, 3);
-
-            i = addHardLink();
-            addRoomToLink(i, 2);
-            addRoomToLink(i, 3);
-
-            i = addHardLink();
-            addRoomToLink(i, 2);
+            addRoomToLink(i, 0);
             addRoomToLink(i, 4);
 
             i = addHardLink();
+            addRoomToLink(i, 1);
             addRoomToLink(i, 3);
-            addRoomToLink(i, 5);
 
             i = addHardLink();
             addRoomToLink(i, 2);
             addRoomToLink(i, 5);
 
+            i = addHardLink();
+            addRoomToLink(i, 4);
+            addRoomToLink(i, 6);
 
-            lastRoomNum = 3;
+
+            lastRoomNum = 7;
 
 
         }

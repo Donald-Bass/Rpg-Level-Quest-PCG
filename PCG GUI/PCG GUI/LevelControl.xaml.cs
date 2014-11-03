@@ -29,33 +29,47 @@ namespace PCG_GUI
             InitializeComponent();
         }
 
-        /*private void InteriorButton_Checked(object sender, RoutedEventArgs e)
-        {
-            viewModel.LevelView.setLevelType(levelType.interior);
-        }
-
-        private void ExteriorButton_Checked(object sender, RoutedEventArgs e)
-        {
-            viewModel.LevelView.setLevelType(levelType.exterior);
-        }*/
-
-        private void CreateLevel_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                viewModel.LevelView.addLevel(Convert.ToInt32(NewLevelSizeX.Text), Convert.ToInt32(NewLevelSizeY.Text));
-            }
-            catch (FormatException exception)
-            {
-                System.Console.WriteLine(exception.ToString());
-            }
-        }
-
         private void Map_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             viewModel.LevelView.editLevel((int)e.GetPosition(LevelViewer).X, (int)e.GetPosition(LevelViewer).Y);
 
         }
+
+         private void AddStep_Click(object sender, RoutedEventArgs e)
+        {
+            viewModel.LevelView.plan.addStep();
+        }
+
+         private void ClearStep_Click(object sender, RoutedEventArgs e)
+         {
+             viewModel.LevelView.plan.clearStep();
+         }
+
+         private void DeleteStep_Click(object sender, RoutedEventArgs e)
+         {
+             viewModel.LevelView.plan.deleteStep();
+         }
+
+         private void LevelPlan_SelectionChanged(object sender, SelectionChangedEventArgs e)
+         {
+             viewModel.LevelView.plan.stepIndex = LevelPlan.SelectedIndex;
+         }
+
+         private void BossRoom_Click(object sender, RoutedEventArgs e)
+         {
+             viewModel.LevelView.plan.addBossRoom();
+         }
+
+         private void TreasureRoom_Click(object sender, RoutedEventArgs e)
+         {
+             viewModel.LevelView.plan.addTreasureRoom();
+         }
+
+         private void Gauntlet_Click(object sender, RoutedEventArgs e)
+         {
+             viewModel.LevelView.plan.addGauntlet();
+         }
+
 
     }
 }

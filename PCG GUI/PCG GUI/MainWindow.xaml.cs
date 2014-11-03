@@ -1,5 +1,5 @@
 ﻿using PCG_GUI.Facts;
-using PCG_GUI.FlowModel;
+using PCG_GUI.PlanModel;
 using PCG_GUI.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -41,14 +41,14 @@ namespace PCG_GUI
 
         private void Menu_New(object sender, RoutedEventArgs e)
         {
-            //viewModel.newWorld();
+            viewModel.newWorld();
 
-            System.IO.StreamWriter file = new System.IO.StreamWriter("WorldDef.txt");
-            FlowGraph testGraph = new FlowGraph();
-            testGraph.writeFlow(file);
+            //System.IO.StreamWriter file = new System.IO.StreamWriter("WorldDef.txt");
+            //PlanLevel testPlan = new PlanLevel();
+            //testPlan.writePlan(file);
 
 
-            file.Close();
+            //file.Close();
         }
 
         private void Menu_Open(object sender, RoutedEventArgs e)
@@ -72,7 +72,7 @@ namespace PCG_GUI
 
         private void Menu_Save(object sender, RoutedEventArgs e)
         {
-            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            /*Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
 
             // Set filter for file extension and default file extension
             dlg.Filter = "PCG files (*.pcg)| *.pcg";
@@ -86,20 +86,22 @@ namespace PCG_GUI
                 // Open document
                 string filename = dlg.FileName;
                 viewModel.BaseView.save(filename);
-            }
+            }*/
         }
 
         private void Menu_Close(object sender, RoutedEventArgs e)
         {
-            viewModel.Close();
+            //viewModel.Close();
         }
 
         private void Menu_Run(object sender, RoutedEventArgs e)
         {
+            viewModel.runClingo();
+        }
 
+        private void LevelView_Loaded(object sender, RoutedEventArgs e)
+        {
 
-            RunPCGWindow runWin = new RunPCGWindow(viewModel);
-            runWin.Show();
         }
 
       

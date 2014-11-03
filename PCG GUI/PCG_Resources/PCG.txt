@@ -2,33 +2,98 @@
 %Framework
 %----------------------------------------------------------------------------
 
+xRange(0..9).
+yRange(0..9).
+
 %Determine the number of rooms 
 numRoomRange(minRooms .. maxRooms). %set a minimum and maximum number of rooms
 1 { numRooms(X) : numRoomRange(X) } 1.
 
-%Each room number corrosponds to a room
-room(1 .. X) :- numRooms(X). 
+roomRange(1 .. X) :- numRooms(X).
 
-0 { edge(X,Y) : room(Y), X != Y } 4 :- room(X).
+
+%Each room number corrosponds to a room
+1 { room(N,X,Y) : xRange(X), yRange(Y) } 1 :- roomRange(N). 
+
+:- room(N1,X,Y), room(N2,X,Y), N1 != N2. %two rooms cannot share the same place
+
+%for the sake of testing at the moment no two rooms may be adjacent
+:- room(N1,X1,Y), room(N2,X2,Y), N1 != N2, X2 - 1 = X1.
+:- room(N1,X,Y1), room(N2,X,Y2), N1 != N2, Y2 - 1 = Y1.
+
+0 { basicEdge(X,Y) : room(Y,_,_), X != Y } 4 :- room(X,_,_).
 
 %all edges must be two ways. This is an intergrity constraint and not an implication, as just making each edge two ways could violate the max number of edges out of a room
-:- edge(X,Y), not edge(Y,X). 
+:- basicEdge(X,Y), not basicEdge(Y,X). 
 
 reachable(ID) :- levelStartRoom(ID). %The start has to be on the edge of the level so it has to been on the edge of a room
 reachable(ID2) :- reachable(ID1), edge(ID1,ID2). %, finalRoom(IDF), ID1 != IDF.
-:- room(ID), not reachable(ID).
+:- room(ID,_,_), not reachable(ID).
 
 %define number of connections
-numConnections(ID,N) :- N = #count{ V : edge(ID,V) } , room(ID).
-:- numberOfEdges(ID,C), numConnections(ID,N), C != N. %if a room has a set number of connections enforce that number
+numConnections(ID,N) :- N = #count{ V : edge(ID,V) } , room(ID,_,_).
+%:- numberOfEdges(ID,C), numConnections(ID,N), C != N. %if a room has a set number of connections enforce that number
 
 %define what it means for a room to come before
-:- xBeforeY(X,Y), not reachableWithoutRooms(X,Y). %a room doesn't come before another one unless you can access the first without going through the second.
+%really there are two different definitions we could use here. xBeforeY says you have to visit room x before you can visit room Y. xOptionalBeforeY says you can visit x without visiting y, but you don't have to visit x to visit 
 
-% % branches - %branch(W,X,Y,Z) a branch starting at w, where you can go through either X or Y to reach Z
+reachableWithoutRooms(START,FB1) :- levelStartRoom(START), room(FB1,_,_). %The start room can be reached without passing through a specific room no matter what that room is
+reachableWithoutRooms(ID2,FB1) :- reachableWithoutRooms(ID1,FB1), edge(ID1,ID2), ID1 != FB1. %otherwise a room can be reached without going through another room, if there is a room the first is adjacent to that can be reached without going through said room
+
+mustVisitXtoReachY(X,Y) :- room(X,_,_), room(Y,_,_), not reachableWithoutRooms(Y,X). %Now we reverse the results to find which rooms can't be reached without passing through particular rooms which is the form we actually need
+
+																						 
+mustVisitXtoReachY(X,Z)	:-	mustVisitXtoReachY(X,Y), mustVisitXtoReachY(Y,Z). %this property should be transative. If you must visit room X to visit Y and Y to visit Z logically you must visit X to reach Z
+						
+:- xBeforeY(X,Y), not mustVisitXtoReachY(X,Y). %a room doesn't come before another one unless you can access the first without going through the second.
+
+horEdge(U,V) :- basicEdge(U,V), U < V, room(U, X1, Y), room(V, X2, Y). 
+vertEdge(U,V) :- basicEdge(U,V), U < V, room(U, X, Y1), room(V, X, Y2). 
+
+:- basicEdge(U,V), U < V, not horEdge(U,V), not vertEdge(U,V).
+
+%Make sure distances between rooms aren't too far. (A really long corridor isn't great gameplay)
+:- horEdge(U,V), room(U,X1,Y), room(V,X2,Y), X1 < X2, D = X2 - X1, D > 4.
+:- horEdge(U,V), room(U,X1,Y), room(V,X2,Y), X2 < X1, D = X1 - X2, D > 4.
+:- vertEdge(U,V), room(U,X,Y1), room(V,X,Y2), Y1 < Y2, D = Y2 - Y1, D > 4.
+:- vertEdge(U,V), room(U,X,Y1), room(V,X,Y2), Y2 < Y1, D = Y1 - Y2, D > 4.
+
+% horDist(U,V,D) :- D = @lAbs(X1 - X2), horEdge(U,V), room(U,X1,Y), room(V,X2,Y). %For horizontal lines the distance is the absolute value of the difference between x components
+% edgeDist(U,V,D) :- horDist(U,V,D). %store the distance in a final atom that holds a distance for any type of edge
+% vertDist(U,V,D) :- D = @lAbs(Y1 - Y2), vertEdge(U,V), room(U,X,Y1), room(V,X,Y2).  %For vertical lines the distance is the absolute value of the difference between y components
+% edgeDist(U,V,D) :- vertDist(U,V,D).
+% :- edgeDist(_,_,D), D > 3.
+
+
+%there can be no vertices in the middle of an edge
+% :- horEdge(U,V), room(U,X1,Y), room(V,X2,Y), room(_,X3,Y), X1 < X2, X3 > X1, X3 < X2.
+% :- horEdge(U,V), room(U,X2,Y), room(V,X1,Y), room(_,X3,Y), X1 < X2, X3 > X1, X3 < X2.
+
+% :- vertEdge(U,V), room(U,X,Y1), room(V,X,Y2), room(_,X,Y3), Y1 < Y2, Y3 > Y1, Y3 < Y2.
+% :- vertEdge(U,V), room(U,X,Y2), room(V,X,Y1), room(_,X,Y3), Y1 < Y2, Y3 > Y1, Y3 < Y2.
+
+%One more try
+
+occupied(X3,Y,U,V) :- horEdge(U,V), room(U,X1,Y), room(V,X2,Y), X1 < X2, xRange(X3), X3 > X1, X3 < X2.
+occupied(X3,Y,U,V) :- horEdge(U,V), room(U,X2,Y), room(V,X1,Y), X1 < X2, xRange(X3), X3 > X1, X3 < X2.
+occupied(X,Y3,U,V) :- vertEdge(U,V), room(U,X,Y1), room(V,X,Y2), Y1 < Y2, yRange(Y3), Y3 > Y1, Y3 < Y2.
+occupied(X,Y3,U,V) :- vertEdge(U,V), room(U,X,Y2), room(V,X,Y1), Y1 < Y2, yRange(Y3), Y3 > Y1, Y3 < Y2.
+
+:- occupied(X,Y,_,_), room(_,X,Y).
+:- occupied(X,Y,U1,_), occupied(X,Y,U2,_), U1 != U2.
+:- occupied(X,Y,_,V1), occupied(X,Y,_,V2), V1 != V2.
+
+edge(U,V) :- horEdge(U,V).
+edge(U,V) :- vertEdge(U,V).
+edge(V,U) :- edge(U,V).
 
 %key code
-numKeys(2). 
+
+#const minKeys = 0.
+#const maxKeys = 3.
+possibleNumKeysRange(minKeys .. maxKeys).
+
+1 {numKeys(N) : possibleNumKeysRange(N) } 1. %determine the number of keys in the level within the accepted ranged of course 
 keyRange(1..X) :- numKeys(X).
 
 % keyRoom(2,1).
@@ -37,7 +102,7 @@ keyRange(1..X) :- numKeys(X).
 % lock(1,3,1).
 % lock(4,6,2).
 
-1 { keyRoom(RN,KN) : room(RN) } 1 :- keyRange(KN). %the key KN is in room RN
+1 { keyRoom(RN,KN) : room(RN,_,_) } 1 :- keyRange(KN). %the key KN is in room RN
 1 { preLock(X,Y,KN) : edge(X,Y) } 1  :- keyRange(KN). %the lock KN opens is edge X,Y
 
 %for some inexplicable reason using lock instead of preLock in the previous statement prevents the program from being satisifed.
@@ -45,9 +110,14 @@ lock(X,Y,KN) :- preLock(X,Y,KN).
 
 lock(Y,X,KN) :- lock(X,Y,KN). %locks exist in both directions
 
+%Some more sanity checks
+:- keyRoom(RN,KN), lock(RN,RN2,KN). %A key should not be in the same room the locked corridor is
+:- keyRoom(RN,KN), lock(RN2,_,KN), not reachableWithoutRooms(RN2, RN). %There is no point in having a key in a room if the only way to reach one of the rooms around the lock is through the key room in the first place
+
 %To simplify each room can only contain one key and each edge only 1 lock
 :- keyRoom(RN,KN1), keyRoom(RN,KN2), KN1 != KN2.
 :- lock(X,Y,KN1), lock(X,Y,KN2), KN1 != KN2.
+
 
 %determine which rooms can be reached without each key
 reachableWithoutKey(ID,KN) :- keyRange(KN), levelStartRoom(ID).
@@ -55,7 +125,7 @@ reachableWithoutKey(ID2,KN) :- reachableWithoutKey(ID1,KN), edge(ID1,ID2), not l
 
 :- keyRoom(RN,KN), not reachableWithoutKey(RN,KN). %a key cannot be stuck behind the lock it opens
 
-roomsBlocked(KN) :- keyRange(KN), room(RN), not reachableWithoutKey(RN,KN). %check if any rooms are actually blocked off by the lock
+roomsBlocked(KN) :- keyRange(KN), room(RN,_,_), not reachableWithoutKey(RN,KN). %check if any rooms are actually blocked off by the lock
 :- keyRange(KN), not roomsBlocked(KN). %for now force each lock to actually lock something away.
 
 %Ok now the trickest part. In a series of stages we need to make sure all the rooms can enventually be reached by collecting the keys in a proper order
@@ -75,6 +145,30 @@ stage(S+1) :- stage(S), numKeysCollected(N1,S), numKeysCollected(N2,S-1), numKey
 allKeysCollected(0) :- numKeysCollected(N,S), numKeys(N). %if at any point we have collected the same number of keys as there exist keys we know are keys can be collected. (The 0 in the allKeysCollected is to prevent my parser from breaking on a niche case)
 
 :- not allKeysCollected(0). %we must be able to collect all the keys
+
+mustVisitXtoReachY(X,Y) :- keyRoom(X,KN), not reachableWithoutKey(Y,KN), room(Y,_,_). %for each key determine all the rooms we must visit the keyroom first to reach
+
+%mustVisitXtoReachY(X,Z) :- mustVisitXtoReachY(X,Y), mustVisitXtoReachY(Y,Z). %
+
+
+%Define pacing part 1. Num Rooms
+
+% roomsBetween(3,5,2). %roomsBetween(U,V,N) have n aditional rooms between rooms U and V
+% roomsBetween(4,6,2). %roomsBetween(U,V,N) have n aditional rooms between rooms U and V
+
+% to find distance we find all rooms reachable from U by passing through 0 other rooms, then 1, etc.
+% if we find a path that is shorter then roomsBetween, we have a problem.
+% else if not path exists of the desired lenght we have a problem
+% findReachableInN(C,U,V,CN,N) means we are at C, we are trying to reach V having started at U, we have passed through CN rooms, and our target distance is N  
+% % findReachableInN(U,U,V,0,N)  :- roomsBetween(U,V,N). %start looking for a path at U 
+% % findReachableInN(C2,U,V,CN+1,N)  :-  findReachableInN(C1,U,V,CN,N), CN < N, edge(C1,C2).
+% % :-  findReachableInN(C,U,V,CN,N), CN < N, edge(C,V). %If there is an edge to v before we have enough rooms there is a problem
+% % distanceCorrect(U,V,N) :-  findReachableInN(C,U,V,CN,N), CN = N, edge(C,V). %If there is an edge to v when we have enough rooms we are golden
+
+% % :- roomsBetween(U,V,N), not distanceCorrect(U,V,N).
+
+
+
 
 %#show edgeNumber/1.
 %#show numRooms/1.

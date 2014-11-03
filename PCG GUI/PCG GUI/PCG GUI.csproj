@@ -79,6 +79,9 @@
     <Compile Include="LevelControl.xaml.cs">
       <DependentUpon>LevelControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PlanModel\PlanLevel.cs" />
+    <Compile Include="PlanModel\PlanLink.cs" />
+    <Compile Include="PlanModel\PlanRoom.cs" />
     <Compile Include="SmartObservableCollection.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\LevelViewModel.cs" />

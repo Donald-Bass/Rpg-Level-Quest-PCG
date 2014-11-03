@@ -32,13 +32,13 @@ namespace PCG_GUI.ViewModels
         public void newWorld()
         {
             Close();
-            BaseView.newWorld();
+            //BaseView.newWorld();
         }
 
-        public void runClingo(int numberOfLevels)
+        public void runClingo()
         {
-            BaseView.runClingo(numberOfLevels);
-            Close();
+            BaseView.runClingo(LevelView.plan);
+            //Close();
             Open("TempResults.pcg");
         }
     }

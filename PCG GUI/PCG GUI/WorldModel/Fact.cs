@@ -9,12 +9,12 @@ namespace PCG_GUI
     class Fact
     {
         private String predicate; //what predicate is the fact from
-        private String[] values; //values for each of the variables in the predicate
+        private List<String> values; //values for each of the variables in the predicate
 
         public Fact() //base constructor
         {
             predicate = "";
-            values = new String[0];
+            values = new List<String>();
         }
 
         //constructor that parses a fact from a clingo output file. The string factString should start with the predicate and end with the )
@@ -26,19 +26,20 @@ namespace PCG_GUI
             parIndex = factString.IndexOf("("); //find where the ( is ending the name of the predicate
             predicate = factString.Substring(0, parIndex);
 
-            values = factString.Substring(parIndex + 1, factString.Count() - parIndex - 2).Split(',');
+            values = factString.Substring(parIndex + 1, factString.Count() - parIndex - 2).Split(',').ToList();
         }
 
+        //TODO go back to all these references and make them use a proper list
         public Fact(string predicate, String[] values)
         {
             this.predicate = predicate;
-            this.values = values;
+            this.values = values.ToList();
         }
 
         //return number of values in the fact
         public int getNumVariables()
         {
-            return values.Length;
+            return values.Count;
         }
 
         public string getPredicate()
@@ -46,9 +47,9 @@ namespace PCG_GUI
             return predicate;
         }
 
-        public string[] getValues()
+        public void setPredicate(string predicate)
         {
-            return values;
+            this.predicate = predicate;
         }
 
         public string getValue(int i)
@@ -56,10 +57,28 @@ namespace PCG_GUI
             return values[i];
         }
 
+        public void setValue(int i, string Value)
+        {
+            while (i >= values.Count) //if we don't have i elements create them till we have that many
+            {
+                string blank = "";
+
+                values.Insert(values.Count, blank);
+            }
+
+            values[i] = Value;
+        }
+
         //convert a value into an int before returning it
         public int getNumericValue(int i)
         {
             return Convert.ToInt32(values[i]);
+        }
+
+        //Take a value as an int and turn in into a string before stroing
+        public void setNumericValue(int i, int value)
+        {
+            setValue(i, value.ToString());
         }
 
         //returns a string representation of the fact in the same format clingo would output
@@ -76,11 +95,11 @@ namespace PCG_GUI
 
             rep = rep + predicate + "(";
 
-            if(values.Length > 0) //if there is at least one value
+            if (values.Count > 0) //if there is at least one value
             {
                 rep += values[0]; //print the first value outside of the loop to make adding commas easier
 
-                for(int i = 1; i < values.Length; i++)
+                for (int i = 1; i < values.Count; i++)
                 {
                     rep = rep + "," + values[i];
                 }

@@ -135,13 +135,7 @@ namespace PCG_GUI.Facts
         {
             allRooms[toAdd.roomNumber] = toAdd;
 
-            for(int i = toAdd.XUL; i <= toAdd.XBR; i++)
-            {
-                for(int j = toAdd.YUL; j <= toAdd.YBR; j++)
-                {
-                    levelMap[i, j].RoomNumber = toAdd.roomNumber;
-                }
-            }
+            levelMap[toAdd.X, toAdd.Y].RoomNumber = toAdd.roomNumber;
         }
 
         //write the contents of the level to file (levelNumber is the number to give to this level in the file)

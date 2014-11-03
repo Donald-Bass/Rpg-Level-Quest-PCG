@@ -10,10 +10,10 @@
                 <MenuItem Header="_Open" Click="Menu_Open" />
                 <MenuItem Header="_Save" Click="Menu_Save" />
                 <MenuItem Header="_Close" Click="Menu_Close" />
-                <MenuItem Header="_Run PCG" Click="Menu_Run" IsEnabled="{Binding Path=BaseView.worldAttached}" />
+                <MenuItem Header="_Run PCG" Click="Menu_Run" />
             </MenuItem>
         </Menu>
-        <local:LevelControl x:Name="LevelView" Margin="0,29,56,32"/>
+        <local:LevelControl x:Name="LevelView" Margin="0,29,56,32" Loaded="LevelView_Loaded"/>
     </Grid>
 
 

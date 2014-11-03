@@ -14,6 +14,10 @@ namespace PCG_GUI.WorldModel
         public int XBR { get; set; }
         public int YBR { get; set; }
 
+        public int X { get; set; }
+        public int Y { get; set; }
+
+
         public int roomNumber { get; set; }
 
         public string roomType { get; set; }
@@ -24,6 +28,8 @@ namespace PCG_GUI.WorldModel
             YUL = -1;
             XBR = -1;
             YBR = -1;
+            X = -1;
+            Y = -1;
         }
     }
 }

@@ -12,6 +12,7 @@ using System.Windows.Shapes;
 using System.Windows.Media;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using PCG_GUI.PlanModel;
 
 namespace PCG_GUI.ViewModels
 {
@@ -47,6 +48,8 @@ namespace PCG_GUI.ViewModels
         public Boolean blockedTiles { get; set; }
         public Boolean undefinedTiles { get; set; }
 
+        public PlanLevel plan { get; set; }
+
         private int curLevel;
         public int selectedLevel  {
             get 
@@ -74,6 +77,7 @@ namespace PCG_GUI.ViewModels
             Y_Length = 0;
             selectedLevel = -1;
 
+            plan = new PlanLevel();
         }
 
         public void setUpLevelList()
@@ -187,6 +191,7 @@ namespace PCG_GUI.ViewModels
             RaisePropertyChanged("levelInterior");
             RaisePropertyChanged("levelExterior");
 
+            plan.clear();
         }
 
         //level display list type stuff
