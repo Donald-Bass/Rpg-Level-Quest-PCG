@@ -26,7 +26,7 @@ namespace PCG_GUI.ViewModels
         public void Open(String Filename)
         {
             BaseView.open(Filename);
-            LevelView.finishOpen();
+            //LevelView.finishOpen();
         }
 
         public void newWorld()

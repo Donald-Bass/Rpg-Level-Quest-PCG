@@ -1,4 +1,5 @@
-﻿/* A PlanRoom object is used to represent a single room in the partially ordered plan used to describe the level
+﻿/* A PlanRoom object is used to represent a single room in the partially ordered plan used to describe the level. This currently doesn't really do anything. It stores the type
+ * of the room that will be important when vizulization comes along, and may play into other constraints at a future date, but right now the only important thing this class does is store the roomnumber
  * 
  * */
 
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace PCG_GUI.PlanModel
 {
-    public enum roomTypes {TreasureRoom, BossFight, Gauntlet};
+    public enum roomTypes {TreasureRoom, BossFight, Gauntlet, Entrance};
 
     public class PlanRoom
     {

@@ -1,4 +1,8 @@
-﻿using System;
+﻿/* The BaseViewModel class is unfortantly not very distinct from the LevelViewModel class. The original plans for this were very opened and far too ambitious including multiple levels, npcs, and quests. The
+ * level view model would have all the code needed specifically for viewing an individual level, while the BaseViewModel would have the code all the different types of views would need. Unfortantly the 
+ * scope ultimately changed to generating a single level so the code needed to interface with the GUI is essentially randomly scattered across the two
+ */ 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -15,26 +19,21 @@ namespace PCG_GUI.ViewModels
 {
     public class BaseViewModel : INotifyPropertyChanged
     {
-        public const int GRID_SIZE = 20;
-        public const int WALL_PIXEL_RANGE = 3; //Range from wall at which a click registers
+        public const int GRID_SIZE = 20; //size of the squares in the grid in the map of the level (in pixels)
 
         public SmartObservableCollection<System.Windows.FrameworkElement> levelGraphic { get;  private set; }
 
-        public Boolean worldAttached { get; set; } //is there a world attached to the view model
+        //public Boolean worldAttached { get; set; } //is there a world attached to the view model. This was intended to allow
+                                                     //the gui to be open without a world actually being generated, and prevent the gui from doing
+                                                     //anything till the user goes to menu and hits new. This is stupid. I've disabled this and programed the gui to automatically
+                                                     //create an empty PlanLevel to start off with, and I've disabled the Close menu option so there will never be nothing to interact with
         public World world;
-        public int NumberOfLevels { get;  set; } //TODO: refactor this out and replace with references to number of levels in world?
-
 
         public BaseViewModel()
         {
             world = null;
             levelGraphic = new SmartObservableCollection<System.Windows.FrameworkElement>();
-            worldAttached = false;
-        }
-
-        public virtual void openView() //handles any additional steps needed for opening a file for a specific view
-        {
-            
+            //worldAttached = false;
         }
 
         //open the world contained in Filename
@@ -50,16 +49,16 @@ namespace PCG_GUI.ViewModels
             System.IO.StreamReader file = new System.IO.StreamReader(Filename);
             world.parseClingoFile(file);
 
-            NumberOfLevels = world.numLevels;
-
             file.Close();
 
-            worldAttached = true;
+            //worldAttached = true;
             RaisePropertyChanged("worldAttached");
+
+            drawLevel();
         }
 
 
-        public void save(string Filename)
+        public void save(string Filename) //saves the current world to a file. This doesn't really work right currently, but it should have been fixed by the time the code is turned over
         {
             if (world != null)
             {
@@ -70,47 +69,32 @@ namespace PCG_GUI.ViewModels
 
         }
 
-        public void newWorld()
-        {
-            world = new World();
-            worldAttached = true;
-            NumberOfLevels = 0;
-            RaisePropertyChanged("worldAttached");
-        }
-
+        //creates a new world
         internal void RaisePropertyChanged(string prop)
         {
             if (PropertyChanged != null) { PropertyChanged(this, new PropertyChangedEventArgs(prop)); }
         }
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public virtual void closeWorldView() //function handles any additional cleanup the specific view model needs when a world is closed
-        {
-
-        }
 
         //Removes the world model attached to the view model
         public void closeWorld()
         {
             //remove all stored values
             world = null;
-            NumberOfLevels = 0;
 
             levelGraphic.Clear();
 
-            worldAttached = false;
             RaisePropertyChanged("worldAttached");
         }
 
 
-
-
-        public void drawLevel(int levelNum)
+        public void drawLevel()
         {
-            drawLevelBody(levelNum, levelGraphic);
+            drawLevelBody(levelGraphic);
         }
 
-        public void drawLevelBody(int levelNum, SmartObservableCollection<System.Windows.FrameworkElement> graphic)
+        public void drawLevelBody(SmartObservableCollection<System.Windows.FrameworkElement> graphic)
         {
             if (world != null) //sanity check
             {
@@ -119,7 +103,7 @@ namespace PCG_GUI.ViewModels
                 List<Shape> toDraw = new List<Shape>();
                 List<TextBlock> allRoomNums = new List<TextBlock>();
 
-                Level levelToDraw = world.getLevel(levelNum);
+                Level levelToDraw = world.getLevel();
 
                 for (int i = 0; i < levelToDraw.xDimension; i++)
                 {
@@ -273,7 +257,7 @@ namespace PCG_GUI.ViewModels
             System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
             startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
             startInfo.FileName = "cmd.exe";
-            startInfo.Arguments = "/C clingo.exe PCG.txt TempWorldDef.txt --seed=" + unixTimestamp + " --rand-freq .1 > TempResults.pcg";
+            startInfo.Arguments = "/C clingo.exe PCG.txt TempWorldDef.txt --seed=" + unixTimestamp + " --rand-freq .01 > TempResults.pcg";
             process.StartInfo = startInfo;
             process.Start();
             process.WaitForExit();

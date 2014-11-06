@@ -89,7 +89,7 @@ edge(V,U) :- edge(U,V).
 
 %key code
 
-#const minKeys = 0.
+#const minKeys = 1.
 #const maxKeys = 3.
 possibleNumKeysRange(minKeys .. maxKeys).
 

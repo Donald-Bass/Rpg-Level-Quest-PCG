@@ -1,4 +1,9 @@
-﻿using System;
+﻿/*  This class we used to represent a room in the graph/eventual dungon level. It doesn't actually do all that mutch
+ * 
+ */
+
+/*
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,12 +13,12 @@ namespace PCG_GUI.FlowModel
 {
     class FlowRoom
     {
-        public int roomNumber { get; set; }
+        public int roomNumber { get; set; } //what is the number of rhe room
         public Boolean soft { get; set; } //is the room soft (i.e are links outside the specifieds ones allowed)
 
-        public List<int> allLinks { get; set; }
+        public List<int> allLinks { get; set; } //List of indecies of links the room is part of
 
-        private int numConnections;
+        private int numConnections; //how many rooms the room is connected to. This was different from the number of links long ago, know doesn't mean much
 
         public FlowRoom(int num)
         {
@@ -44,17 +49,18 @@ namespace PCG_GUI.FlowModel
             //write that this is a predefined room
             //file.WriteLine("predefined(" + roomNumber.ToString() + ").");
 
-            if (!soft) //if the room is not soft (can have additional edges added) constrict the number of edges
+            if (!soft) //if the room is not soft (meaning it can't have additional edges added) constrict the number of edges allowed
             {
                 file.WriteLine("numberOfEdges(" + roomNumber + "," + allLinks.Count + ").");
             }
 
             //if this isn't a soft room add a connection number constraint
-            /*if(!soft)
-            {
-                file.WriteLine(":- {connectedRooms(" + roomNumber.ToString() + ",ID2) : rectRange(ID2) } " + (numConnections - 1) +  ".");
-                file.WriteLine(":- " + (numConnections + 1) + " {connectedRooms(" + roomNumber.ToString() + ",ID2) : rectRange(ID2) }.");
-            }*/
+            //if(!soft)
+            //{
+            //    file.WriteLine(":- {connectedRooms(" + roomNumber.ToString() + ",ID2) : rectRange(ID2) } " + (numConnections - 1) +  ".");
+            //   file.WriteLine(":- " + (numConnections + 1) + " {connectedRooms(" + roomNumber.ToString() + ",ID2) : rectRange(ID2) }.");
+            //}
         }
     }
 }
+*/

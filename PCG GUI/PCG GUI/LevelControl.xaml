@@ -11,7 +11,7 @@
         </Grid.RowDefinitions>
         <ScrollViewer x:Name="MapScroll" HorizontalAlignment="Left" Height="577" VerticalAlignment="Top" Width="497" Margin="21,295,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <ItemsControl x:Name="LevelViewer" ItemsSource="{Binding BaseView.levelGraphic}"
-    			HorizontalAlignment="Left" Height="{Binding LevelViewModel.Y_Length}" VerticalAlignment="Top" Width="{Binding LevelViewModel.X_Length}" Margin="0,0,-1,-1" MouseLeftButtonDown="Map_MouseLeftButtonDown" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
+    			HorizontalAlignment="Left" Height="{Binding LevelViewModel.Y_Length}" VerticalAlignment="Top" Width="{Binding LevelViewModel.X_Length}" Margin="0,0,-1,-1" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <Canvas Width="4000" Height="4000"/>
@@ -39,7 +39,7 @@
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Header="Step" DisplayMemberBinding="{Binding stepNum}"  />
-                        <GridViewColumn Header="Step Contents" DisplayMemberBinding="{Binding stepContents}"  />
+                        <GridViewColumn Header="Step Contents" Width ="300" DisplayMemberBinding="{Binding stepContents}"  />
                     </GridView>
                 </ListView.View>
             </ListView>

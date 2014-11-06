@@ -1,5 +1,20 @@
-﻿/*  The PlanLevel class is used to store a users desired plans for the level in the form of a partially ordered graph, and convert that into code for Clingo.s
+﻿/*  The PlanLevel class is used to store a users desired plans for the level in the form of a partially ordered graph, and convert that into code for Clingo.
  * 
+ * To be more specific the PlanLevel class represents the overall plan for the level. The plan is a list of steps, with each step holding a set of rooms (which are intended to represent the core content of
+ * the level) that must be visited by the player before any room that is part of a future step can be reached.
+ * 
+ * There are several pieces of functionality found here that is not usable from the GUID yet. The main two are pacing/links, and optional rooms. Pacing and Links are really the same thing for the most part 
+ * a way of dicating how much time passes between major rooms. A link specifies one room in one step and a second in the next step, and says that the first room is the last room visited in it's step, 
+ * the second room is the first room visited in it's step, and a set number of rooms not specifically part of the plan must occur inbetween. Pacing is similar but doesn't have predetermined rooms 1 and 2
+ * Instead pacing just says that somehow there is X non important rooms between the last room of one step and the first room of the next (This ends up using the same code as links for now with the GUI 
+ * randomly picking rooms to be room 1 and 2). 
+ * 
+ * Optional rooms are rooms that are well optional. This means that they must be placed in such a way that you must visit all the (nonoptional) rooms from previous steps, before it can be reached
+ * but once it can be reached, visiting it is not a requirement to reach any of the rooms in the next step. This is useful for adding side rooms and the like.
+ * 
+ * Also the first room is hardcoded to be the entrance and be the only room in its step to simplfy the pcg. The UI currently doesn't really give any feedback on this issue though
+ * 
+ * Also search for TODO and you may find a few bugs that I didn't have time to fix but knew about. Hopefully though I will have fixed them and removed this
  * */
 
 using System;
@@ -13,22 +28,24 @@ using System.ComponentModel;
 
 namespace PCG_GUI.PlanModel
 {
-    public class planStep :  INotifyPropertyChanged
+    //The planStep class is used to represent a single step in the overall plan. The INotifyPropertyChanged allows the class to notify the GUI when some of the values stored in it changes
+    //Allowing the UI to match the actual contents of the plan being generated
+    public class planStep :  INotifyPropertyChanged 
     {
-        public planStep(int stepNum)
+        public planStep(int stepNum) 
         {
             this.stepNum = stepNum;
             stepRooms = new List<PlanRoom>();
+            pacing = 1;
         }
 
-        public List<PlanRoom> stepRooms { get; set; }
+        public List<PlanRoom> stepRooms { get; set; } //list of all rooms part of the current step
 
-        public int trueStepNum;
-
-        public void stepUpdated()
-        {
-            RaisePropertyChanged("stepContents");
-        }
+        //we need a variable to keep track what number step the current object holds. This is complicated by the fact that we need to alert the GUI if the step number
+        //disapears (such as if a previous step was deleted) so we need a custom set function. Since this set function has to change the value of the variable to avoid an infinite loop of the set
+        //function calling it self we have a trueStepNum variable that actually holds the value, and a stepNum "variable" which has the get and set functions that the rest of the code uses
+        //There is probally a better way of doing this if you know C# better then I do but this works
+        public int trueStepNum; //what is the number of the step. 
 
         public int stepNum
         {
@@ -46,6 +63,17 @@ namespace PCG_GUI.PlanModel
             }
         }
 
+
+        public int pacing; //how many rooms should occur between this level and the next
+
+        //if we update the contents of the step this room alerts the gui to that fact
+        public void stepUpdated()
+        {
+            RaisePropertyChanged("stepContents");
+        }
+
+      
+        //Function that returns a string representation of the contents of the step, listing the types of rooms we have in the step
         public string stepContents
         {
             get
@@ -67,12 +95,18 @@ namespace PCG_GUI.PlanModel
                     {
                         contents += "TreasureRoom ";
                     }
+
+                    else if(r.type == roomTypes.Entrance)
+                    {
+                        contents += "Entrance ";
+                    }
                 }
 
                 return contents;
             }
         }
 
+        //used to alert the GUI to any changes in data
         internal void RaisePropertyChanged(string prop)
         {
             if (PropertyChanged != null) { PropertyChanged(this, new PropertyChangedEventArgs(prop)); }
@@ -81,67 +115,56 @@ namespace PCG_GUI.PlanModel
 
     };
 
+    //This class represents the overall plan. It essential has a list of planStep objects and the functions needed to manage the overall list
     public class PlanLevel : INotifyPropertyChanged
     {
-        private List<PlanLink> links; //List of lists. Each individual list represents 1 step in the plan, and all the rooms that are part of that step. The overall list represents the order of the steps
+        public ObservableCollection<planStep> stepList { get; set; } //An ObservableCollection is a special type of collection that allows the gui to detect items being added and removed
+                                                                     //and in general draw data from
 
-        public ObservableCollection<planStep> stepList { get; set; }
-
-        public int stepIndex {get; set;}
+        public int stepIndex {get; set;} //what is the index of the step currently selected in the gui
  
 
         int nextRoomNumber; //room number to give to the next room. Used to avoid having duplicate room numbers
-        int maxExtraRooms; //max number of extra rooms to add that are not part of the plan
+        //int maxExtraRooms; //max number of extra rooms to add that are not part of the plan. This is not yet implemented in any way shape or form
 
         //constructor
         public PlanLevel()
         {
-            nextRoomNumber = 1; //the first room should be 1
-            links = new List<PlanLink>();
+            nextRoomNumber = 2; //The first room is hardcoded to be the entrance so the first room we create will be room 2
 
             stepList = new ObservableCollection<planStep>();
 
-            stepIndex = -1;
+            stepIndex = -1; //the UI starts out with no step selected
 
-            //sample plan
-            //addRoomToLevel(0);
-            //addRoomToLevel(0);
-            //addRoomToLevel(0);
-            //addRoomToLevel(1);
-            //addRoomToLevel(1);
-            //addRoomToLevel(1);
-            //addRoomToLevel(2);
-            //addRoomToLevel(2);
-            //addRoomToLevel(2);
+            //create a step containing just the entrance and then a second blank step for the user to start putting rooms in
+            PlanRoom Entrance = new PlanRoom(1, roomTypes.Entrance);
 
-            //plan[0][1].optionalRoom = true;
-            //plan[1][1].optionalRoom = true;
-            //plan[2][1].optionalRoom = true;
-
-            //addLink(3, 6, 2);
-            //addLink(4, 9, 2);
-
+            addStep();
+            addRoomToStep(Entrance, 0);
+            addStep();
         }
 
-        //adds a step to the step list
+        //adds an empty step to the step list
         public void addStep()
         {
             planStep nextStep = new planStep(stepList.Count + 1);
             stepList.Insert(stepList.Count, nextStep);
         }
 
+        //Takes the currently selected step and removes all rooms from said step, as well as update all the room numbers to ensure there is no gap in them (One of the assumptions
+        //The PCG code makes to keep things simple is that if it is told that there are X rooms those rooms have the numbers 1..X with no gaps).
         public void clearStep()
         {
-            if (stepIndex != -1)
+            if (stepIndex > 0) //the first step is hardcoded and shouldn't be changable anything else is fair game
             {
-                //Since we can't have a gap in room numbers update all the room numbers to remove the gap removing this rooms creates
-                int roomsRemoved = stepList[stepIndex].stepRooms.Count;
+                //Since we can't have a gap in room numbers we need update all the room numbers to remove the gap removing this rooms creates
+                int roomsRemoved = stepList[stepIndex].stepRooms.Count; //get the number of rooms removed
 
-                nextRoomNumber -= roomsRemoved;
+                nextRoomNumber -= roomsRemoved; //update the next room number to use to account for the rooms removed
 
                 if(stepIndex != stepList.Count - 1) //if the step is not the last in the list
                 {
-                    for(int i = stepIndex + 1; i < stepList.Count; i++)
+                    for(int i = stepIndex + 1; i < stepList.Count; i++) //reduce the room numbers of all rooms that come after the step
                     {
                         foreach (PlanRoom r in stepList[i].stepRooms)
                         {
@@ -150,18 +173,19 @@ namespace PCG_GUI.PlanModel
                     }
                 }
 
-                stepList[stepIndex].stepRooms.Clear();
+                stepList[stepIndex].stepRooms.Clear(); //remove all rooms
 
-                stepList[stepIndex].stepUpdated();
+                stepList[stepIndex].stepUpdated(); //notify the gui that the step was updated
             }
         }
 
+        //this function removes the step currently selected in the GUI  from the stepList 
         public void deleteStep()
         {
-            System.Console.WriteLine(stepIndex);
-
-            if (stepIndex != -1) //if a step is selected
+            if (stepIndex > 0) //the first step is hardcoded and shouldn't be changable anything else is fair game
             {
+                clearStep(); //We need to clear all the rooms from the step first or the room numbers will be incorrect
+
                 if (stepIndex < stepList.Count - 1) //if the item selected is not the last in the list we need to decrease the step numbers for the rest of the list
                 {
                     for (int i = stepIndex + 1; i < stepList.Count; i++)
@@ -170,23 +194,24 @@ namespace PCG_GUI.PlanModel
                     }
                 }
 
-                stepList.RemoveAt(stepIndex);
+                stepList.RemoveAt(stepIndex); //finally remove the step
             }
         }
 
-        //Add a Planroom room to the plan at the given step (with step being a 0 indexed value)
+        //Add a Planroom room to the plan in the step found at the given index step (with step being a 0 indexed value (so the first step has an index of 0)
         public void addRoomToStep(PlanRoom room, int step)
         {
-            while (stepList.Count <= step) //if there are not enough steps add them
+            while (stepList.Count <= step) //This should probally never trigger but if the index is for a step that hasn't been created, keep creating new steps until said step is created)
             {
                 planStep nextStep = new planStep(stepList.Count + 1);
                 stepList.Insert(stepList.Count, nextStep);
             }
 
             stepList[step].stepRooms.Insert(stepList[step].stepRooms.Count, room);
-            stepList[step].stepUpdated();
+            stepList[step].stepUpdated(); //notify the gui that the step has been updated
         }
 
+        //These functions add rooms of different types
         public void addBossRoom()
         {
             addRoom(roomTypes.BossFight);
@@ -197,16 +222,15 @@ namespace PCG_GUI.PlanModel
             addRoom(roomTypes.TreasureRoom);
         }
 
-
         public void addGauntlet()
         {
             addRoom(roomTypes.Gauntlet);
         }
 
-
+        //Given a type of room, create a room of that type and add it to the step currently selected
         public void addRoom(roomTypes type)
         {
-            if(stepIndex != -1)
+            if(stepIndex > 0) //the first step is hardcoded and shouldn't be changable. Everything else is fair game
             {
 
             PlanRoom room = new PlanRoom(nextRoomNumber, type);
@@ -216,14 +240,7 @@ namespace PCG_GUI.PlanModel
             }
         }
 
-        /*public void addRoomToLevel(int step)
-        {
-            PlanRoom r = new PlanRoom(nextRoomNumber, roomTypes.BossFight);
-            nextRoomNumber++;
-
-            addRoomToLevel(r, step);
-        }*/
-
+        //Add a link between 2 rooms. This functionality is incomplete
         public void addLink(int room1, int room2, int linkLength)
         {
             //PlanLink l = new PlanLink(room1, plan[getStepOfRoom(room1)], room2, plan[getStepOfRoom(room2)], linkLength);
@@ -231,13 +248,12 @@ namespace PCG_GUI.PlanModel
             //links.Insert(links.Count, l);
         }
 
-
+        //Write a set of Clingo rules to a file that contain the series of rules necessary to ensure that whatever Clingo generates as output matches the plan
         public void writePlan(System.IO.StreamWriter file)
         {
-            //write the necessary constants. Hardcoded for the moment won't be for long
-
+            //write the necessary constants. Hardcoded for the moment 
             int minRoomsNeeded = 0; //how many rooms are needed
-            int maxRoomsNeeded = 0;
+            int maxRoomsNeeded = 0; //the maximum number of rules to allow
             bool optional = false; //have any optional rooms been found
             bool linkRules = false; //are any links present that require us to print the rules for links 
             bool linkRulesForbid = false; //are any links present that require us to print the additional rules for links with forbidden rooms
@@ -250,7 +266,7 @@ namespace PCG_GUI.PlanModel
                     r.writeRoom(file);
 
                     //Add xBeforeY atoms as appropiate for each room in the previous step.
-                    //NOTE. This will fail quietly if I end up with an empty step which I haven't guarded against currently. 
+                    //TODO. This will fail quietly if I end up with an empty step which I haven't guarded against currently. 
                     if (i != 0) //if this is not the first step
                     {
                         Fact xBeforeY = new Fact();
@@ -272,7 +288,8 @@ namespace PCG_GUI.PlanModel
                     {
                         optional = true;
 
-                        //OK defining this is tricker then I expected so lets say that an optional room just has only one edge
+                        //OK defining this is tricker then I expected so for now lets say that an optional room just has only one edge connecting it
+                        //to the rest of the graph
                         Fact numberOfEdges = new Fact();
                         numberOfEdges.setPredicate("numberOfEdges");
                         numberOfEdges.setNumericValue(0, r.roomNumber);
@@ -284,7 +301,7 @@ namespace PCG_GUI.PlanModel
                         numberOfEdges.setPredicate("keyRoom");
                         numberOfEdges.setNumericValue(0, r.roomNumber);
                         numberOfEdges.setValue(1, "_");
-                        file.Write(numberOfEdges.getStringRepresentation(true, true));
+                        file.Write(numberOfEdges.getStringRepresentation(true, true)); //the second true means the atom we generated must not exist
 
                         /*
                         Fact mustVisitXtoReachY = new Fact();
@@ -312,7 +329,7 @@ namespace PCG_GUI.PlanModel
                                 if (r.roomNumber != n.roomNumber) //if this is a different room
                                 {
                                     mustVisitXtoReachY.setNumericValue(0, n.roomNumber);
-                                    file.Write(mustVisitXtoReachY.getStringRepresentation(true, true));
+                                    file.Write(mustVisitXtoReachY.getStringRepresentation(true, true)); //the second true means the atom we generated must not exist
                                 }
                             }
                         }
@@ -322,24 +339,44 @@ namespace PCG_GUI.PlanModel
                 }
             }
 
-            foreach(PlanLink l in links)
+            int previousRoom2 = -1; //keep track of what was the second room of the previous link generated to implement pacing
+
+            //Go through the steps and handle the pacing between them. This will need updating if other links are added but the code should remain quite similar
+            for (int i = 0; i < stepList.Count - 1; i++) //for each step but the last
             {
+                System.Random rand = new System.Random();
+
+                //randomly pick a room from the current step and the next step to generate a link between
+                int room1 = stepList[i].stepRooms[rand.Next(0,stepList[i].stepRooms.Count)].roomNumber;
+ 
+                while(stepList[i].stepRooms.Count > 1 && room1 == previousRoom2) //if there is more then 1 room in the current step don't pick a room that was used as room2 on the previous step
+                {
+                    room1 = stepList[i].stepRooms[rand.Next(0, stepList[i].stepRooms.Count)].roomNumber;
+                }
+                
+                int room2 = stepList[i+1].stepRooms[rand.Next(0, stepList[i+1].stepRooms.Count)].roomNumber;
+                previousRoom2 = room2;
+
+                PlanLink l = new PlanLink(room1, stepList[i].stepRooms, room2, stepList[i+1].stepRooms, stepList[i].pacing); //generate a link between those two rooms
 
                 linkRules = true;
-                if (l.getForbiddenRoomsCount() > 0)
+                if (l.getForbiddenRoomsCount() > 0) //check if we need to forbid any rooms. (More detail about what this means in the PlanLink class and below
                 {
                     linkRulesForbid = true;
-                    minRoomsNeeded += l.linkLength;
                 }
 
+                minRoomsNeeded += l.linkLength; //add the number of rooms we need in the link to the total number of rooms needed
 
-                 l.writeLink(file);
+                l.writeLink(file);
 
             }
 
-            maxRoomsNeeded = minRoomsNeeded + maxExtraRooms;
+            maxRoomsNeeded = minRoomsNeeded + 2; //Placeholder. Allow for there to be 2 more rooms then necessary
 
-            file.WriteLine("levelStartRoom(1).");
+            file.WriteLine("levelStartRoom(1)."); //Room 1 is hardcoded to always be the start of the level
+
+            //Finally output only the clingo rules needed for the particular plan. This will include extensive comments in the output file describing what they do, which is
+            //all the stuff found after each % if you want to read them in this file
 
             //Clingo will throw a fit if we put in the rules for optional rooms and no rooms using it are specified. So only write this when we need it
             if(optional)
@@ -368,6 +405,9 @@ namespace PCG_GUI.PlanModel
             if (linkRulesForbid)
             {
                 file.WriteLine("% Rules for links with forbidden rooms.");
+                file.WriteLine("% Forbidden rooms are rooms the link is not allowed to pass through.");
+                file.WriteLine("% It is also disallowed for there to be a path between the two endpoints of the link that passes through a forbidden room and is shorter then the actual link's path is.");
+                file.WriteLine("% This is used when connecting the last room of one step with the first room of another to ensure that you don't end up with other rooms from those step in between them violating their status as last and first.");
                 file.WriteLine("% findNotReachableInN(C,U,V,CN,N) means we are at C, we are trying to reach V having started at U, we have passed through CN rooms, and our target distance is N");
                 file.WriteLine("findNotReachableInN(U,U,V,0,N)  :- notRoomsBetween(U,V,N). %start looking for a path at U");
                 file.WriteLine("findNotReachableInN(C2,U,V,CN+1,N)  :-  findNotReachableInN(C1,U,V,CN,N), CN < N, edge(C1,C2).");
@@ -388,9 +428,9 @@ namespace PCG_GUI.PlanModel
         {
             int roomStep = -1;
 
-            for(int i = 0; i < stepList.Count; i++)
+            for(int i = 0; i < stepList.Count; i++) //for each step
             {
-                for (int j = 0; j < stepList[i].stepRooms.Count; j++)
+                for (int j = 0; j < stepList[i].stepRooms.Count; j++) //for eah room in that step
                 {
                     if (stepList[i].stepRooms[j].roomNumber == roomNumber)
                     {
@@ -402,10 +442,20 @@ namespace PCG_GUI.PlanModel
             return roomStep;
         }
 
+        //This function resets the plan to it's original mostly empty state. (One step with just the enterance, then a second empty step)
         public void clear()
         {
-            nextRoomNumber = 1;
+            nextRoomNumber = 2;
             stepList.Clear();
+
+            stepIndex = -1;
+
+            PlanRoom Entrance = new PlanRoom(1, roomTypes.Entrance);
+
+            addStep();
+            addRoomToStep(Entrance, 0);
+            addStep();
+
             RaisePropertyChanged("stepList");
         }
 

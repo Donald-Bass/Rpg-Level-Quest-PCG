@@ -29,15 +29,10 @@ namespace PCG_GUI
             InitializeComponent();
         }
 
-        private void Map_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            viewModel.LevelView.editLevel((int)e.GetPosition(LevelViewer).X, (int)e.GetPosition(LevelViewer).Y);
-
-        }
-
          private void AddStep_Click(object sender, RoutedEventArgs e)
         {
             viewModel.LevelView.plan.addStep();
+            LevelPlan.SelectedIndex = viewModel.LevelView.plan.stepList.Count - 1;
         }
 
          private void ClearStep_Click(object sender, RoutedEventArgs e)

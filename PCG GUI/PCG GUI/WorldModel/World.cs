@@ -1,4 +1,7 @@
-﻿//holds the state of the entire world.
+﻿/* The World class is another class whose purpose is confusing do to a change in direction in the research. It was originally going to be possible for there to be multiple levels generated
+ * by the PCG and the world class would have held them all and handled any communications between the GUI and a specific level. There is only a single level being generated now
+ * so the World class is mostly uncessary complication.
+ */
 
 using PCG_GUI.WorldModel;
 using System;
@@ -18,17 +21,13 @@ namespace PCG_GUI.Facts
         const int LEVEL_X_DIMENSION = 10;
         const int LEVEL_Y_DIMENSION = 10;
 
-        public int numLevels { get; private set; } //how many different levels are there
-        int[,] levelDimensions; //dimensions of each level. First index is level number second is x/y (0 is x dimension 1 is y dimension)
-        private List<Level> allLevels; //all levels
+        private Level pcgLevel; //all levels
 
         public World()
         {
-            numLevels = 0;
             roomFacts = new List<Fact>();
             edgeFacts = new List<Fact>();
-            allLevels = new List<Level>();
-
+            pcgLevel = new Level(LEVEL_X_DIMENSION, LEVEL_Y_DIMENSION);
         }
 
         public void parseClingoFile(System.IO.StreamReader file)
@@ -44,10 +43,6 @@ namespace PCG_GUI.Facts
 
             //parse all facts
             //allFacts = new Fact[StringFacts.Length];
-            
-            numLevels = 1;
-            setUpLevels();
-
 
             for (int i = 0; i < StringFacts.Length; i++ )
             {
@@ -67,42 +62,7 @@ namespace PCG_GUI.Facts
             file.WriteLine(""); 
             file.WriteLine("");
 
-
-            Fact totalLevels = new Fact("totalLevels", new String[] { "1" });
-            file.Write(totalLevels.getStringRepresentation());
-
-            /*
-            //placeholder till npcs are actually stored in memory
-            foreach (Fact f in npcFacts)
-            {
-                file.Write(f.getStringRepresentation());
-            }
-
-            //placeholder till quests are actually stored in memory
-            foreach (Fact f in questFacts)
-            {
-                file.Write(f.getStringRepresentation());
-            }*/
-
-            for(int i = 0; i < numLevels; i++)
-            {
-                allLevels[i].write(file, i);
-            }
-        }
-
-        //numberOfLevels - number of levels to generate. If -1 generate as many as clingo feels is necessary
-        public void writeClingoInputFile(System.IO.StreamWriter file, int numberOfLevels)
-        {
-            if (numberOfLevels != -1)
-            {
-                Fact totalLevels = new Fact("totalLevels", new String[] { numberOfLevels.ToString() });
-                file.Write(totalLevels.getStringRepresentation(true));
-            }
-
-            for (int i = 0; i < numLevels; i++)
-            {
-                allLevels[i].write(file, i, true);
-            }
+            pcgLevel.write(file, 1);
         }
 
         //does the inital processing of facts. The order is not all that reliable so store everything that has any prequristies to be processed
@@ -119,17 +79,6 @@ namespace PCG_GUI.Facts
             }
         }
 
-        //determine the dimensions of each level and create the level objects
-        //Must have already parsed the clingo file and sorted all the facts from it
-        private void setUpLevels()
-        {
-            for(int i = 0; i < numLevels; i++)
-            {
-                Level newLevel = new Level(LEVEL_X_DIMENSION, LEVEL_Y_DIMENSION);
-                allLevels.Add(newLevel);
-            }
-        }
-    
         //go through the level facts to build all the levels
         private void buildLevels()
         {
@@ -138,7 +87,7 @@ namespace PCG_GUI.Facts
             //Place the rooms on the temporaly vizulized level
             foreach (Fact f in roomFacts)
             {
-                allLevels[0].setTileType(f.getNumericValue(1), f.getNumericValue(2), TileType.floor);
+                pcgLevel.setTileType(f.getNumericValue(1), f.getNumericValue(2), TileType.floor);
             }
 
             buildRoomInfo();
@@ -149,10 +98,10 @@ namespace PCG_GUI.Facts
                 int room1 = f.getNumericValue(0);
                 int room2 = f.getNumericValue(1);
 
-                int X1 = allLevels[0].allRooms[room1].X;
-                int Y1 = allLevels[0].allRooms[room1].Y;
-                int X2 = allLevels[0].allRooms[room2].X;
-                int Y2 = allLevels[0].allRooms[room2].Y;
+                int X1 = pcgLevel.allRooms[room1].X;
+                int Y1 = pcgLevel.allRooms[room1].Y;
+                int X2 = pcgLevel.allRooms[room2].X;
+                int Y2 = pcgLevel.allRooms[room2].Y;
 
                 System.Console.WriteLine("room1 " + room1 + " X1 " + X1 + " Y1 " + Y1);
                 System.Console.WriteLine("room2 " + room2 + " X2 " + X2 + " Y2 " + Y2);
@@ -178,7 +127,7 @@ namespace PCG_GUI.Facts
                 {
                     for (int i = X1 + 1; i < X2; i++)
                     {
-                        allLevels[0].setTileType(i, Y1, TileType.arena);
+                        pcgLevel.setTileType(i, Y1, TileType.arena);
                     }
                 }
 
@@ -188,16 +137,13 @@ namespace PCG_GUI.Facts
                 {
                     for (int i = Y1 + 1; i < Y2; i++)
                     {
-                        allLevels[0].setTileType(X1, i, TileType.treasureRoom);
+                        pcgLevel.setTileType(X1, i, TileType.treasureRoom);
                     }
                 }
 
             }
 
-            foreach(Level l in allLevels)
-            {
-                l.finalizeLevel();
-            }
+            pcgLevel.finalizeLevel();
         }
 
         //function that goes through all the rectangle and room ID facts to determine what room belongs where
@@ -231,28 +177,19 @@ namespace PCG_GUI.Facts
 
             while(tempRooms[i] != null && i < 100)
             {
-                allLevels[0].addRoom(tempRooms[i]);
+                pcgLevel.addRoom(tempRooms[i]);
                 i++;
             }
 
         }
 
         //setters and getters
-        public Level getLevel(int levelNum)
+        public Level getLevel()
         {
-            return allLevels[levelNum];
+            return pcgLevel;
         }
 
-        //add an additional level
-        public void addLevel(int x, int y)
-        {
-            Level newLevel = new Level(x, y);
-            allLevels.Add(newLevel);
-            numLevels++;
-        }
     }
 
-
- 
     
 }
