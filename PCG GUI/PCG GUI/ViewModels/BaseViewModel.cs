@@ -1,6 +1,8 @@
-﻿/* The BaseViewModel class is unfortantly not very distinct from the LevelViewModel class. The original plans for this were very opened and far too ambitious including multiple levels, npcs, and quests. The
- * level view model would have all the code needed specifically for viewing an individual level, while the BaseViewModel would have the code all the different types of views would need. Unfortantly the 
- * scope ultimately changed to generating a single level so the code needed to interface with the GUI is essentially randomly scattered across the two
+﻿/* The BaseViewModel class is poorly named. This project originally had a bigger scope that would require multiple types of views with BaseViewModel holding the code they shared in common. That
+ * didn't end up happening and I was able to refactor all the code into a single class, but the original name currently remains
+ * 
+ * The BaseViewModel class acts as the interface between the UI and the actual data we're working with.
+ *
  */ 
 using System;
 using System.Collections.Generic;
@@ -11,6 +13,7 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Windows.Shapes;
 using PCG_GUI.Facts;
+using PCG_GUI.PlanModel;
 using System.Windows.Media;
 using System.Windows.Controls;
 
@@ -27,19 +30,39 @@ namespace PCG_GUI.ViewModels
                                                      //the gui to be open without a world actually being generated, and prevent the gui from doing
                                                      //anything till the user goes to menu and hits new. This is stupid. I've disabled this and programed the gui to automatically
                                                      //create an empty PlanLevel to start off with, and I've disabled the Close menu option so there will never be nothing to interact with
-        public World world;
+ 
+        public World world;                         //Once a level is generated it will be stored in this object
+
+        public PlanLevel plan { get; set; }         //the user generated plan for a level
+       
+        //these two strings are used to display the dimensions of the level
+        public String X_Dimension { get; private set; }
+        public String Y_Dimension { get; private set; }
+
+        //while these hold the actual dimensions
+        public int X_Length { get; private set; }
+        public int Y_Length { get; private set; }
+
 
         public BaseViewModel()
         {
-            world = null;
+            world = null; //there is no world at the start
             levelGraphic = new SmartObservableCollection<System.Windows.FrameworkElement>();
+            plan = new PlanLevel();
+
+            X_Dimension = "";
+            X_Length = 0;
+            Y_Dimension = "";
+            Y_Length = 0;
+
+
             //worldAttached = false;
         }
 
         //open the world contained in Filename
         public void open(string Filename)
         {
-            if (world != null)
+            if (world != null) //if we have a wor
             {
                 closeWorld(); //close the world currently open
             }
@@ -84,27 +107,46 @@ namespace PCG_GUI.ViewModels
             world = null;
 
             levelGraphic.Clear();
+            plan.clear();
+ 
+            //RaisePropertyChanged("worldAttached");
 
-            RaisePropertyChanged("worldAttached");
+            //remove any saved dimensions of the level
+
+            //remove all stored values
+            X_Dimension = "";
+            Y_Dimension = "";
+            X_Length = 0;
+            Y_Length = 0;
+
+            //tell gui values have been removed
+            RaisePropertyChanged("X_Dimension");
+            RaisePropertyChanged("Y_Dimension");
         }
 
 
+        //The next several functions handle drawing the map of the level displayed in the gui
+
+        //I honestly have no idea why this function exists instead of drawLevelBody being called directly. I really should have documented some of this
+        //code while it was fresh in my mind rather then a year later
         public void drawLevel()
         {
             drawLevelBody(levelGraphic);
         }
 
+        //This is the main function for drawing the map
         public void drawLevelBody(SmartObservableCollection<System.Windows.FrameworkElement> graphic)
         {
-            if (world != null) //sanity check
+            if (world != null) //sanity check to make sure there is a level to draw
             {
-                graphic.Clear();
+                graphic.Clear(); //remove any previous drawings
 
-                List<Shape> toDraw = new List<Shape>();
-                List<TextBlock> allRoomNums = new List<TextBlock>();
+                List<Shape> toDraw = new List<Shape>();  //start a list of shapes to draw
+                List<TextBlock> allRoomNums = new List<TextBlock>(); //start a list of room numbers to place
 
-                Level levelToDraw = world.getLevel();
+                Level levelToDraw = world.getLevel(); //get the actual level
 
+                //for each tile draw the tile
                 for (int i = 0; i < levelToDraw.xDimension; i++)
                 {
                     for (int j = 0; j < levelToDraw.yDimension; j++)
@@ -113,21 +155,25 @@ namespace PCG_GUI.ViewModels
                     }
                 }
 
+                //add in gridlines
                 drawWallGrid(levelToDraw, toDraw);
 
-                graphic.AddRange(toDraw);
-                graphic.AddRange(allRoomNums);
+                graphic.AddRange(toDraw); //add all the shapes to the actual graphic
+                graphic.AddRange(allRoomNums); //add the room numbers to the graphic as well
 
             }
         }
+
+        //This handles drawing the specific tile t, located at coordinates x,y in the level
         private void drawTile(Tile t, int x, int y, List<Shape> toDraw, List<TextBlock> allRoomNums)
         {
+            //create a shape to represent the tile
             Rectangle drawnTile = new Rectangle();
             SolidColorBrush fillBrush = new SolidColorBrush();
             drawnTile.Height = GRID_SIZE;
             drawnTile.Width = GRID_SIZE;
 
-            switch (t.tType)
+            switch (t.tType) //pick a color for the tile based on it's type. Many of these are placeholders but that should be fixed by the time the code is handed over
             {
                 case TileType.floor:
                     fillBrush.Color = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF); //white
@@ -154,10 +200,11 @@ namespace PCG_GUI.ViewModels
 
             }
 
+            //fill the tile with the chosen color
             drawnTile.Fill = fillBrush;
-            Canvas.SetLeft(drawnTile, x * GRID_SIZE);
+            Canvas.SetLeft(drawnTile, x * GRID_SIZE); //set the coordinates. The coordinates are soley the coordinates within the canvas being drawn, so the upper left? of the canvas is 0,0 and the math is simple
             Canvas.SetTop(drawnTile, y * GRID_SIZE);            
-            toDraw.Add(drawnTile);
+            toDraw.Add(drawnTile); //save the tile to be drawn
 
             //temp code to display room numbers of each tile for debugging purposes
             if (t.RoomNumber != -1)
@@ -171,34 +218,20 @@ namespace PCG_GUI.ViewModels
 
         }
 
+        //Draws grid lines on the level graphic to make it clear where each tile starts and ends
         private void drawWallGrid(Level levelToDraw, List<Shape> toDraw)
         {
             //draw horizontal lines
-            for (int i = 0; i < levelToDraw.xDimension; i++)
+            for (int i = 0; i < levelToDraw.xDimension; i++) //for each column
             {
-                for (int j = 0; j <= levelToDraw.yDimension; j++)
+                for (int j = 0; j <= levelToDraw.yDimension; j++) //for each row
                 {
+                    //draw a line from one edge of the column to the other
                     Line gridLine = new Line();
 
-                    if ((j == levelToDraw.yDimension && levelToDraw.levelMap[i, j - 1].southWall == WallType.wall) || (j != levelToDraw.yDimension && levelToDraw.levelMap[i, j].northWall == WallType.wall))
-                    {
-                        gridLine.Stroke = System.Windows.Media.Brushes.Black;
-                        gridLine.StrokeThickness = 2;
-                    }
-
-                    else if ((j == levelToDraw.yDimension && levelToDraw.levelMap[i, j - 1].southWall == WallType.door) || (j != levelToDraw.yDimension && levelToDraw.levelMap[i, j].northWall == WallType.door))
-                    {
-                        gridLine.Stroke = System.Windows.Media.Brushes.Brown;
-                        gridLine.StrokeThickness = 2;
-                    }
-
-
-                    else
-                    {
-                        gridLine.Stroke = System.Windows.Media.Brushes.Gray;
-                        gridLine.StrokeThickness = 1;
-                    }
-
+                    gridLine.Stroke = System.Windows.Media.Brushes.Gray;
+                    gridLine.StrokeThickness = 1;
+                  
                     gridLine.X1 = i * GRID_SIZE;
                     gridLine.X2 = i * GRID_SIZE + GRID_SIZE;
                     gridLine.Y1 = j * GRID_SIZE;
@@ -206,30 +239,16 @@ namespace PCG_GUI.ViewModels
                     toDraw.Add(gridLine);
                 }
             }
-            //draw horizontal lines
-            for (int i = 0; i <= levelToDraw.xDimension; i++)
+            //draw vertical lines lines
+            for (int i = 0; i <= levelToDraw.xDimension; i++) //for each column
             {
-                for (int j = 0; j < levelToDraw.yDimension; j++)
+                for (int j = 0; j < levelToDraw.yDimension; j++) //for each row
                 {
-                    Line gridLine = new Line();
+                    //draw a line from the top of the row to the bottom
+                    Line gridLine = new Line(); 
 
-                    if ((i == levelToDraw.xDimension && levelToDraw.levelMap[i - 1, j].eastWall == WallType.wall) || (i != levelToDraw.xDimension && levelToDraw.levelMap[i, j].westWall == WallType.wall))
-                    {
-                        gridLine.Stroke = System.Windows.Media.Brushes.Black;
-                        gridLine.StrokeThickness = 2;
-                    }
-
-                    else if ((i == levelToDraw.xDimension && levelToDraw.levelMap[i - 1, j].eastWall == WallType.door) || (i != levelToDraw.xDimension && levelToDraw.levelMap[i, j].westWall == WallType.door))
-                    {
-                        gridLine.Stroke = System.Windows.Media.Brushes.Brown;
-                        gridLine.StrokeThickness = 2;
-                    }
-
-                    else
-                    {
-                        gridLine.Stroke = System.Windows.Media.Brushes.Gray;
-                        gridLine.StrokeThickness = 1;
-                    }
+                    gridLine.Stroke = System.Windows.Media.Brushes.Gray;
+                    gridLine.StrokeThickness = 1;
 
                     gridLine.X1 = i * GRID_SIZE;
                     gridLine.X2 = i * GRID_SIZE;
@@ -240,19 +259,19 @@ namespace PCG_GUI.ViewModels
             }
         }
 
-        //the body of the runClingo code
-        //numberOfLevels - number of levels to generate. If -1 generate as many as clingo feels is necessary
-        public void runClingo(PCG_GUI.PlanModel.PlanLevel plan)
+        //This code allows the GUI to call and run Clingo to generate a level
+        public void runClingo()
         {
-            System.IO.StreamWriter file = new System.IO.StreamWriter("TempWorldDef.txt");
+            System.IO.StreamWriter file = new System.IO.StreamWriter("TempWorldDef.txt"); //create a text file to store the rules we generate to feed to Clingo
 
-            plan.writePlan(file);
+            plan.writePlan(file); //write the necessary ru;es
             file.Close();
 
-            //get the unix time to use as a seed
+            //get the unix time to use as a seed for Clingos RNG
             String unixTimestamp = ((Int32)(DateTime.Now.Subtract(new DateTime(1970, 1, 1))).TotalSeconds).ToString();
 
-
+            //start a process that calls Clingo from the command line, and wait for the process to exit before continuing.
+            //This will currently completly freeze the GUI. It would be nice if it didn't but that's not a priority
             System.Diagnostics.Process process = new System.Diagnostics.Process();
             System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
             startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;

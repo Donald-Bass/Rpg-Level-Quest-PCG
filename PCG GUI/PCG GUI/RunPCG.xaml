@@ -5,7 +5,7 @@
     <Grid>
         <CheckBox x:Name="numLevelsEnabled" Content="Num Levels" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="numLevelsField" HorizontalAlignment="Left" Height="25" Margin="113,25,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="49" IsEnabled="{Binding IsChecked, ElementName=numLevelsEnabled}"/>
-        <Button x:Name="RunButton" Content="RunClingo" HorizontalAlignment="Left" Margin="284,277,0,0" VerticalAlignment="Top" Width="75" Click="RunButton_Click"/>
+        <Button x:Name="RunButton" Content="RunClingo" HorizontalAlignment="Left" Margin="284,277,0,0" VerticalAlignment="Top" Width="75"/>
 
     </Grid>
 </Window>

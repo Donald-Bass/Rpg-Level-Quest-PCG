@@ -23,15 +23,16 @@ namespace PCG_GUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        ViewModelParent viewModel;
+        BaseViewModel viewModel;
 
         public MainWindow()
         {
             InitializeComponent();
-            viewModel = new ViewModelParent();
+            viewModel = new BaseViewModel();
             DataContext = viewModel;
             LevelView.viewModel = this.viewModel;
             LevelView.DataContext = viewModel;
+
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -41,7 +42,7 @@ namespace PCG_GUI
 
         private void Menu_New(object sender, RoutedEventArgs e)
         {
-            viewModel.newWorld();
+            viewModel.closeWorld();
 
             //System.IO.StreamWriter file = new System.IO.StreamWriter("WorldDef.txt");
             //PlanLevel testPlan = new PlanLevel();
@@ -66,7 +67,7 @@ namespace PCG_GUI
             {
                 // Open document
                 string filename = dlg.FileName;
-                viewModel.Open(filename);
+                viewModel.open(filename);
             }
         }
 
@@ -97,6 +98,7 @@ namespace PCG_GUI
         private void Menu_Run(object sender, RoutedEventArgs e)
         {
             viewModel.runClingo();
+            viewModel.open("TempResults.pcg");
         }
 
         private void LevelView_Loaded(object sender, RoutedEventArgs e)

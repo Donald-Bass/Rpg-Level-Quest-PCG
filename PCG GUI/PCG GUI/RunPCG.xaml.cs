@@ -1,4 +1,6 @@
-﻿using PCG_GUI.ViewModels;
+﻿/*This class was used originally to power a window that popped up when runPCG was selected in the menu to get additional input. It is no longer necessary
+ * 
+ * using PCG_GUI.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,3 +51,4 @@ namespace PCG_GUI
 
     }
 }
+*/

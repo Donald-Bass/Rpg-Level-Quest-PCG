@@ -10,8 +10,8 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <ScrollViewer x:Name="MapScroll" HorizontalAlignment="Left" Height="577" VerticalAlignment="Top" Width="497" Margin="21,295,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-            <ItemsControl x:Name="LevelViewer" ItemsSource="{Binding BaseView.levelGraphic}"
-    			HorizontalAlignment="Left" Height="{Binding LevelViewModel.Y_Length}" VerticalAlignment="Top" Width="{Binding LevelViewModel.X_Length}" Margin="0,0,-1,-1" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="LevelViewer" ItemsSource="{Binding levelGraphic}"
+    			HorizontalAlignment="Left" Height="{Binding Y_Length}" VerticalAlignment="Top" Width="{Binding X_Length}" Margin="0,0,-1,-1" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <Canvas Width="4000" Height="4000"/>
@@ -34,8 +34,8 @@
                 <ColumnDefinition Width="61*"/>
             </Grid.ColumnDefinitions>
             <Label Content="X Length:" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.45,-0.038" Margin="-246,-7,0,0"/>
-            <TextBox HorizontalAlignment="Left" Height="23" Margin="-190,-4,0,0" TextWrapping="Wrap" Text="{Binding LevelView.X_Dimension}" VerticalAlignment="Top" Width="67" Focusable="False" IsEnabled="False"/>
-            <ListView x:Name="LevelPlan" Grid.Column="2" HorizontalAlignment="Left" Height="488" Margin="202,-217,-468,-132" VerticalAlignment="Top" Width="317" ItemsSource="{Binding LevelView.plan.stepList}" SelectionChanged="LevelPlan_SelectionChanged" SelectionMode="Single">
+            <TextBox HorizontalAlignment="Left" Height="23" Margin="-190,-4,0,0" TextWrapping="Wrap" Text="{Binding X_Dimension}" VerticalAlignment="Top" Width="67" Focusable="False" IsEnabled="False"/>
+            <ListView x:Name="LevelPlan" Grid.Column="2" HorizontalAlignment="Left" Height="488" Margin="202,-217,-468,-132" VerticalAlignment="Top" Width="317" ItemsSource="{Binding plan.stepList}" SelectionChanged="LevelPlan_SelectionChanged" SelectionMode="Single">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Header="Step" DisplayMemberBinding="{Binding stepNum}"  />
@@ -46,7 +46,7 @@
         </Grid>
         <Grid Margin="407,242,331,620">
             <Label Content="Y Length:" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.45,-0.038" Margin="-246,-7,0,0"/>
-            <TextBox HorizontalAlignment="Left" Height="23" Margin="-182,-4,0,0" TextWrapping="Wrap" Text="{Binding LevelView.Y_Dimension}" VerticalAlignment="Top" Width="57" Focusable="False" IsEnabled="False"/>
+            <TextBox HorizontalAlignment="Left" Height="23" Margin="-182,-4,0,0" TextWrapping="Wrap" Text="{Binding Y_Dimension}" VerticalAlignment="Top" Width="57" Focusable="False" IsEnabled="False"/>
         </Grid>
         <Button x:Name="AddStep" Content="Add New Step" HorizontalAlignment="Left" Margin="533,525,0,0" VerticalAlignment="Top" Width="102" RenderTransformOrigin="0.5,0.5" Click="AddStep_Click">
             <Button.RenderTransform>

@@ -22,7 +22,7 @@ namespace PCG_GUI
     /// </summary>
     public partial class LevelControl : UserControl
     {
-        public ViewModelParent viewModel { get; set;  }
+        public BaseViewModel viewModel { get; set;  }
 
         public LevelControl()
         {
@@ -31,38 +31,38 @@ namespace PCG_GUI
 
          private void AddStep_Click(object sender, RoutedEventArgs e)
         {
-            viewModel.LevelView.plan.addStep();
-            LevelPlan.SelectedIndex = viewModel.LevelView.plan.stepList.Count - 1;
+            viewModel.plan.addStep();
+            LevelPlan.SelectedIndex = viewModel.plan.stepList.Count - 1;
         }
 
          private void ClearStep_Click(object sender, RoutedEventArgs e)
          {
-             viewModel.LevelView.plan.clearStep();
+             viewModel.plan.clearStep();
          }
 
          private void DeleteStep_Click(object sender, RoutedEventArgs e)
          {
-             viewModel.LevelView.plan.deleteStep();
+             viewModel.plan.deleteStep();
          }
 
          private void LevelPlan_SelectionChanged(object sender, SelectionChangedEventArgs e)
          {
-             viewModel.LevelView.plan.stepIndex = LevelPlan.SelectedIndex;
+             viewModel.plan.stepIndex = LevelPlan.SelectedIndex;
          }
 
          private void BossRoom_Click(object sender, RoutedEventArgs e)
          {
-             viewModel.LevelView.plan.addBossRoom();
+             viewModel.plan.addBossRoom();
          }
 
          private void TreasureRoom_Click(object sender, RoutedEventArgs e)
          {
-             viewModel.LevelView.plan.addTreasureRoom();
+             viewModel.plan.addTreasureRoom();
          }
 
          private void Gauntlet_Click(object sender, RoutedEventArgs e)
          {
-             viewModel.LevelView.plan.addGauntlet();
+             viewModel.plan.addGauntlet();
          }
 
 

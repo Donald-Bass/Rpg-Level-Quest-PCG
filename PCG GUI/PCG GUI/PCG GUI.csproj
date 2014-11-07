@@ -84,11 +84,9 @@
     <Compile Include="PlanModel\PlanRoom.cs" />
     <Compile Include="SmartObservableCollection.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
-    <Compile Include="ViewModels\LevelViewModel.cs" />
     <Compile Include="RunPCG.xaml.cs">
       <DependentUpon>RunPCG.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ViewModels\ViewModelParent.cs" />
     <Compile Include="WorldModel\Room.cs" />
     <Compile Include="WorldModel\Level.cs" />
     <Compile Include="WorldModel\Tile.cs" />
