@@ -34,9 +34,30 @@ namespace PCG_GUI.PlanModel
             this.type = type;
         }
 
+        //print an atom containing type of the room
         public void writeRoom(System.IO.StreamWriter file)
         {
+            Fact typeOfRoom = new Fact();
+            typeOfRoom.setPredicate("typeOfRoom");
+            typeOfRoom.setNumericValue(0, roomNumber);
 
+            switch(type)
+            {
+                case roomTypes.TreasureRoom:
+                    typeOfRoom.setValue(1, "treasure");
+                    break;
+                case roomTypes.BossFight:
+                    typeOfRoom.setValue(1, "boss");
+                    break;
+                case roomTypes.Gauntlet:
+                    typeOfRoom.setValue(1, "gauntlet");
+                    break;
+                case roomTypes.Entrance:
+                    typeOfRoom.setValue(1, "entrance");
+                    break;
+            }
+
+            file.WriteLine(typeOfRoom.getStringRepresentation(true));
         }
     }
 }

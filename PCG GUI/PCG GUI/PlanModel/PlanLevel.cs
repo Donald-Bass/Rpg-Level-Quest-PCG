@@ -375,14 +375,26 @@ namespace PCG_GUI.PlanModel
 
             file.WriteLine("levelStartRoom(1)."); //Room 1 is hardcoded to always be the start of the level
 
-            //Finally output only the clingo rules needed for the particular plan. This will include extensive comments in the output file describing what they do, which is
-            //all the stuff found after each % if you want to read them in this file
+            //set all rooms after the last room specifically specified by the plan as generic rooms. 
+            Fact typeOfRoom = new Fact();
+            typeOfRoom.setPredicate("typeOfRoom");
+            typeOfRoom.setValue(1, "generic");
 
-            //Clingo will throw a fit if we put in the rules for optional rooms and no rooms using it are specified. So only write this when we need it
-            if(optional)
+            for (int i = nextRoomNumber; i <= maxRoomsNeeded; i++ ) //this may set more rooms to generic then are ultimately generated in the level.
+                                                                    //clingo should harmlessly ignore the extra room designations
             {
-                file.WriteLine(":- numberOfEdges(ID,C), numConnections(ID,N), C != N. %if a room has a set number of connections enforce that number");
+                typeOfRoom.setNumericValue(0, i);
+                file.WriteLine(typeOfRoom.getStringRepresentation(true));
             }
+
+                //Finally output only the clingo rules needed for the particular plan. This will include extensive comments in the output file describing what they do, which is
+                //all the stuff found after each % if you want to read them in this file
+
+                //Clingo will throw a fit if we put in the rules for optional rooms and no rooms using it are specified. So only write this when we need it
+                if (optional)
+                {
+                    file.WriteLine(":- numberOfEdges(ID,C), numConnections(ID,N), C != N. %if a room has a set number of connections enforce that number");
+                }
 
             //again if there are any links there are additional rules we need to add
             if (linkRules)

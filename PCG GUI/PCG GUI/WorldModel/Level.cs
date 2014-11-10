@@ -44,12 +44,17 @@ namespace PCG_GUI.Facts
         }
 
 
+        public TileType getTileType(int x, int y)
+        {
+            return levelMap[x, y].tType;
+        }
 
         public void setTileType(int x, int y, TileType type)
         {
             levelMap[x, y].tType = type;
         }
 
+        /*
         public void addWallX(int x, int y, WallType type)
         {
             //the wall being added goes from X,Y to X+1,Y
@@ -112,7 +117,7 @@ namespace PCG_GUI.Facts
             {
                 levelMap[x, y].westWall = WallType.none;
             }
-        }
+        }*/
 
 
         //covert all undefined tiles into blocked tiles
@@ -252,7 +257,7 @@ namespace PCG_GUI.Facts
         }
 
         //set the type of a room
-        public void setRoomType(string type, int roomNum)
+        /*public void setRoomType(string type, int roomNum)
         {
             allRooms[roomNum].roomType = type;
 
@@ -276,7 +281,7 @@ namespace PCG_GUI.Facts
                 }
             }
             
-        }
+        }*/
     }
 
 }

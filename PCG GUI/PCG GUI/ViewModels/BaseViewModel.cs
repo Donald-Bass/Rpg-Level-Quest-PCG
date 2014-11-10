@@ -31,8 +31,7 @@ namespace PCG_GUI.ViewModels
                                                      //anything till the user goes to menu and hits new. This is stupid. I've disabled this and programed the gui to automatically
                                                      //create an empty PlanLevel to start off with, and I've disabled the Close menu option so there will never be nothing to interact with
  
-        public World world;                         //Once a level is generated it will be stored in this object
-
+        public LevelBuilder build;                         //This object builds the actual level out of Clingo's Output, and creates a level object to hold it
         public PlanLevel plan { get; set; }         //the user generated plan for a level
        
         //these two strings are used to display the dimensions of the level
@@ -46,7 +45,7 @@ namespace PCG_GUI.ViewModels
 
         public BaseViewModel()
         {
-            world = null; //there is no world at the start
+            build = null; //there is no world at the start
             levelGraphic = new SmartObservableCollection<System.Windows.FrameworkElement>();
             plan = new PlanLevel();
 
@@ -62,15 +61,15 @@ namespace PCG_GUI.ViewModels
         //open the world contained in Filename
         public void open(string Filename)
         {
-            if (world != null) //if we have a wor
+            if (build != null) //if we have a wor
             {
                 closeWorld(); //close the world currently open
             }
 
             //load the new world
-            world = new World();
+            build = new LevelBuilder();
             System.IO.StreamReader file = new System.IO.StreamReader(Filename);
-            world.parseClingoFile(file);
+            build.parseClingoFile(file);
 
             file.Close();
 
@@ -83,10 +82,10 @@ namespace PCG_GUI.ViewModels
 
         public void save(string Filename) //saves the current world to a file. This doesn't really work right currently, but it should have been fixed by the time the code is turned over
         {
-            if (world != null)
+            if (build != null)
             {
                 System.IO.StreamWriter file = new System.IO.StreamWriter(Filename);
-                world.writeWorldFile(file);
+                build.writeWorldFile(file);
                 file.Close();
             }
 
@@ -104,7 +103,7 @@ namespace PCG_GUI.ViewModels
         public void closeWorld()
         {
             //remove all stored values
-            world = null;
+            build = null;
 
             levelGraphic.Clear();
             plan.clear();
@@ -137,14 +136,14 @@ namespace PCG_GUI.ViewModels
         //This is the main function for drawing the map
         public void drawLevelBody(SmartObservableCollection<System.Windows.FrameworkElement> graphic)
         {
-            if (world != null) //sanity check to make sure there is a level to draw
+            if (build != null) //sanity check to make sure there is a level to draw
             {
                 graphic.Clear(); //remove any previous drawings
 
                 List<Shape> toDraw = new List<Shape>();  //start a list of shapes to draw
                 List<TextBlock> allRoomNums = new List<TextBlock>(); //start a list of room numbers to place
 
-                Level levelToDraw = world.getLevel(); //get the actual level
+                Level levelToDraw = build.getLevel(); //get the actual level
 
                 //for each tile draw the tile
                 for (int i = 0; i < levelToDraw.xDimension; i++)

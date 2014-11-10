@@ -9,12 +9,12 @@
             <RowDefinition Height="201*"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <ScrollViewer x:Name="MapScroll" HorizontalAlignment="Left" Height="577" VerticalAlignment="Top" Width="497" Margin="21,295,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer x:Name="MapScroll" HorizontalAlignment="Left" Height="577" VerticalAlignment="Top" Width="497" Margin="21,295,0,0" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible" CanContentScroll="True">
             <ItemsControl x:Name="LevelViewer" ItemsSource="{Binding levelGraphic}"
-    			HorizontalAlignment="Left" Height="{Binding Y_Length}" VerticalAlignment="Top" Width="{Binding X_Length}" Margin="0,0,-1,-1" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
+    			HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,-1,-1" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.VerticalScrollBarVisibility="Visible">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <Canvas Width="4000" Height="4000"/>
+                        <Canvas x:Name="MapImage" Width="4000" Height="4000"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemContainerStyle>
