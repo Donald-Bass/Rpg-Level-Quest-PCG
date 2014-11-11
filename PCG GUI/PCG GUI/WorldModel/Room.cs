@@ -14,6 +14,7 @@ namespace PCG_GUI.WorldModel
         public int XBR { get; set; }
         public int YBR { get; set; }
 
+
         public int X { get; set; }
         public int Y { get; set; }
 
@@ -30,6 +31,23 @@ namespace PCG_GUI.WorldModel
             YBR = -1;
             X = -1;
             Y = -1;
+        }
+
+        //returns an atom encoding the room
+        //format is room(XUL,YUL,XBR,YBR,N,T) where t is the roomType and n is the room number
+        public Fact roomAtom()
+        {
+            Fact atom = new Fact();
+
+            atom.setPredicate("room");
+            atom.setNumericValue(0,XUL);
+            atom.setNumericValue(1,YUL);
+            atom.setNumericValue(2,XBR);
+            atom.setNumericValue(3,YBR);
+            atom.setNumericValue(4,roomNumber);
+            atom.setValue(5,roomType);
+
+            return atom;
         }
     }
 }

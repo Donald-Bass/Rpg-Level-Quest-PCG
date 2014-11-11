@@ -21,6 +21,8 @@ namespace PCG_GUI.Facts
 
         public string levelName { get; set; } //TODO FIGURE OUT NAME GEN
 
+        public int maxRoomNumber { get; set; }
+
         public Level(int xDim, int yDim)
         {
             xDimension = xDim;
@@ -35,7 +37,9 @@ namespace PCG_GUI.Facts
                 }
             }
 
-            allRooms = new Room[100]; 
+            maxRoomNumber = 100; //enventually to stop wasting memory add code to properly detect how many rooms there are
+
+            allRooms = new Room[maxRoomNumber]; 
 
             levelName = "";
 
@@ -136,152 +140,69 @@ namespace PCG_GUI.Facts
         }
 
         //adds a room to the array of rooms and update tiles appropiately
-        public void addRoom(Room toAdd)
+        public void addRoom(int lowX, int lowY, int highX, int highY, int roomNumber, string RoomType)
         {
-            allRooms[toAdd.roomNumber] = toAdd;
+            Room toAdd = new Room();
+            toAdd.XUL = lowX;
+            toAdd.YUL = lowY;
+            toAdd.XBR = highX;
+            toAdd.YBR = highY;
+            toAdd.roomType = RoomType;
+            toAdd.roomNumber = roomNumber;
 
-            levelMap[toAdd.X, toAdd.Y].RoomNumber = toAdd.roomNumber;
+            Console.WriteLine("Adding Room " + roomNumber);
+
+            allRooms[roomNumber] = toAdd;
+
         }
 
         //write the contents of the level to file (levelNumber is the number to give to this level in the file)
-        public void write(System.IO.StreamWriter file, int levelNumber, bool ClingoInput = false)
+        public void write(System.IO.StreamWriter file)
         {
             Fact curFact;
 
-            curFact = new Fact("level", new String[] {levelNumber.ToString() });
-            file.Write(curFact.getStringRepresentation(ClingoInput));
-
             //output dimensions
-            curFact = new Fact("levelLengthX", new String[] { xDimension.ToString(), levelNumber.ToString() });
-            file.Write(curFact.getStringRepresentation(ClingoInput));
+            curFact = new Fact("levelLengthX", new String[] { xDimension.ToString()});
+            file.Write(curFact.getStringRepresentation());
 
-            curFact = new Fact("levelLengthY", new String[] { yDimension.ToString(), levelNumber.ToString() });
-            file.Write(curFact.getStringRepresentation(ClingoInput));
-
-            /*
-            //output level type
-            if (typeOfLevel == levelType.interior)
-            {
-                curFact = new Fact("interior", new String[] { levelNumber.ToString() });
-            }
-
-            else
-            {
-                curFact = new Fact("exterior", new String[] { levelNumber.ToString() });
-            }
-            file.Write(curFact.getStringRepresentation(ClingoInput));*/
+            curFact = new Fact("levelLengthY", new String[] { yDimension.ToString()});
+            file.Write(curFact.getStringRepresentation());
 
 
             for(int i = 0; i < xDimension; i++)
             {
                 for (int j = 0; j < yDimension; j++)
                 {
-                    if(levelMap[i,j].tType == TileType.floor)
+                    if (levelMap[i, j].tType == TileType.floor) 
                     {
-                        curFact = new Fact("floor", new String[] { i.ToString(), j.ToString(), levelNumber.ToString() });
-                        file.Write(curFact.getStringRepresentation(ClingoInput));
+                        curFact = new Fact("floor", new String[] { i.ToString(), j.ToString() });
+                        file.Write(curFact.getStringRepresentation());
                     }
 
-                    else if (levelMap[i, j].tType == TileType.blocked && ClingoInput) //if inputing into clingo specifically mark tiles that can't be floors
+                    else if (levelMap[i, j].tType == TileType.door)
                     {
-                        curFact = new Fact("floor", new String[] { i.ToString(), j.ToString(), levelNumber.ToString() });
-                        file.Write(curFact.getStringRepresentation(ClingoInput, true));
+                        curFact = new Fact("door", new String[] { i.ToString(), j.ToString() });
+                        file.Write(curFact.getStringRepresentation());
                     }
 
-                    //check for north and west walls (south and east walls will normally be caught by tile to south/east
-                    if(levelMap[i,j].westWall == WallType.wall)
+                    else if(levelMap[i, j].tType == TileType.startingRoom) //for now we'll treat starting room tiles as different. Once rooms are handled more comprehensively
+                                                                           //this will probally be obsolete
                     {
-                        curFact = new Fact("wallY", new String[] { i.ToString(), j.ToString(), levelNumber.ToString() });
-                        file.Write(curFact.getStringRepresentation(ClingoInput));
+                        curFact = new Fact("startingRoom", new String[] { i.ToString(), j.ToString() });
+                        file.Write(curFact.getStringRepresentation());
                     }
+                }
+            }
 
-                    else if (levelMap[i, j].westWall == WallType.door)
-                    {
-                        curFact = new Fact("doorY", new String[] { i.ToString(), j.ToString(), levelNumber.ToString() });
-                        file.Write(curFact.getStringRepresentation(ClingoInput));
-                    }
-
-                    else if (ClingoInput && i != 0 && levelMap[i, j].tType == TileType.floor && levelMap[i - 1, j].tType == TileType.floor) //if there is a floor to the west and no wall there can't be a wall there
-                    {
-                        curFact = new Fact("barricadeY", new String[] { i.ToString(), j.ToString(), levelNumber.ToString() });
-                        file.Write(curFact.getStringRepresentation(ClingoInput, true));
-                    }
-
-                    if (levelMap[i, j].northWall == WallType.wall)
-                    {
-                        curFact = new Fact("wallX", new String[] { i.ToString(), j.ToString(), levelNumber.ToString() });
-                        file.Write(curFact.getStringRepresentation(ClingoInput));
-                    }
-
-                    if (levelMap[i, j].northWall == WallType.door)
-                    {
-                        curFact = new Fact("doorX", new String[] { i.ToString(), j.ToString(), levelNumber.ToString() });
-                        file.Write(curFact.getStringRepresentation(ClingoInput));
-                    }
-
-
-                    else if (ClingoInput && j != 0 && levelMap[i, j].tType == TileType.floor  && levelMap[i, j - 1].tType == TileType.floor) //if there is a floor to the north and no wall there can't be a wall there
-                    {
-                        curFact = new Fact("barricadeX", new String[] { i.ToString(), j.ToString(), levelNumber.ToString() });
-                        file.Write(curFact.getStringRepresentation(ClingoInput, true));
-                    }
-
-                    //if at the east or south edges check for east/south wall
-                    if(i == xDimension - 1 && levelMap[i,j].eastWall == WallType.wall)
-                    {
-                        curFact = new Fact("wallY", new String[] { (i + 1).ToString(), j.ToString(), levelNumber.ToString() });
-                        file.Write(curFact.getStringRepresentation(ClingoInput));
-                    }
-
-                    //if at the east or south edges check for east/south wall
-                    else if (i == xDimension - 1 && levelMap[i, j].eastWall == WallType.door)
-                    {
-                        curFact = new Fact("doorY", new String[] { (i + 1).ToString(), j.ToString(), levelNumber.ToString() });
-                        file.Write(curFact.getStringRepresentation(ClingoInput));
-                    }
-
-
-                    if (j == yDimension - 1 && levelMap[i, j].southWall == WallType.wall)
-                    {
-                        curFact = new Fact("wallX", new String[] { i.ToString(), (j + 1).ToString(), levelNumber.ToString() });
-                        file.Write(curFact.getStringRepresentation(ClingoInput));
-                    }
-
-                    else if (j == yDimension - 1 && levelMap[i, j].southWall == WallType.door)
-                    {
-                        curFact = new Fact("doorX", new String[] { i.ToString(), (j + 1).ToString(), levelNumber.ToString() });
-                        file.Write(curFact.getStringRepresentation(ClingoInput));
-                    }
+            for(int i = 0; i < maxRoomNumber; i++) //for each room
+            {
+                if(allRooms[i] != null) //if the room exists
+                {
+                    file.Write(allRooms[i].roomAtom().getStringRepresentation());
                 }
             }
         }
 
-        //set the type of a room
-        /*public void setRoomType(string type, int roomNum)
-        {
-            allRooms[roomNum].roomType = type;
-
-            TileType tileToSet = TileType.floor;
-
-            if(type.Equals("treasure"))
-            {
-                tileToSet = TileType.treasureRoom;
-            }
-
-            else if (type.Equals("arena"))
-            {
-                tileToSet = TileType.arena;
-            }
-
-            for (int i = allRooms[roomNum].XUL; i <= allRooms[roomNum].XBR; i++)
-            {
-                for (int j = allRooms[roomNum].YUL; j <= allRooms[roomNum].YBR; j++)
-                {
-                    levelMap[i, j].tType = tileToSet;
-                }
-            }
-            
-        }*/
     }
 
 }

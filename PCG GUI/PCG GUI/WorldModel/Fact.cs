@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PCG_GUI
 {
-    class Fact
+    public class Fact
     {
         private String predicate; //what predicate is the fact from
         private List<String> values; //values for each of the variables in the predicate

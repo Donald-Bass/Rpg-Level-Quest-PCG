@@ -74,7 +74,7 @@ namespace PCG_GUI
 
         private void Menu_Save(object sender, RoutedEventArgs e)
         {
-            /*Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
 
             // Set filter for file extension and default file extension
             dlg.Filter = "PCG files (*.pcg)| *.pcg";
@@ -87,8 +87,8 @@ namespace PCG_GUI
             {
                 // Open document
                 string filename = dlg.FileName;
-                viewModel.BaseView.save(filename);
-            }*/
+                viewModel.save(filename);
+            }
         }
 
      
@@ -145,7 +145,7 @@ namespace PCG_GUI
             {
                 // Open document
                 string filename = dlg.FileName;
-                SnapShotPNG((UIElement)LevelView.MapScroll.Content, "filename", 1);
+                SnapShotPNG((UIElement)LevelView.MapScroll.Content, filename, 1);
             }
 
         }

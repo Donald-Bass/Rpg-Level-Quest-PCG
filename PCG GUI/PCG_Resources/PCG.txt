@@ -93,8 +93,6 @@ edge(U,V) :- horEdge(U,V).
 edge(U,V) :- vertEdge(U,V).
 edge(V,U) :- edge(U,V).
 
-uniqueEdge(U,V) :- edge(U,V), U < V. %Create a version of the edge atom that only has each edge once
-
 %key code
 
 #const minKeys = 1.
@@ -156,7 +154,9 @@ allKeysCollected(0) :- numKeysCollected(N,S), numKeys(N). %if at any point we ha
 
 mustVisitXtoReachY(X,Y) :- keyRoom(X,KN), not reachableWithoutKey(Y,KN), room(Y,_,_,_). %for each key determine all the rooms we must visit the keyroom first to reach
 
-
+%Create some additional atoms to make using the output easier
+uniqueEdge(U,V) :- edge(U,V), U < V, not lock(U,V,_). %Create a version of the edge atom that only has each edge once (also for convience sake ignore edges that are locked
+uniqueLock(U,V,KN) :- lock(U,V,KN), U < V. %and create a similar atom for locks
 
 %#show edgeNumber/1.
 %#show numRooms/1.
