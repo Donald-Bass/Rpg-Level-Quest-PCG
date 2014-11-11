@@ -58,6 +58,12 @@ namespace PCG_GUI.Facts
             levelMap[x, y].tType = type;
         }
 
+        public void setTileAdditionalInformation(int x, int y, int info)
+        {
+            levelMap[x, y].additionalInformation = info;
+        }
+
+
         /*
         public void addWallX(int x, int y, WallType type)
         {
@@ -189,6 +195,18 @@ namespace PCG_GUI.Facts
                                                                            //this will probally be obsolete
                     {
                         curFact = new Fact("startingRoom", new String[] { i.ToString(), j.ToString() });
+                        file.Write(curFact.getStringRepresentation());
+                    }
+
+                    else if (levelMap[i, j].tType == TileType.key)
+                    {
+                        curFact = new Fact("key", new String[] { i.ToString(), j.ToString(), levelMap[i,j].additionalInformation.ToString() });
+                        file.Write(curFact.getStringRepresentation());
+                    }
+
+                    else if (levelMap[i, j].tType == TileType.locked)
+                    {
+                        curFact = new Fact("lock", new String[] { i.ToString(), j.ToString(), levelMap[i, j].additionalInformation.ToString() });
                         file.Write(curFact.getStringRepresentation());
                     }
                 }

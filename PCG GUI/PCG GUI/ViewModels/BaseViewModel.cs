@@ -187,6 +187,7 @@ namespace PCG_GUI.ViewModels
                 case TileType.undefined: 
                     fillBrush.Color = Color.FromArgb(0xFF, 0xFF, 0x69, 0xB4); //hot pink. Nothing should be undefined so make that case stand out
                     break;
+                case TileType.locked:
                 case TileType.door:
                     fillBrush.Color = Color.FromArgb(0xFF, 0xA5, 0x2A, 0x2A); //brown
                     break;
