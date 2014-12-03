@@ -92,7 +92,7 @@
     <Compile Include="WorldModel\Template.cs" />
     <Compile Include="WorldModel\Tile.cs" />
     <Compile Include="WorldModel\LevelBuilder.cs" />
-    <Compile Include="WorldModel\Fact.cs" />
+    <Compile Include="WorldModel\Atom.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

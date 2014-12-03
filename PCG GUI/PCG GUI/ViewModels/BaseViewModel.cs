@@ -1,7 +1,7 @@
 ﻿/* The BaseViewModel class is poorly named. This project originally had a bigger scope that would require multiple types of views with BaseViewModel holding the code they shared in common. That
  * didn't end up happening and I was able to refactor all the code into a single class, but the original name currently remains
  * 
- * The BaseViewModel class acts as the interface between the UI and the actual data we're working with.
+ * The BaseViewModel class acts as the interface between the UI and the actual data we're working with. It also holds all the code for drawing the level map
  *
  */ 
 using System;
@@ -25,24 +25,17 @@ namespace PCG_GUI.ViewModels
         public const int GRID_SIZE = 20; //size of the squares in the grid in the map of the level (in pixels)
 
         public SmartObservableCollection<System.Windows.FrameworkElement> levelGraphic { get;  private set; }
-
-        //public Boolean worldAttached { get; set; } //is there a world attached to the view model. This was intended to allow
-                                                     //the gui to be open without a world actually being generated, and prevent the gui from doing
-                                                     //anything till the user goes to menu and hits new. This is stupid. I've disabled this and programed the gui to automatically
-                                                     //create an empty PlanLevel to start off with, and I've disabled the Close menu option so there will never be nothing to interact with
  
-        public LevelBuilder build;                         //This object builds the actual level out of Clingo's Output, and creates a level object to hold it
+        public LevelBuilder build;                  //This object builds the actual level out of Clingo's Output, and creates a level object to hold it
         public PlanLevel plan { get; set; }         //the user generated plan for a level
        
+
         //these two strings are used to display the dimensions of the level
         public String X_Dimension { get; private set; }
         public String Y_Dimension { get; private set; }
 
-        //while these hold the actual dimensions
-        public int X_Length { get; private set; }
-        public int Y_Length { get; private set; }
 
-
+        //Basic constructor.
         public BaseViewModel()
         {
             build = null; //there is no world at the start
@@ -50,48 +43,50 @@ namespace PCG_GUI.ViewModels
             plan = new PlanLevel();
 
             X_Dimension = "";
-            X_Length = 0;
             Y_Dimension = "";
-            Y_Length = 0;
 
-
-            //worldAttached = false;
         }
 
-        //open the world contained in Filename
+        //open the level contained in the file Filename. This can handle files output by Clingo, or saved by the GUI, despite them having somewhat different formats
         public void open(string Filename)
         {
-            if (build != null) //if we have a wor
+            if (build != null) //if we have a level already built
             {
-                closeWorld(); //close the world currently open
+                closeWorld(); //close the level currently open
             }
 
-            //load the new world
-            build = new LevelBuilder();
-            System.IO.StreamReader file = new System.IO.StreamReader(Filename);
-            build.parseClingoFile(file);
+            //load the level
+            build = new LevelBuilder(); //create a new LevelBuilder to handle reading the file
+            System.IO.StreamReader file = new System.IO.StreamReader(Filename); //open the file
+            build.parseInputFile(file); //process the file and build the level
+
+            //once the level is built we can get it's dimensions
+            X_Dimension = build.getLevel().xDimension.ToString();
+            Y_Dimension = build.getLevel().yDimension.ToString();
+
+            RaisePropertyChanged("X_Dimension");
+            RaisePropertyChanged("Y_Dimension");
 
             file.Close();
 
-            //worldAttached = true;
-            RaisePropertyChanged("worldAttached");
-
+            //finally now that we have a complet file we need to draw the level
             drawLevel();
         }
 
-
-        public void save(string Filename) //saves the current world to a file. This doesn't really work right currently, but it should have been fixed by the time the code is turned over
+        //saves the current world to a file, that can be loaded back up at a later date
+        public void save(string Filename) 
         {
-            if (build != null)
+            if (build != null) //only save a file if a level has already been built and as such there is something to save
             {
                 System.IO.StreamWriter file = new System.IO.StreamWriter(Filename);
-                build.writeWorldFile(file);
+                build.saveLevel(file);
                 file.Close();
             }
 
         }
 
-        //creates a new world
+        //This function is used to notify the GUI whenever one of the variables that it is drawing data from has updated (In WPF terms I'm talking about databinding
+        //You will need to manually call this with the name of the variable every time you change said variable
         internal void RaisePropertyChanged(string prop)
         {
             if (PropertyChanged != null) { PropertyChanged(this, new PropertyChangedEventArgs(prop)); }
@@ -108,15 +103,11 @@ namespace PCG_GUI.ViewModels
             levelGraphic.Clear();
             plan.clear();
  
-            //RaisePropertyChanged("worldAttached");
-
             //remove any saved dimensions of the level
 
             //remove all stored values
             X_Dimension = "";
             Y_Dimension = "";
-            X_Length = 0;
-            Y_Length = 0;
 
             //tell gui values have been removed
             RaisePropertyChanged("X_Dimension");
@@ -126,8 +117,8 @@ namespace PCG_GUI.ViewModels
 
         //The next several functions handle drawing the map of the level displayed in the gui
 
-        //I honestly have no idea why this function exists instead of drawLevelBody being called directly. I really should have documented some of this
-        //code while it was fresh in my mind rather then a year later
+        //I honestly have no idea why this particular function exists instead of drawLevelBody being called directly. But I don't want to change it in case I break anything. 
+        //I really should have documented some of this code while it was fresh in my mind rather then a year later
         public void drawLevel()
         {
             drawLevelBody(levelGraphic);
@@ -179,10 +170,6 @@ namespace PCG_GUI.ViewModels
                     break;
                 case TileType.blocked:
                     fillBrush.Color = Color.FromArgb(0xFF, 0, 0, 0); //black
-                    break;
-                case TileType.wall:
-                    fillBrush.Color = Color.FromArgb(0xFF, 0, 0, 0); //black
-                    //fillBrush.Color = Color.FromArgb(0xFF, 0xD3, 0xD3, 0xD3); //grey
                     break;
                 case TileType.undefined: 
                     fillBrush.Color = Color.FromArgb(0xFF, 0xFF, 0x69, 0xB4); //hot pink. Nothing should be undefined so make that case stand out

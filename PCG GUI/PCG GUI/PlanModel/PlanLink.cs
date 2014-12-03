@@ -61,12 +61,12 @@ namespace PCG_GUI.PlanModel
         public void writeLink(System.IO.StreamWriter file)
         {
 
-                Fact roomsBetween = new Fact();  
+                Atom roomsBetween = new Atom();  
                 //the roomsBetween atom takes the format roomsBetween(U,V,N), and defines that the shortest path between U and V passes through N rooms, and no shorter path
                 //is present. To be specific the N is the number of rooms between U and V. If the graph is U-V then N would have to be 0 for this to be satisifed. U-X-Y would
                 //be what a N of 1 represents
 
-                roomsBetween.setPredicate("roomsBetween");
+                roomsBetween.setAtomName("roomsBetween");
                 roomsBetween.setNumericValue(0, room1);
                 roomsBetween.setNumericValue(1, room2);
                 roomsBetween.setNumericValue(2, linkLength);
@@ -82,12 +82,12 @@ namespace PCG_GUI.PlanModel
                                             
             {
 
-                Fact notRoomsBetween = new Fact();
+                Atom notRoomsBetween = new Atom();
                 //the notRoomsBetween atom takes the format notRoomsBetween(U,V,N), and defines that the shortest path between U and V passes must pass through more then N rooms
                 //To be specific the N is refering to the of number of rooms between U and V not counting U or V. If the graph is U-V then N would have to be 0 for this to be satisifed. U-X-Y would
                 //be what a N of 1 represents. 
 
-                notRoomsBetween.setPredicate("notRoomsBetween");
+                notRoomsBetween.setAtomName("notRoomsBetween");
                 notRoomsBetween.setNumericValue(2, linkLength);
 
                 //for rooms in the first room's step look at distances to room 2

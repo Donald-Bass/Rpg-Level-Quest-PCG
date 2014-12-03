@@ -71,7 +71,7 @@ static bool alloc_object(struct cave *c, int set, int typ, int depth, byte origi
 #define ROOM_LOG(...) if (OPT(cheat_room)) msg(__VA_ARGS__);
 #endif
 
-
+//PCGSTART
 //INPUT FUNCTIONS
 //FUNCTIONS FOR READING IN THE INPUT FILE, PARSING IT AND STORING IT
 
@@ -114,7 +114,7 @@ atom* parseAtomString(char atomString[100]);
 
 pcgRoom* parseRoomIDAtom(atom* roomID);
 void finishRoom(pcgRoomListEntry* head, atom* rectangle);
-
+//PCGEND
 
 /**
  * Note that Level generation is *not* an important bottleneck, though it can
@@ -2758,7 +2758,7 @@ static void set_cave_dimensions(struct cave *c, int h, int w)
 	for (i = 0; i < n; i++) cave_squares[i] = i;
 }
 
-
+//PCGSTART
 /**
  * Generate a new dungeon level.
  */
@@ -2985,6 +2985,7 @@ static bool default_gen(struct cave *c, struct player *p) {
 	
 	return TRUE;
 }
+//PCGEND
 
 // static bool default_gen(struct cave *c, struct player *p) {
 	// int i, j, k, y, x, y1, x1;
@@ -4283,6 +4284,7 @@ struct init_module generate_module = {
 	.cleanup = NULL
 };
 
+//PCGSTART
 //FUNCTIONS FOR READING IN THE INPUT FILE, PARSING IT AND STORING IT
 
 void removeAtom(atom* toRemove)
@@ -4485,3 +4487,5 @@ void finishRoom(pcgRoomListEntry* head, atom* rectangle)
 	curEntry->node->XBR = atoi(rectangle->preds[2]);
 	curEntry->node->YBR = atoi(rectangle->preds[3]);
 }
+
+//PCGEnd

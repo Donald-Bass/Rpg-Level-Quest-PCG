@@ -269,8 +269,8 @@ namespace PCG_GUI.PlanModel
                     //TODO. This will fail quietly if I end up with an empty step which I haven't guarded against currently. 
                     if (i != 0) //if this is not the first step
                     {
-                        Fact xBeforeY = new Fact();
-                        xBeforeY.setPredicate("xBeforeY"); //the xBeforeY predicate takes the form xBeforeY(X,Y), saying roomX must occur before roomY
+                        Atom xBeforeY = new Atom();
+                        xBeforeY.setAtomName("xBeforeY"); //the xBeforeY predicate takes the form xBeforeY(X,Y), saying roomX must occur before roomY
                         xBeforeY.setNumericValue(1, r.roomNumber); //the Y part is the current room and will remain fixed 
 
                         foreach (PlanRoom p in stepList[i - 1].stepRooms) //for each room in the previous step
@@ -290,15 +290,15 @@ namespace PCG_GUI.PlanModel
 
                         //OK defining this is tricker then I expected so for now lets say that an optional room just has only one edge connecting it
                         //to the rest of the graph
-                        Fact numberOfEdges = new Fact();
-                        numberOfEdges.setPredicate("numberOfEdges");
+                        Atom numberOfEdges = new Atom();
+                        numberOfEdges.setAtomName("numberOfEdges");
                         numberOfEdges.setNumericValue(0, r.roomNumber);
                         numberOfEdges.setNumericValue(1, 1);
                         file.Write(numberOfEdges.getStringRepresentation(true));
 
                         //also to be safe make sure the optional room has no keys
-                        Fact keyRoom = new Fact();
-                        numberOfEdges.setPredicate("keyRoom");
+                        Atom keyRoom = new Atom();
+                        numberOfEdges.setAtomName("keyRoom");
                         numberOfEdges.setNumericValue(0, r.roomNumber);
                         numberOfEdges.setValue(1, "_");
                         file.Write(numberOfEdges.getStringRepresentation(true, true)); //the second true means the atom we generated must not exist
@@ -320,8 +320,8 @@ namespace PCG_GUI.PlanModel
 
                         if (i < stepList.Count - 1) //if there is a next level you must not have to visit those rooms to reach the optional room
                         {
-                            Fact mustVisitXtoReachY = new Fact();
-                            mustVisitXtoReachY.setPredicate("mustVisitXtoReachY"); //format is mustVisitXtoReachY(X,Y), means that to get to Y you must pass through X first
+                            Atom mustVisitXtoReachY = new Atom();
+                            mustVisitXtoReachY.setAtomName("mustVisitXtoReachY"); //format is mustVisitXtoReachY(X,Y), means that to get to Y you must pass through X first
                             mustVisitXtoReachY.setNumericValue(1, r.roomNumber);
 
                             foreach (PlanRoom n in stepList[i + 1].stepRooms) //for each room in the current step
@@ -376,8 +376,8 @@ namespace PCG_GUI.PlanModel
             file.WriteLine("levelStartRoom(1)."); //Room 1 is hardcoded to always be the start of the level
 
             //set all rooms after the last room specifically specified by the plan as generic rooms. 
-            Fact typeOfRoom = new Fact();
-            typeOfRoom.setPredicate("typeOfRoom");
+            Atom typeOfRoom = new Atom();
+            typeOfRoom.setAtomName("typeOfRoom");
             typeOfRoom.setValue(1, "generic");
 
             for (int i = nextRoomNumber; i <= maxRoomsNeeded; i++ ) //this may set more rooms to generic then are ultimately generated in the level.

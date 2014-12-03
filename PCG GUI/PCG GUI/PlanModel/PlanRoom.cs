@@ -37,8 +37,8 @@ namespace PCG_GUI.PlanModel
         //print an atom containing type of the room
         public void writeRoom(System.IO.StreamWriter file)
         {
-            Fact typeOfRoom = new Fact();
-            typeOfRoom.setPredicate("typeOfRoom");
+            Atom typeOfRoom = new Atom();
+            typeOfRoom.setAtomName("typeOfRoom");
             typeOfRoom.setNumericValue(0, roomNumber);
 
             switch(type)

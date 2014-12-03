@@ -1,1 +1,47 @@
 The overall concept here is to create a PCG System that can generate focused levels for a RPG. To understand what I mean like that think of the levels in games that use PCG like Diablo, or most rougelikes. Levels in those games tend to be sprawling labyrinths with little overall structure. They work fine exploration, but they aren't suited for a lot of the types of gameplay you see in handmade levels in non pcg based games. The biggest thing they are missing is any concept of order. If a game wants the player to encounter a npc who tells a player about a boss before the boss encounters it, or go through a fierce gauntlet of monsters where the players resources are slowly drained room by room, or anything similar the only way these games seem to have to control the order events happen, are to place these events are the start and endpoints of levels the only two points the player is guaranteed to visit, or temporarily abandon PCG, to use a hand designed level that ensures the level matches the intent. The goal for my system is to be able to take a loose intention of a plan for a level, the major events that need to happen, whether they are story, like meeting npc, or gameplay like running into a miniboss or a treasure room, as well as a few other parameters like the pacing between these points and generate a random level that supports that plan. Not only would this allow ...
+
+
+
+
+Overview of the overall pipeline.
+
+1. When the GUI is first booted up, it creates a PlanLevel object. This object is used to store a partially ordered plan that the user inputs. It also uses the PlanRoom, PlanStep(Found in the PlanLevel file for now) and PlanLink classes to store certain types of information (Specific rooms, and rooms that need some sort of specific connection between them). This step is one of the ones that need the most work. The GUI for this is a real hack right now and I haven't managed to get all the functionality in that I wanted to give more advanced control. Specifically there are four obvious things missing. First is optional rooms. This one is already defined in the PCG code, and marks that a room must occur on a specific step of the plan but it is not required to be visited to advance to the next step. The planroom class has an optionalRoom parameter that can be used to mark rooms as this, and all the PCG code should work if it is set. I just lack a way to set this in the GUI. The second is pacing, which dicates how much space there must be (in terms of number of rooms) between different steps of the user provided plan. Again the pcg code is mostly there. The planStep class in the planLevel file has a pacing variable that works, but there is no way yet to actually set it in the GUI. Finally I wanted to add branches, a series of several rooms that must be passed through in order without going through any other rooms (especially other rooms that are specifically part of the overall plan). This is still conceputal. I have some older code found in the FlowModel classes that did something similar but I haven't had the time to try and adapt it for this task. Finally if you search for the maxRoomsNeeded variable in the PlanLevel file you will see a line that allows you to let the PCG throw in some additional number of rooms beyond those needed to furfill the plans requirments. This is hardcoded at 2 extra rooms (this in reality means there will be 0-2 more rooms then necessary), and could possibly be user controlled, or if not should have more thought put into the proper value.
+
+2. When the user is satisifed with the plan they go to the menu and hit RunPCG. The GUI calls the writePlan function for the PlanLevel object which writes the partially ordered plan as Clingo code, and calls similar functions in the various PlanRoom, and PlanLink objects to specifically add code to ensure those objects are generated.
+
+3. When the writePlan function finishes, the System passes the output to Clingo, as well as the file PCG.txt in the PCG Resources subfolder of the PCG GUI folder, which contains all the general rules Clingo needs to follow. (This happens in the runClingo function of the BaseViewModel class) This currently freezes the entire GUI until Clingo finishes running. This is not ideal but its not like there's anything actually implemented that you could be doing with the GUI while waiting. If you really wanted to change this you would need to have the runClingo function spawn a seperate thread to actually call Clingo in, and then somehow have the system check for that thread to complete without locking the GUI (If I knew how to do this easily I wouldn't have left things like this)
+
+4. When clingo returns its output the output is read back into the GUI. The open function in the BaseViewModel starts the process but the bulk of the work is done by the levelBuilder class. Clingo returns output that is essentially a graph laid out on a 10 by 10 grid. The levelBuilder takes this and replaces all the vertices with the actual rooms they represent, connects them up with corridors, and adds doors and keys as necessary. Once this is complete the BaseViewModel class is responsible for drawing a map of the level on the GUI. 
+
+Not touched on in the above are a number of classes used mostly as storage.
+
+The Atom class is one of the most useful as it allows easy communication with Clingo (at least at the parts where I rememebered to use it). It can read in strings containing atoms from Clingo's output, and parse them, and it can also be used to build atoms
+that can be output in a format Clingo can take as input. 
+
+The tile class is a simple class used to represent a single tile in the level. It honestly doesn't do much right now. It tracks what type of tile it is and can hold additional information in a few special cases (like what number key a tile with a key contains)
+
+The template class stores a single template for a room. A template is a predefined layout for a room and is intended to ensure that the room created can function properly for the type of room it is even if that type of room requires a complicated layout, and show that this system can work in commercial games which have specific art assests a room would need to be able to match. Templates have to be rectangular, but can have tiles defined as walls so the rooms don't need to appear to be rectangular. More importantly a template can be copied directly onto a level making placing these rooms easy. 
+
+Templates come in a files(one file for each type of room) the following format
+
+	The first line is a single number which is the number of templates in the file
+			  The next line starts the first template. 
+			  The first line of the template is the x  dimensions of the template
+			  and the second is the y
+			  Each additional line holds one row of the template detailing each tile. Currently
+					. is floor
+					# is blocked terrain
+					
+	And a number of example files can be found in the PCG Resources folder. If you want to add additional tile types beyond floors and blocked terrain(i.e walls) you will need to edit the readTemplates function in the LevelBuilder class to support that.
+	
+	Currently each template needs to have odd values for both their length and height, so there is a clear center tile, to simplify generating the level. This can be changed as long as you are willing to change the necessary code in the LevelBuilder class that uses said templates. (Currently there are three problems that you will need to fix. Room positions are based on the centers of the room, said center is the center of the row and column the room is in, and corridors are drawn on the same row/column as the centers of the rooms they depart from. The main reason for these constraints is to avoid having problems connecting two small rooms together in a row/column that has a big room and as such has a lot more space in it then either small room takes up. Knowing they will both be centered around the center of that row/column means they can always be connected by a straight line. Removing those constraints introduce edge cases where those two rooms cannot be connected by any straight horiziontal/vertical line)
+
+The room class stores information about particular rooms. It is currently fairly bareboned, just tracking the corners of the room, the type of the room, and the room number used to identify it, but should be useful when it comes time to figure out how to create an actual level for a game, and you need to do fancier things with rooms
+
+Finally the Level class is used to store the actual level. It mainly contains a 2d array of tile objects but has some other functionality, including the code to actually save the completed level to a file.
+
+GUI Information
+The GUI due to changes in scope ended up divided into two classes/windows. There is the main window that contains the menu, stores the actual baseViewModel, and has a single object in the window a Level Control that contains the rest of the GUI. 
+
+Other little details
+The Atom class was orignally called the fact class. I caught most of the references to this name when I changed it, and the code runs just fine but there may be a few references in the comments or variable names to facts instead of atoms
