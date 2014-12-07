@@ -108,5 +108,6 @@
                 </TransformGroup>
             </Button.RenderTransform>
         </Button>
+        <Button Content="Run PCG" HorizontalAlignment="Left" Margin="681,713,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
     </Grid>
 </UserControl>

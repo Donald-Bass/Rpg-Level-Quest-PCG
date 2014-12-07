@@ -74,6 +74,12 @@ namespace PCG_GUI
              viewModel.plan.addGauntlet();
          }
 
+         private void Button_Click(object sender, RoutedEventArgs e)
+         {
+             viewModel.runClingo();
+             viewModel.open("TempResults.pcg");
+         }
+
 
     }
 }
